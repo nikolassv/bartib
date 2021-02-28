@@ -1,0 +1,1 @@
+pub static FORMAT_DATETIME : &str = "%F %R";
