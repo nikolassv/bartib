@@ -1,6 +1,7 @@
 use chrono::{NaiveDateTime, Local};
 use std::fmt;
 use std::str::{FromStr, Chars};
+use thiserror::Error;
 
 use crate::project;
 use crate::conf;
@@ -9,8 +10,17 @@ use crate::conf;
 pub struct Task {
 	start : NaiveDateTime,
 	end : Option<NaiveDateTime>,
+	
 	project : project::Project,
 	description : String
+}
+
+#[derive(Error,Debug)]
+pub enum TaskError {
+	#[error("could not parse date or time of task")]
+	DateTimeParseError,
+	#[error("could not parse task")]
+	GeneralParseError
 }
 
 impl Task {
@@ -46,7 +56,7 @@ fn escape_special_chars(s: &str) -> String {
 }
 
 impl FromStr for Task {
-	type Err = ();
+	type Err = TaskError;
 	
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let parts : Vec<String> = split_with_escaped_delimeter(s).collect();
@@ -54,7 +64,7 @@ impl FromStr for Task {
 		println!("{:?}", parts);
 		
 		if parts.len() < 2 {
-			return Err(());
+			return Err(TaskError::GeneralParseError);
 		}
 	
 		let time_parts : Vec<&str> = parts[0].split(" - ").collect();
@@ -62,7 +72,7 @@ impl FromStr for Task {
 		let starttime = match NaiveDateTime::parse_from_str(time_parts[0].trim(), conf::FORMAT_DATETIME) {
 			Ok(t) => t,
 			Err(_) => {
-				return Err(())
+				return Err(TaskError::DateTimeParseError)
 			}
 		};
 		
@@ -72,7 +82,7 @@ impl FromStr for Task {
 			endtime = match NaiveDateTime::parse_from_str(time_parts[1].trim(), conf::FORMAT_DATETIME) {
 				Ok(t) => Some(t),
 				Err(_) => {
-					return Err(())
+					return Err(TaskError::DateTimeParseError)
 				}
 			}
 		} else {
@@ -239,5 +249,13 @@ mod tests {
 		assert_eq!(t.project.0, t2.project.0);
 		assert_eq!(t.description, t2.description);
 	}
-
+	
+	#[test]
+	fn from_str_errors() {
+		let t = Task::from_str("2021 test project");
+		assert!(matches!(t, Err(TaskError::GeneralParseError)));
+		
+		let t = Task::from_str("asb - 2021- | project");
+		assert!(matches!(t, Err(TaskError::DateTimeParseError)));
+	}
 }

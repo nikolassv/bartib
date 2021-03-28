@@ -9,3 +9,4 @@ license = "GPL-3.0-or-later"
 [dependencies]
 chrono = "0.4"
 clap = "~2.33"
+thiserror = "1.0"
