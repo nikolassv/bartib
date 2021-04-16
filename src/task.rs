@@ -36,6 +36,10 @@ impl Task {
 	pub fn stop(&mut self) {
 		self.end = Some(Local::now().naive_local());
 	}
+	
+	pub fn is_stopped(&self) -> bool {
+		self.end.is_some()
+	}
 }
 
 impl fmt::Display for Task {
@@ -60,9 +64,7 @@ impl FromStr for Task {
 	
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let parts : Vec<String> = split_with_escaped_delimeter(s).collect();
-		
-		println!("{:?}", parts);
-		
+				
 		if parts.len() < 2 {
 			return Err(TaskError::GeneralParseError);
 		}
