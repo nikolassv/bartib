@@ -1,4 +1,4 @@
-use chrono::{NaiveDateTime, Local};
+use chrono::{NaiveDateTime, Local, Duration};
 use std::fmt;
 use std::str::{FromStr, Chars};
 use thiserror::Error;
@@ -8,11 +8,11 @@ use crate::conf;
 
 #[derive(Debug)]
 pub struct Task {
-	start : NaiveDateTime,
-	end : Option<NaiveDateTime>,
+	pub start : NaiveDateTime,
+	pub end : Option<NaiveDateTime>,
 	
-	project : project::Project,
-	description : String
+	pub project : project::Project,
+	pub description : String
 }
 
 #[derive(Error,Debug)]
@@ -39,6 +39,14 @@ impl Task {
 	
 	pub fn is_stopped(&self) -> bool {
 		self.end.is_some()
+	}
+	
+	pub fn get_duration(&self) -> Duration {
+		if let Some(end) = self.end {
+			end.signed_duration_since(self.start)
+		} else {
+			Local::now().naive_local().signed_duration_since(self.start)
+		}
 	}
 }
 
