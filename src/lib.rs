@@ -12,7 +12,7 @@ pub fn start(file_name: &str, project_name: &str, task_description: &str) {
 	
 	let project = project::Project(project_name.to_string());
 	let task = task::Task::start(project, task_description.to_string());	
-	file_content.push(bartib_file::Row::for_task(task));
+	file_content.push(bartib_file::Line::for_task(task));
 	
 	bartib_file::write_to_file(file_name, &file_content).expect("Could not write to file");
 }
@@ -29,20 +29,20 @@ pub fn list_running(file_name: &str) {
 	list_running_tasks(running_tasks);
 }
 
-fn stop_all_running_tasks(file_content: &mut [bartib_file::Row]) {
-	for row in file_content {
-		if let Ok(task) = &mut row.task {
+fn stop_all_running_tasks(file_content: &mut [bartib_file::Line]) {
+	for line in file_content {
+		if let Ok(task) = &mut line.task {
 			if !task.is_stopped() {
 				task.stop();
-				row.set_changed();
+				line.set_changed();
 			}
 		}
 	}
 }
 
-fn get_running_tasks(file_content: &[bartib_file::Row]) -> Vec<&task::Task> {
+fn get_running_tasks(file_content: &[bartib_file::Line]) -> Vec<&task::Task> {
 	file_content.iter()
-		.map(|row| row.task.as_ref())
+		.map(|line| line.task.as_ref())
 		.filter_map(|task_result| task_result.ok())
 		.filter(|task| !task.is_stopped())
 		.collect()
