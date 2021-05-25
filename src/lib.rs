@@ -1,49 +1,54 @@
-use std::io;
-use std::io::{Write,BufReader,BufRead};
-use std::fs::{File,OpenOptions};
-use std::str::FromStr;
-
 mod conf;
 mod project;
 mod task;
 mod table;
 mod format_util;
+pub mod bartib_file;
 
-pub fn start(mut bartib_file: File, project_name: &str, task_description: &str) {
-	let project = project::Project(project_name.to_string());
-	let task = task::Task::start(project, task_description.to_string());
+pub fn start(file_name: &str, project_name: &str, task_description: &str) {
+	let mut file_content = bartib_file::get_file_content(file_name);
 	
-	write!(bartib_file, "{}", task).expect("Could not write new task to file");
+	stop_all_running_tasks(&mut file_content);
+	
+	let project = project::Project(project_name.to_string());
+	let task = task::Task::start(project, task_description.to_string());	
+	file_content.push(bartib_file::Row::for_task(task));
+	
+	bartib_file::write_to_file(file_name, &file_content).expect("Could not write to file");
 }
 
-pub fn list_running(bartib_file: File) {
-	let running_tasks = get_running_tasks(bartib_file);
+pub fn stop(file_name: &str) {
+	let mut file_content = bartib_file::get_file_content(file_name);	
+	stop_all_running_tasks(&mut file_content);	
+	bartib_file::write_to_file(file_name, &file_content).expect("Could not write to file");
+}
+
+pub fn list_running(file_name: &str) {
+	let file_content = bartib_file::get_file_content(file_name);
+	let running_tasks = get_running_tasks(&file_content);
 	list_running_tasks(running_tasks);
 }
 
-pub fn get_bartib_file_writable(file_name: &str) -> Result<File, io::Error> {
-	OpenOptions::new()
-		.create(true)
-		.append(true)
-		.open(file_name)
+fn stop_all_running_tasks(file_content: &mut [bartib_file::Row]) {
+	for row in file_content {
+		if let Ok(task) = &mut row.task {
+			if !task.is_stopped() {
+				task.stop();
+				row.set_changed();
+			}
+		}
+	}
 }
 
-pub fn get_bartib_file_readable(file_name: &str) -> Result<File, io::Error> {
-	File::open(file_name)
-}
-
-fn get_running_tasks(bartib_file: File) -> Vec<task::Task> {
-	let reader = BufReader::new(bartib_file);
-	
-	reader.lines()
-		.filter_map(|line_result| line_result.ok())
-		.map(|line| task::Task::from_str(&line))
+fn get_running_tasks(file_content: &[bartib_file::Row]) -> Vec<&task::Task> {
+	file_content.iter()
+		.map(|row| row.task.as_ref())
 		.filter_map(|task_result| task_result.ok())
 		.filter(|task| !task.is_stopped())
 		.collect()
 }
 
-fn list_running_tasks(running_tasks: Vec<task::Task>) {
+fn list_running_tasks(running_tasks: Vec<&task::Task>) {
 	if running_tasks.is_empty() {
 		println!("No Task is currently running");
 	} else {		

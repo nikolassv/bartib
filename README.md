@@ -32,7 +32,17 @@ Start a new task with a short description and an associated project:
 bartib start -p "The name of the associated project" -d "A description of the task"
 ```
 
-### List all currently tracked tasks
+This will also stop all currently running tasks.
+
+### Stop a running task
+
+Stops the currently running task:
+
+```
+bartib stop
+```
+
+### List all currently running tasks
 
 ```
 bartib current

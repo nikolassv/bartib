@@ -37,6 +37,10 @@ fn main() {
 				)
 		)
 		.subcommand(
+			SubCommand::with_name("stop")
+				.about("stops all currently running tasks")
+		)
+		.subcommand(
 			SubCommand::with_name("current")
 				.about("lists all currently running tasks")
 		)
@@ -45,19 +49,15 @@ fn main() {
 	let file_name = matches.value_of("file").unwrap();	
 	
 	match matches.subcommand() {
-		("start", Some(sub_m)) => {
-			let bartib_file = bartib::get_bartib_file_writable(file_name).unwrap();
-			
+		("start", Some(sub_m)) => {		
 			let project_name = sub_m.value_of("project").unwrap();
 			let task_description = sub_m.value_of("description").unwrap();
 					
-			bartib::start(bartib_file, project_name, task_description);
+			bartib::start(file_name, project_name, task_description);
 
 		},
-		("current", Some(_)) => {
-			let bartib_file = bartib::get_bartib_file_readable(file_name).unwrap();
-			bartib::list_running(bartib_file)
-		},
+		("stop", Some(_)) => bartib::stop(file_name),
+		("current", Some(_)) => bartib::list_running(file_name),
 		_ => println!("Unknown command")
 	}
 }
