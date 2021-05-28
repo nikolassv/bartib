@@ -44,6 +44,18 @@ fn main() {
 			SubCommand::with_name("current")
 				.about("lists all currently running tasks")
 		)
+		.subcommand(
+			SubCommand::with_name("list")
+				.about("list recent tasks")
+				.arg(
+					Arg::with_name("number")
+						.short("n")
+						.value_name("NUMBER")
+						.help("maximum number of tasks to display")
+						.required(false)
+						.takes_value(true)
+				)
+		)
 		.get_matches();
 
 	let file_name = matches.value_of("file").unwrap();	
@@ -58,6 +70,25 @@ fn main() {
 		},
 		("stop", Some(_)) => bartib::stop(file_name),
 		("current", Some(_)) => bartib::list_running(file_name),
+		("list", Some(sub_m)) => {
+			let number_of_tasks : Option<usize> = get_number_argument_or_ignore(sub_m.value_of("number"), "-n/--number");
+			bartib::list(file_name, number_of_tasks)
+		},
 		_ => println!("Unknown command")
+	}
+}
+
+fn get_number_argument_or_ignore(number_argument : Option<&str>, argument_name : &str) -> Option<usize> {
+	if let Some(number_string) = number_argument {
+		let parsing_result = number_string.parse();
+		
+		if let Ok(number) = parsing_result {
+			Some(number)
+		} else {
+			println!("Can not parse \"{}\" as number. Argument for {} is ignored", number_string, argument_name);
+			None
+		}
+	} else {
+		None
 	}
 }
