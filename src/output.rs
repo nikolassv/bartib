@@ -1,25 +1,40 @@
+use std::collections::BTreeMap;
+use chrono::NaiveDate;
+
 use crate::task;
 use crate::format_util;
 use crate::table;
 use crate::conf;
 
+// displays a table with tasks
 pub fn list_tasks(tasks: &[&task::Task]) {
 	if tasks.is_empty() {
 		println!("No task to display");
-	} else {
-		let mut task_table = table::Table::new(vec!["Started", "Stopped", "Description", "Project", "Duration"]);
+		return
+	}
 
-		tasks.iter()
-			.map(|task| table::Row::new(vec![
-				task.start.format(conf::FORMAT_DATETIME).to_string(),
-				task.end.map_or_else(|| "-".to_string(), |end| end.format(conf::FORMAT_DATETIME).to_string()),
-				task.description.clone(),
-				task.project.to_string(),
-				format_util::format_duration(&task.get_duration())
-			]))
-			.for_each(|row| task_table.add_row(row));
+	let mut task_table = table::Table::new(vec!["Started", "Stopped", "Description", "Project", "Duration"]);
 
-		println!("\n{}", task_table);
+	tasks.iter()
+		.map(get_task_table_row_without_dates)
+		.for_each(|row| task_table.add_row(row));
+
+	println!("\n{}", task_table);
+}
+
+// list tasks grouped by the dates of their start time
+pub fn list_tasks_grouped_by_date(tasks: &[&task::Task]) {
+	if tasks.is_empty() {
+		println!("No task to display");
+		return
+	}
+
+	let tasks_by_date = group_tasks_by_date(tasks);
+
+	for (date, task_list) in tasks_by_date {
+		println!("{}", date);
+		list_tasks(&task_list);
+		println!();
 	}
 }
 
@@ -41,4 +56,42 @@ pub fn list_running_tasks(running_tasks: &[&task::Task]) {
 			
 		println!("\n{}", task_table);
 	}
+}
+
+// create a row for a task without showing dates
+//
+// the date of the end is shown when it is not the same date as the start
+fn get_task_table_row_without_dates(task: &&task::Task) -> table::Row {
+	let end = task.end.map_or_else(
+		|| "-".to_string(), 
+		|end|  if task.start.date() == end.date() {
+			end.format(conf::FORMAT_TIME).to_string()
+		} else {
+			end.format(conf::FORMAT_DATETIME).to_string()
+
+		}
+	);
+
+	table::Row::new(vec![
+		task.start.format(conf::FORMAT_TIME).to_string(),
+		end,
+		task.description.clone(),
+		task.project.to_string(),
+		format_util::format_duration(&task.get_duration())
+	])
+}
+
+// groups tasks in vectors of tasks that started at the same day
+fn group_tasks_by_date<'a>(tasks: &[&'a task::Task]) -> BTreeMap<NaiveDate, Vec<&'a task::Task>> {
+	let mut tasks_by_date = BTreeMap::new();
+
+	for &task in tasks.iter() {
+		tasks_by_date.entry(task.start.date()).or_insert(Vec::new()).push(task);
+	}
+
+	for task_list in tasks_by_date.values_mut() {
+		task_list.sort_by_key(|task| task.start);
+	}
+
+	tasks_by_date
 }

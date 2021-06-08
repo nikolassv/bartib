@@ -46,7 +46,7 @@ pub fn list(file_name: &str, number_of_tasks: Option<usize>) {
 	all_tasks.sort_by_key(|task| task.start);
 
 	let first_element = get_index_of_first_element(all_tasks.len(), number_of_tasks);
-	output::list_tasks(&all_tasks[first_element .. all_tasks.len()]);
+	output::list_tasks_grouped_by_date(&all_tasks[first_element .. all_tasks.len()]);
 }
 
 fn get_index_of_first_element(length: usize, sub: Option<usize>) -> usize {
