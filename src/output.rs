@@ -7,7 +7,7 @@ use crate::table;
 use crate::conf;
 
 // displays a table with tasks
-pub fn list_tasks(tasks: &[&task::Task]) {
+pub fn list_tasks(tasks: &[&task::Task], with_start_dates: bool) {
 	if tasks.is_empty() {
 		println!("No task to display");
 		return
@@ -16,7 +16,7 @@ pub fn list_tasks(tasks: &[&task::Task]) {
 	let mut task_table = table::Table::new(vec!["Started", "Stopped", "Description", "Project", "Duration"]);
 
 	tasks.iter()
-		.map(get_task_table_row_without_dates)
+		.map(|t| get_task_table_row(&t, with_start_dates))
 		.for_each(|row| task_table.add_row(row));
 
 	println!("\n{}", task_table);
@@ -33,7 +33,7 @@ pub fn list_tasks_grouped_by_date(tasks: &[&task::Task]) {
 
 	for (date, task_list) in tasks_by_date {
 		println!("{}", date);
-		list_tasks(&task_list);
+		list_tasks(&task_list, false);
 		println!();
 	}
 }
@@ -58,10 +58,10 @@ pub fn list_running_tasks(running_tasks: &[&task::Task]) {
 	}
 }
 
-// create a row for a task without showing dates
+// create a row for a task
 //
 // the date of the end is shown when it is not the same date as the start
-fn get_task_table_row_without_dates(task: &&task::Task) -> table::Row {
+fn get_task_table_row(task: &&task::Task, with_start_dates : bool) -> table::Row {
 	let end = task.end.map_or_else(
 		|| "-".to_string(), 
 		|end|  if task.start.date() == end.date() {
@@ -72,8 +72,10 @@ fn get_task_table_row_without_dates(task: &&task::Task) -> table::Row {
 		}
 	);
 
+	let start_format = if with_start_dates {conf::FORMAT_DATETIME} else {conf::FORMAT_TIME};
+
 	table::Row::new(vec![
-		task.start.format(conf::FORMAT_TIME).to_string(),
+		task.start.format(start_format).to_string(),
 		end,
 		task.description.clone(),
 		task.project.to_string(),

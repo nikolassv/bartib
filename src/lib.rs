@@ -1,10 +1,20 @@
-mod conf;
+use chrono::NaiveDate;
+use chrono::naive;
+
+pub mod conf;
 mod project;
 mod task;
 mod table;
 mod format_util;
 mod output;
 pub mod bartib_file;
+
+pub struct TaskFilter {
+	pub number_of_tasks: Option<usize>,
+	pub from_date: Option<NaiveDate>,
+	pub to_date: Option<NaiveDate>,
+	pub date: Option<NaiveDate>
+}
 
 // starts a new task
 pub fn start(file_name: &str, project_name: &str, task_description: &str) {
@@ -39,14 +49,20 @@ pub fn list_running(file_name: &str) {
 // lists tracked tasks
 //
 // the tasks will be ordered chronologically. 
-pub fn list(file_name: &str, number_of_tasks: Option<usize>) {
+pub fn list(file_name: &str, filter: TaskFilter, do_group_tasks: bool) {
 	let file_content = bartib_file::get_file_content(file_name);
-	let mut all_tasks : Vec<&task::Task> = get_tasks(&file_content).collect();
+	let tasks = get_tasks(&file_content);
+	let mut filtered_tasks : Vec<&task::Task> = filter_tasks(tasks, &filter).collect();
 	
-	all_tasks.sort_by_key(|task| task.start);
+	filtered_tasks.sort_by_key(|task| task.start);
 
-	let first_element = get_index_of_first_element(all_tasks.len(), number_of_tasks);
-	output::list_tasks_grouped_by_date(&all_tasks[first_element .. all_tasks.len()]);
+	let first_element = get_index_of_first_element(filtered_tasks.len(), filter.number_of_tasks);
+
+	if do_group_tasks {
+		output::list_tasks_grouped_by_date(&filtered_tasks[first_element .. filtered_tasks.len()]);
+	} else {
+		output::list_tasks(&filtered_tasks[first_element .. filtered_tasks.len()], true);
+	}
 }
 
 fn get_index_of_first_element(length: usize, sub: Option<usize>) -> usize {
@@ -78,4 +94,19 @@ fn get_tasks(file_content: &[bartib_file::Line]) -> impl Iterator<Item = &task::
 	file_content.iter()
 		.map(|line| line.task.as_ref())
 		.filter_map(|task_result| task_result.ok())
+}
+
+fn filter_tasks<'a>(tasks : impl Iterator<Item = &'a task::Task>, filter : &TaskFilter) -> impl Iterator<Item = &'a task::Task> {
+	let from_date : NaiveDate;
+	let to_date : NaiveDate;
+
+	if let Some(date) = filter.date {
+		from_date = date;
+		to_date = date;
+	} else {
+		from_date = filter.from_date.unwrap_or(naive::MIN_DATE);
+		to_date = filter.to_date.unwrap_or(naive::MAX_DATE);
+	}
+
+	tasks.filter(move |task| task.start.date() >= from_date && task.start.date() <= to_date)
 }
