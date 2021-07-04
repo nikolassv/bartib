@@ -61,7 +61,8 @@ pub fn list(file_name: &str, filter: TaskFilter, do_group_tasks: bool) {
 	if do_group_tasks {
 		output::list_tasks_grouped_by_date(&filtered_tasks[first_element .. filtered_tasks.len()]);
 	} else {
-		output::list_tasks(&filtered_tasks[first_element .. filtered_tasks.len()], true);
+		let with_start_dates = !filter.date.is_some();
+		output::list_tasks(&filtered_tasks[first_element .. filtered_tasks.len()], with_start_dates);
 	}
 }
 

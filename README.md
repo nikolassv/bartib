@@ -18,7 +18,7 @@ Bartib safes a journal of all tracked tasks in a plaintext file. The file can ei
 
 ### Help
 
-Print help informations:
+Print help information:
 
 ```
 bartib -h
@@ -46,4 +46,30 @@ bartib stop
 
 ```
 bartib current
+```
+
+### List tasks
+
+All tasks:
+
+```
+bartib list
+```
+
+Do not group tasks by date:
+
+```
+bartib list --no_grouping
+```
+
+List tasks in a given time range:
+
+```
+bartib list --from 2021-03-01 --to 2021-11-01
+```
+
+List tasks on a given day:
+
+```
+bartib list --date 2021-05-17
 ```

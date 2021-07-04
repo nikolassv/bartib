@@ -111,7 +111,7 @@ fn main() {
 				date : get_date_argument_or_ignore(sub_m.value_of("date"), "-d/--date")
 			};
 
-			let do_group_tasks = !sub_m.is_present("no_grouping");
+			let do_group_tasks = !sub_m.is_present("no_grouping") && !filter.date.is_some();
 			bartib::list(file_name, filter, do_group_tasks);
 		},
 		_ => println!("Unknown command")
