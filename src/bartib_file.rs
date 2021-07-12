@@ -3,7 +3,7 @@ use std::fs::{File,OpenOptions};
 use std::str::FromStr;
 use std::io::{Write,BufReader,BufRead};
 
-use crate::task;
+use crate::activity;
 
 pub enum LineStatus {
 	Unchanged, Changed
@@ -14,9 +14,9 @@ pub struct Line {
 	// the plaintext of the line as it has been read from the file
 	// we save this to be able write untouched lines back to file without chaning them
 	plaintext: String,
-	// the result of parsing this line to a task
-	pub task: Result<task::Task, task::TaskError>,
-	// the status of this task
+	// the result of parsing this line to a activity
+	pub activity: Result<activity::Activity, activity::ActivityError>,
+	// the status of this activity
 	status: LineStatus
 }
 
@@ -25,16 +25,16 @@ impl Line {
 	pub fn new(plaintext: &str) -> Line {
 		Line {
 			plaintext: plaintext.trim().to_string(),
-			task: task::Task::from_str(plaintext),
+			activity: activity::Activity::from_str(plaintext),
 			status: LineStatus::Unchanged
 		}
 	}
 	
-	// creates a new line from an existing task
-	pub fn for_task(task: task::Task) -> Line {
+	// creates a new line from an existing activity
+	pub fn for_activity(activity: activity::Activity) -> Line {
 		Line {
 			plaintext: "".to_string(),
-			task: Ok(task),
+			activity: Ok(activity),
 			status: LineStatus::Changed
 		}
 	}
@@ -63,7 +63,7 @@ pub fn write_to_file(file_name: &str, file_content: &[Line]) -> Result<(), io::E
 	for line in file_content {
 		match line.status {
 			LineStatus::Unchanged => writeln!(&file_handler, "{}", line.plaintext)?,
-			LineStatus::Changed => write!(&file_handler, "{}", line.task.as_ref().unwrap())?
+			LineStatus::Changed => write!(&file_handler, "{}", line.activity.as_ref().unwrap())?
 		}
 	}
 	

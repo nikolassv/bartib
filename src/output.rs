@@ -1,70 +1,70 @@
 use std::collections::BTreeMap;
 use chrono::NaiveDate;
 
-use crate::task;
+use crate::activity;
 use crate::format_util;
 use crate::table;
 use crate::conf;
 
-// displays a table with tasks
-pub fn list_tasks(tasks: &[&task::Task], with_start_dates: bool) {
-	if tasks.is_empty() {
-		println!("No task to display");
+// displays a table with activities
+pub fn list_activities(activities: &[&activity::Activity], with_start_dates: bool) {
+	if activities.is_empty() {
+		println!("No activity to display");
 		return
 	}
 
-	let mut task_table = table::Table::new(vec!["   ", "Started", "Stopped", "Description", "Project", "Duration"]);
+	let mut activity_table = table::Table::new(vec!["   ", "Started", "Stopped", "Description", "Project", "Duration"]);
 
-	tasks.iter()
-		.map(|t| get_task_table_row(&t, with_start_dates))
-		.for_each(|row| task_table.add_row(row));
+	activities.iter()
+		.map(|t| get_activity_table_row(&t, with_start_dates))
+		.for_each(|row| activity_table.add_row(row));
 
-	println!("\n{}", task_table);
+	println!("\n{}", activity_table);
 }
 
-// list tasks grouped by the dates of their start time
-pub fn list_tasks_grouped_by_date(tasks: &[&task::Task]) {
-	if tasks.is_empty() {
-		println!("No task to display");
+// list activities grouped by the dates of their start time
+pub fn list_activities_grouped_by_date(activities: &[&activity::Activity]) {
+	if activities.is_empty() {
+		println!("No activity to display");
 		return
 	}
 
-	let tasks_by_date = group_tasks_by_date(tasks);
+	let activities_by_date = group_activities_by_date(activities);
 
-	for (date, task_list) in tasks_by_date {
+	for (date, activity_list) in activities_by_date {
 		println!("{}", date);
-		list_tasks(&task_list, false);
+		list_activities(&activity_list, false);
 		println!();
 	}
 }
 
-// displays a table with running tasks (no end time)
-pub fn list_running_tasks(running_tasks: &[&task::Task]) {
-	if running_tasks.is_empty() {
-		println!("No Task is currently running");
+// displays a table with running activities (no end time)
+pub fn list_running_activities(running_activities: &[&activity::Activity]) {
+	if running_activities.is_empty() {
+		println!("No Activity is currently running");
 	} else {		
-		let mut task_table = table::Table::new(vec!["Started At", "Description", "Project", "Duration"]);
+		let mut activity_table = table::Table::new(vec!["Started At", "Description", "Project", "Duration"]);
 		
-		running_tasks.iter()
-			.map(|task| table::Row::new(vec![
-				task.start.format(conf::FORMAT_DATETIME).to_string(),
-				task.description.clone(),
-				task.project.to_string(),
-				format_util::format_duration(&task.get_duration())
+		running_activities.iter()
+			.map(|activity| table::Row::new(vec![
+				activity.start.format(conf::FORMAT_DATETIME).to_string(),
+				activity.description.clone(),
+				activity.project.to_string(),
+				format_util::format_duration(&activity.get_duration())
 			]))
-			.for_each(|row| task_table.add_row(row));
+			.for_each(|row| activity_table.add_row(row));
 			
-		println!("\n{}", task_table);
+		println!("\n{}", activity_table);
 	}
 }
 
-// create a row for a task
+// create a row for a activity
 //
 // the date of the end is shown when it is not the same date as the start
-fn get_task_table_row(task: &&task::Task, with_start_dates : bool) -> table::Row {
-	let display_end = task.end.map_or_else(
+fn get_activity_table_row(activity: &&activity::Activity, with_start_dates : bool) -> table::Row {
+	let display_end = activity.end.map_or_else(
 		|| "-".to_string(), 
-		|end|  if task.start.date() == end.date() {
+		|end|  if activity.start.date() == end.date() {
 			end.format(conf::FORMAT_TIME).to_string()
 		} else {
 			end.format(conf::FORMAT_DATETIME).to_string()
@@ -75,26 +75,26 @@ fn get_task_table_row(task: &&task::Task, with_start_dates : bool) -> table::Row
 	let start_format = if with_start_dates {conf::FORMAT_DATETIME} else {conf::FORMAT_TIME};
 
 	table::Row::new(vec![
-		if !task.is_stopped() {" * ".to_string()} else {" ".to_string()},
-		task.start.format(start_format).to_string(),
+		if !activity.is_stopped() {" * ".to_string()} else {" ".to_string()},
+		activity.start.format(start_format).to_string(),
 		display_end,
-		task.description.clone(),
-		task.project.to_string(),
-		format_util::format_duration(&task.get_duration())
+		activity.description.clone(),
+		activity.project.to_string(),
+		format_util::format_duration(&activity.get_duration())
 	])
 }
 
-// groups tasks in vectors of tasks that started at the same day
-fn group_tasks_by_date<'a>(tasks: &[&'a task::Task]) -> BTreeMap<NaiveDate, Vec<&'a task::Task>> {
-	let mut tasks_by_date = BTreeMap::new();
+// groups activities in vectors of activities that started at the same day
+fn group_activities_by_date<'a>(activities: &[&'a activity::Activity]) -> BTreeMap<NaiveDate, Vec<&'a activity::Activity>> {
+	let mut activities_by_date = BTreeMap::new();
 
-	for &task in tasks.iter() {
-		tasks_by_date.entry(task.start.date()).or_insert(Vec::new()).push(task);
+	for &activity in activities.iter() {
+		activities_by_date.entry(activity.start.date()).or_insert(Vec::new()).push(activity);
 	}
 
-	for task_list in tasks_by_date.values_mut() {
-		task_list.sort_by_key(|task| task.start);
+	for activity_list in activities_by_date.values_mut() {
+		activity_list.sort_by_key(|activity| activity.start);
 	}
 
-	tasks_by_date
+	activities_by_date
 }
