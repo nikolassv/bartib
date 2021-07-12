@@ -13,7 +13,7 @@ pub fn list_tasks(tasks: &[&task::Task], with_start_dates: bool) {
 		return
 	}
 
-	let mut task_table = table::Table::new(vec!["Started", "Stopped", "Description", "Project", "Duration"]);
+	let mut task_table = table::Table::new(vec!["   ", "Started", "Stopped", "Description", "Project", "Duration"]);
 
 	tasks.iter()
 		.map(|t| get_task_table_row(&t, with_start_dates))
@@ -62,7 +62,7 @@ pub fn list_running_tasks(running_tasks: &[&task::Task]) {
 //
 // the date of the end is shown when it is not the same date as the start
 fn get_task_table_row(task: &&task::Task, with_start_dates : bool) -> table::Row {
-	let end = task.end.map_or_else(
+	let display_end = task.end.map_or_else(
 		|| "-".to_string(), 
 		|end|  if task.start.date() == end.date() {
 			end.format(conf::FORMAT_TIME).to_string()
@@ -75,8 +75,9 @@ fn get_task_table_row(task: &&task::Task, with_start_dates : bool) -> table::Row
 	let start_format = if with_start_dates {conf::FORMAT_DATETIME} else {conf::FORMAT_TIME};
 
 	table::Row::new(vec![
+		if !task.is_stopped() {" * ".to_string()} else {" ".to_string()},
 		task.start.format(start_format).to_string(),
-		end,
+		display_end,
 		task.description.clone(),
 		task.project.to_string(),
 		format_util::format_duration(&task.get_duration())
