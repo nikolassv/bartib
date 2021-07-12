@@ -27,8 +27,10 @@ pub fn start(file_name: &str, project_name: &str, activity_description: &str) {
 	
 	let project = project::Project(project_name.to_string());
 	let activity = activity::Activity::start(project, activity_description.to_string());	
-	file_content.push(bartib_file::Line::for_activity(activity));
 	
+	println!("Started activity: \"{}\" ({}) at {}", activity_description, project_name, activity.start.format(conf::FORMAT_DATETIME));
+	
+	file_content.push(bartib_file::Line::for_activity(activity));
 	bartib_file::write_to_file(file_name, &file_content).expect("Could not write to file");
 }
 
