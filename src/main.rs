@@ -1,7 +1,8 @@
 use chrono::NaiveDate;
 use clap::{App, AppSettings, Arg, SubCommand, ArgMatches};
+use anyhow::{bail, Context, Result};
 
-fn main() {
+fn main() -> Result<()>{
     let matches = App::new("bartib")
         .version("0.1")
         .author("Nikolas Schmidt-Voigt <nikolas.schmidt-voigt@posteo.de>")
@@ -86,20 +87,18 @@ fn main() {
         )
         .get_matches();
 
-    if let Some(file_name) = matches.value_of("file") {
-        run_subcommand(&matches, file_name);
-    } else {
-        println!("Please specify a file with your activity log either as -f option or as BARTIB_FILE environment variable");
-    }
+    let file_name = matches.value_of("file").context("Please specify a file with your activity log either as -f option or as BARTIB_FILE environment variable")?;
+
+    run_subcommand(&matches, file_name)
 }
 
-fn run_subcommand(matches: &ArgMatches, file_name: &str) {
+fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
     match matches.subcommand() {
         ("start", Some(sub_m)) => {
             let project_name = sub_m.value_of("project").unwrap();
             let activity_description = sub_m.value_of("description").unwrap();
 
-            bartib::start(file_name, project_name, activity_description);
+            bartib::start(file_name, project_name, activity_description)
         }
         ("stop", Some(_)) => bartib::stop(file_name),
         ("current", Some(_)) => bartib::list_running(file_name),
@@ -115,9 +114,9 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) {
             };
 
             let do_group_activities = !sub_m.is_present("no_grouping") && !filter.date.is_some();
-            bartib::list(file_name, filter, do_group_activities);
+            bartib::list(file_name, filter, do_group_activities)
         }
-        _ => println!("Unknown command"),
+        _ => bail!("Unknown command"),
     }
 }
 

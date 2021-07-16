@@ -1,5 +1,8 @@
+use anyhow::{Context, Result};
 use chrono::naive;
 use chrono::NaiveDate;
+
+use crate::bartib_file::Line;
 
 mod activity;
 pub mod bartib_file;
@@ -17,13 +20,17 @@ pub struct ActivityFilter {
 }
 
 // starts a new activity
-pub fn start(file_name: &str, project_name: &str, activity_description: &str) {
-    let mut file_content = bartib_file::get_file_content(file_name);
+pub fn start(file_name: &str, project_name: &str, activity_description: &str) -> Result<()>{
+    let mut file_content: Vec<Line> = Vec::new();
 
-    // if we start a new activities programaticly, we stop all other activities first.
-    // However, we must not assume that there is always only one activity
-    // running as the user may have started activities manually
-    stop_all_running_activities(&mut file_content);
+    if let Ok(mut previous_file_content) = bartib_file::get_file_content(file_name) {
+        // if we start a new activities programaticly, we stop all other activities first.
+        // However, we must not assume that there is always only one activity
+        // running as the user may have started activities manually
+        stop_all_running_activities(&mut previous_file_content);
+
+        file_content.append(&mut previous_file_content);
+    }
 
     let project = project::Project(project_name.to_string());
     let activity = activity::Activity::start(project, activity_description.to_string());
@@ -36,28 +43,30 @@ pub fn start(file_name: &str, project_name: &str, activity_description: &str) {
     );
 
     file_content.push(bartib_file::Line::for_activity(activity));
-    bartib_file::write_to_file(file_name, &file_content).expect("Could not write to file");
+    bartib_file::write_to_file(file_name, &file_content).context(format!("Could not write to file: {}", file_name))
 }
 
 // stops all currently running activities
-pub fn stop(file_name: &str) {
-    let mut file_content = bartib_file::get_file_content(file_name);
+pub fn stop(file_name: &str) -> Result<()>{
+    let mut file_content = bartib_file::get_file_content(file_name)?;
     stop_all_running_activities(&mut file_content);
-    bartib_file::write_to_file(file_name, &file_content).expect("Could not write to file");
+    bartib_file::write_to_file(file_name, &file_content).context(format!("Could not write to file: {}", file_name))
 }
 
 // lists all currently runninng activities.
-pub fn list_running(file_name: &str) {
-    let file_content = bartib_file::get_file_content(file_name);
+pub fn list_running(file_name: &str) -> Result<()>{
+    let file_content = bartib_file::get_file_content(file_name)?;
     let running_activities = get_running_activities(&file_content);
     output::list_running_activities(&running_activities);
+
+    Ok(())
 }
 
 // lists tracked activities
 //
 // the activities will be ordered chronologically.
-pub fn list(file_name: &str, filter: ActivityFilter, do_group_activities: bool) {
-    let file_content = bartib_file::get_file_content(file_name);
+pub fn list(file_name: &str, filter: ActivityFilter, do_group_activities: bool) -> Result<()> {
+    let file_content = bartib_file::get_file_content(file_name)?;
     let activities = get_activities(&file_content);
     let mut filtered_activities: Vec<&activity::Activity> =
         filter_activities(activities, &filter).collect();
@@ -78,6 +87,8 @@ pub fn list(file_name: &str, filter: ActivityFilter, do_group_activities: bool) 
             with_start_dates,
         );
     }
+
+    Ok(())
 }
 
 fn get_index_of_first_element(length: usize, sub: Option<usize>) -> usize {

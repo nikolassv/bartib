@@ -2,6 +2,7 @@ use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::{BufRead, BufReader, Write};
 use std::str::FromStr;
+use anyhow::{Context, Result};
 
 use crate::activity;
 
@@ -47,15 +48,17 @@ impl Line {
 }
 
 // reads the content of a file to a vector of lines
-pub fn get_file_content(file_name: &str) -> Vec<Line> {
-    let file_handler = File::open(file_name).unwrap();
+pub fn get_file_content(file_name: &str) -> Result<Vec<Line>> {
+    let file_handler = File::open(file_name).context(format!("Could not read from file: {}", file_name))?;
     let reader = BufReader::new(file_handler);
 
-    reader
+    let lines = reader
         .lines()
         .filter_map(|line_result| line_result.ok())
         .map(|line| Line::new(&line))
-        .collect()
+        .collect();
+
+    Ok(lines)
 }
 
 // writes a vector of lines into a file

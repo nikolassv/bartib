@@ -32,7 +32,7 @@ Start a new activity with a short description and an associated project:
 bartib start -p "The name of the associated project" -d "A description of the activity"
 ```
 
-This will also stop all currently running activities.
+All currently tracked activites will be stopped. If the specified file does not exist yet it will be created.
 
 ### Stop a running activity
 
