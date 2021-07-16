@@ -9,7 +9,6 @@ pub mod bartib_file;
 pub mod conf;
 mod format_util;
 mod output;
-mod project;
 mod table;
 
 pub struct ActivityFilter {
@@ -32,8 +31,7 @@ pub fn start(file_name: &str, project_name: &str, activity_description: &str) ->
         file_content.append(&mut previous_file_content);
     }
 
-    let project = project::Project(project_name.to_string());
-    let activity = activity::Activity::start(project, activity_description.to_string());
+    let activity = activity::Activity::start(project_name.to_string(), activity_description.to_string());
 
     println!(
         "Started activity: \"{}\" ({}) at {}",

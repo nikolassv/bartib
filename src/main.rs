@@ -1,8 +1,8 @@
-use chrono::NaiveDate;
-use clap::{App, AppSettings, Arg, SubCommand, ArgMatches};
 use anyhow::{bail, Context, Result};
+use chrono::NaiveDate;
+use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
-fn main() -> Result<()>{
+fn main() -> Result<()> {
     let matches = App::new("bartib")
         .version("0.1")
         .author("Nikolas Schmidt-Voigt <nikolas.schmidt-voigt@posteo.de>")

@@ -4,14 +4,13 @@ use std::str::{Chars, FromStr};
 use thiserror::Error;
 
 use crate::conf;
-use crate::project;
 
 #[derive(Debug)]
 pub struct Activity {
     pub start: NaiveDateTime,
     pub end: Option<NaiveDateTime>,
 
-    pub project: project::Project,
+    pub project: String,
     pub description: String,
 }
 
@@ -24,7 +23,7 @@ pub enum ActivityError {
 }
 
 impl Activity {
-    pub fn start(project: project::Project, description: String) -> Activity {
+    pub fn start(project: String, description: String) -> Activity {
         Activity {
             start: Local::now().naive_local(),
             end: None,
@@ -75,7 +74,7 @@ impl fmt::Display for Activity {
     }
 }
 
-// escapes the pipe character, so we can use it to seperate the distinct parts of a activity
+// escapes the pipe character, so we can use it to separate the distinct parts of a activity
 fn escape_special_chars(s: &str) -> String {
     s.replace("\\", "\\\\").replace("|", "\\|")
 }
@@ -116,7 +115,7 @@ impl FromStr for Activity {
         let activity = Activity {
             start: starttime,
             end: endtime,
-            project: project::Project(project.to_string()),
+            project: project.to_string(),
             description: description.to_string(),
         };
 
@@ -179,18 +178,18 @@ mod tests {
     #[test]
     fn start() {
         let t = Activity::start(
-            project::Project("test project".to_string()),
+            "test project".to_string(),
             "test description".to_string(),
         );
         assert_eq!(t.description, "test description".to_string());
-        assert_eq!(t.project.0, "test project".to_string());
+        assert_eq!(t.project, "test project".to_string());
         assert_eq!(t.end, None);
     }
 
     #[test]
     fn stop() {
         let mut t = Activity::start(
-            project::Project("test project".to_string()),
+            "test project".to_string(),
             "test description".to_string(),
         );
         t.stop();
@@ -200,7 +199,7 @@ mod tests {
     #[test]
     fn display() {
         let mut t = Activity::start(
-            project::Project("test project| 1".to_string()),
+            "test project| 1".to_string(),
             "test\\description".to_string(),
         );
         t.start = NaiveDateTime::parse_from_str("2021-02-16 16:14", conf::FORMAT_DATETIME).unwrap();
@@ -228,7 +227,7 @@ mod tests {
         assert_eq!(t.start.time().minute(), 14);
 
         assert_eq!(t.description, "test description".to_string());
-        assert_eq!(t.project.0, "test project".to_string());
+        assert_eq!(t.project, "test project".to_string());
         assert_eq!(t.end, None);
     }
 
@@ -244,7 +243,7 @@ mod tests {
         assert_eq!(t.start.time().minute(), 14);
 
         assert_eq!(t.description, "".to_string());
-        assert_eq!(t.project.0, "test project".to_string());
+        assert_eq!(t.project, "test project".to_string());
         assert_eq!(t.end, None);
     }
 
@@ -274,14 +273,14 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(t.project.0, "test project| 1");
+        assert_eq!(t.project, "test project| 1");
         assert_eq!(t.description, "test\\description");
     }
 
     #[test]
     fn string_roundtrip() {
         let mut t = Activity::start(
-            project::Project("ex\\ample\\\\pro|ject".to_string()),
+            "ex\\ample\\\\pro|ject".to_string(),
             "e\\\\xam|||ple tas\t\t\nk".to_string(),
         );
         t.stop();
@@ -301,7 +300,7 @@ mod tests {
             t2.end.unwrap()
         );
 
-        assert_eq!(t.project.0, t2.project.0);
+        assert_eq!(t.project, t2.project);
         assert_eq!(t.description, t2.description);
     }
 
