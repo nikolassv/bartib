@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use clap::{App, AppSettings, Arg, SubCommand};
+use clap::{App, AppSettings, Arg, SubCommand, ArgMatches};
 
 fn main() {
     let matches = App::new("bartib")
@@ -14,7 +14,6 @@ fn main() {
                 .value_name("FILE")
                 .help("the file in wich bartib tracks all the activities")
                 .env("BARTIB_FILE")
-                .required(true)
                 .takes_value(true),
         )
         .subcommand(
@@ -87,8 +86,14 @@ fn main() {
         )
         .get_matches();
 
-    let file_name = matches.value_of("file").unwrap();
+    if let Some(file_name) = matches.value_of("file") {
+        run_subcommand(&matches, file_name);
+    } else {
+        println!("Please specify a file with your activity log either as -f option or as BARTIB_FILE environment variable");
+    }
+}
 
+fn run_subcommand(matches: &ArgMatches, file_name: &str) {
     match matches.subcommand() {
         ("start", Some(sub_m)) => {
             let project_name = sub_m.value_of("project").unwrap();
