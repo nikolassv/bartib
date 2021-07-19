@@ -89,6 +89,24 @@ pub fn list(file_name: &str, filter: ActivityFilter, do_group_activities: bool) 
     Ok(())
 }
 
+// lists all projects
+pub fn list_projects(file_name: &str) -> Result<()> {
+    let file_content = bartib_file::get_file_content(file_name)?;
+
+    let mut all_projects : Vec<&String> = get_activities(&file_content)
+        .map(|activity| &activity.project)
+        .collect();
+
+    all_projects.sort_unstable();
+    all_projects.dedup();
+
+    for project in all_projects {
+        println!("{}", project);
+    }
+
+    Ok(())
+}
+
 fn get_index_of_first_element(length: usize, sub: Option<usize>) -> usize {
     if let Some(s) = sub {
         length.saturating_sub(s)

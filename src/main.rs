@@ -85,6 +85,9 @@ fn main() -> Result<()> {
                         .help("do not group activities by date in list"),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("projects").about("list all projects")
+        )
         .get_matches();
 
     let file_name = matches.value_of("file").context("Please specify a file with your activity log either as -f option or as BARTIB_FILE environment variable")?;
@@ -115,7 +118,8 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
 
             let do_group_activities = !sub_m.is_present("no_grouping") && !filter.date.is_some();
             bartib::list(file_name, filter, do_group_activities)
-        }
+        },
+        ("projects", Some(_)) => bartib::list_projects(file_name),
         _ => bail!("Unknown command"),
     }
 }
