@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Result};
-use chrono::NaiveDate;
+use chrono::{NaiveDate, Local};
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 fn main() -> Result<()> {
@@ -80,6 +80,14 @@ fn main() -> Result<()> {
                         .takes_value(true),
                 )
                 .arg(
+                    Arg::with_name("today")
+                        .long("today")
+                        .help("show activities of the current day")
+                        .required(false)
+                        .conflicts_with_all(&["from_date", "to_date", "date"])
+                        .takes_value(false)
+                )
+                .arg(
                     Arg::with_name("no_grouping")
                         .long("no_grouping")
                         .help("do not group activities by date in list"),
@@ -106,7 +114,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("stop", Some(_)) => bartib::stop(file_name),
         ("current", Some(_)) => bartib::list_running(file_name),
         ("list", Some(sub_m)) => {
-            let filter = bartib::ActivityFilter {
+            let mut filter = bartib::ActivityFilter {
                 number_of_activities: get_number_argument_or_ignore(
                     sub_m.value_of("number"),
                     "-n/--number",
@@ -115,6 +123,10 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
                 to_date: get_date_argument_or_ignore(sub_m.value_of("to_date"), "--to"),
                 date: get_date_argument_or_ignore(sub_m.value_of("date"), "-d/--date"),
             };
+
+            if sub_m.is_present("today") {
+                filter.date = Some(Local::now().naive_local().date());
+            }
 
             let do_group_activities = !sub_m.is_present("no_grouping") && !filter.date.is_some();
             bartib::list(file_name, filter, do_group_activities)
