@@ -1,7 +1,8 @@
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result, Error};
 use chrono::{naive, NaiveDate};
 
 use crate::bartib_file::Line;
+use crate::activity::Activity;
 
 mod activity;
 pub mod bartib_file;
@@ -32,10 +33,14 @@ pub fn start(file_name: &str, project_name: &str, activity_description: &str) ->
 
     let activity = activity::Activity::start(project_name.to_string(), activity_description.to_string());
 
+    save_new_activity(file_name, &mut file_content, activity)
+}
+
+fn save_new_activity(file_name: &str, file_content: &mut Vec<Line>, activity: Activity) -> Result<(), Error> {
     println!(
         "Started activity: \"{}\" ({}) at {}",
-        activity_description,
-        project_name,
+        activity.description,
+        activity.project,
         activity.start.format(conf::FORMAT_DATETIME)
     );
 
@@ -110,9 +115,7 @@ pub fn list_projects(file_name: &str) -> Result<()> {
 pub fn display_last_activity(file_name: &str) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
 
-    let last_activity = get_activities(&file_content)
-        .filter(|activity| activity.is_stopped())
-        .max_by_key(|activity| activity.end.unwrap_or(naive::MIN_DATE.and_hms(0, 0, 0)));
+    let last_activity = get_last_activity(&file_content);
 
     if let Some(activity) = last_activity {
         output::display_single_activity(&activity);
@@ -121,6 +124,35 @@ pub fn display_last_activity(file_name: &str) -> Result<()> {
     }
 
     Ok(())
+}
+
+// continue last activity
+pub fn continue_last_activity(file_name: &str, project_name: Option<&str>, activity_description: Option<&str>) -> Result<()> {
+    let mut file_content = bartib_file::get_file_content(file_name)?;
+
+    let optional_last_activity = get_last_activity_by_start(&file_content)
+        .or(get_last_activity(&file_content));
+
+    if let Some(last_activity) = optional_last_activity {
+        let new_activity = activity::Activity::start(
+            project_name.unwrap_or(&last_activity.project).to_string(),
+            activity_description.unwrap_or(&last_activity.description).to_string()
+        );
+        stop_all_running_activities(&mut file_content);
+        save_new_activity(file_name, &mut file_content, new_activity)
+    } else {
+        bail!("No activity has been started before.")
+    }
+}
+
+fn get_last_activity(file_content: &Vec<Line>) -> Option<&Activity> {
+    get_activities(&file_content)
+        .filter(|activity| activity.is_stopped())
+        .max_by_key(|activity| activity.end.unwrap_or(naive::MIN_DATE.and_hms(0, 0, 0)))
+}
+
+fn get_last_activity_by_start(file_content: &Vec<Line>) -> Option<&Activity> {
+    get_activities(&file_content).max_by_key(|activity| activity.start)
 }
 
 fn get_index_of_first_element(length: usize, sub: Option<usize>) -> usize {

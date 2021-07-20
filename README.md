@@ -42,6 +42,14 @@ Stops the currently running activity:
 bartib stop
 ```
 
+### Continues the last activity
+
+```
+bartib continue [-p "Another project"] [-d "Another description"]
+```
+
+This continues the last activity. If an activity is currently tracked, bartib stops and restarts this activity. The associated project and description may be overwritten by setting a `-p / --project` or `-d / --description` parameter.
+
 ### List all currently running activities
 
 ```

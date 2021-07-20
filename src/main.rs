@@ -37,6 +37,24 @@ fn main() -> Result<()> {
                         .takes_value(true),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("continue")
+                .about("continues the last activity")
+                .arg(
+                    Arg::with_name("project")
+                        .short("p")
+                        .value_name("PROJECT")
+                        .help("the project to which the new activity belong")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("description")
+                        .short("d")
+                        .value_name("DESCRIPTION")
+                        .help("a description of the new activity")
+                        .takes_value(true),
+                ),
+        )
         .subcommand(SubCommand::with_name("stop").about("stops all currently running activities"))
         .subcommand(
             SubCommand::with_name("current").about("lists all currently running activities"),
@@ -121,7 +139,13 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let activity_description = sub_m.value_of("description").unwrap();
 
             bartib::start(file_name, project_name, activity_description)
-        }
+        },
+        ("continue", Some(sub_m)) => {
+            let project_name = sub_m.value_of("project");
+            let activity_description = sub_m.value_of("description");
+
+            bartib::continue_last_activity(file_name, project_name, activity_description)
+        },
         ("stop", Some(_)) => bartib::stop(file_name),
         ("current", Some(_)) => bartib::list_running(file_name),
         ("list", Some(sub_m)) => {
