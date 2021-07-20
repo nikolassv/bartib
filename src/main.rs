@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Result};
-use chrono::{NaiveDate, Local};
+use chrono::{NaiveDate, Local, Duration};
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 fn main() -> Result<()> {
@@ -84,7 +84,15 @@ fn main() -> Result<()> {
                         .long("today")
                         .help("show activities of the current day")
                         .required(false)
-                        .conflicts_with_all(&["from_date", "to_date", "date"])
+                        .conflicts_with_all(&["from_date", "to_date", "date", "yesterday"])
+                        .takes_value(false)
+                )
+                .arg(
+                    Arg::with_name("yesterday")
+                        .long("yesterday")
+                        .help("show yesterdays activities")
+                        .required(false)
+                        .conflicts_with_all(&["from_date", "to_date", "date", "today"])
                         .takes_value(false)
                 )
                 .arg(
@@ -92,6 +100,9 @@ fn main() -> Result<()> {
                         .long("no_grouping")
                         .help("do not group activities by date in list"),
                 ),
+        )
+        .subcommand(
+            SubCommand::with_name("last").about("displays last finished acitivity")
         )
         .subcommand(
             SubCommand::with_name("projects").about("list all projects")
@@ -128,10 +139,15 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
                 filter.date = Some(Local::now().naive_local().date());
             }
 
+            if sub_m.is_present("yesterday") {
+                filter.date = Some(Local::now().naive_local().date() - Duration::days(1));
+            }
+
             let do_group_activities = !sub_m.is_present("no_grouping") && !filter.date.is_some();
             bartib::list(file_name, filter, do_group_activities)
         },
         ("projects", Some(_)) => bartib::list_projects(file_name),
+        ("last", Some(_)) => bartib::display_last_activity(file_name),
         _ => bail!("Unknown command"),
     }
 }

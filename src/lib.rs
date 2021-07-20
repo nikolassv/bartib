@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
-use chrono::naive;
-use chrono::NaiveDate;
+use chrono::{naive, NaiveDate};
 
 use crate::bartib_file::Line;
 
@@ -102,6 +101,23 @@ pub fn list_projects(file_name: &str) -> Result<()> {
 
     for project in all_projects {
         println!("{}", project);
+    }
+
+    Ok(())
+}
+
+// return last finished activity
+pub fn display_last_activity(file_name: &str) -> Result<()> {
+    let file_content = bartib_file::get_file_content(file_name)?;
+
+    let last_activity = get_activities(&file_content)
+        .filter(|activity| activity.is_stopped())
+        .max_by_key(|activity| activity.end.unwrap_or(naive::MIN_DATE.and_hms(0, 0, 0)));
+
+    if let Some(activity) = last_activity {
+        output::display_single_activity(&activity);
+    } else {
+        println!("No activity has been finished yet.")
     }
 
     Ok(())

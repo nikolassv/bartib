@@ -70,6 +70,19 @@ pub fn list_running_activities(running_activities: &[&activity::Activity]) {
     }
 }
 
+// displays a single activity
+pub fn display_single_activity(activity: &activity::Activity) {
+    println!("Begin: {}", activity.start.format(conf::FORMAT_DATETIME));
+
+    if let Some(end) = activity.end {
+        println!("End: {}", end.format(conf::FORMAT_DATETIME));
+        println!("Duration: {}", format_util::format_duration(&activity.get_duration()));
+    }
+
+    println!("Project: {}", activity.project);
+    println!("Description: {}", activity.description);
+}
+
 // create a row for a activity
 //
 // the date of the end is shown when it is not the same date as the start

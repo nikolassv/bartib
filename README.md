@@ -74,8 +74,15 @@ List activities on a given day:
 bartib list --date 2021-05-17
 ```
 
-List activitier of the current day:
+List activities of special days:
 
 ```
 bartib list --today
+bartib list --yesterday
+```
+
+### Show last activity
+
+```
+bartib last
 ```
