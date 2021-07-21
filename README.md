@@ -10,7 +10,7 @@ Build it with cargo:
 cargo build --release
 ```
 
-## The `.bartib` file
+## The journal file
 
 Bartib safes a journal of all tracked activities in a plaintext file. The file can either be specified via the `-f / --file` cli option or as a `BARTIB_FILE` environment variable.  
 
@@ -42,13 +42,13 @@ Stops the currently running activity:
 bartib stop
 ```
 
-### Continues the last activity
+### Continue the last activity
 
 ```
 bartib continue [-p "Another project"] [-d "Another description"]
 ```
 
-This continues the last activity. If an activity is currently tracked, bartib stops and restarts this activity. The associated project and description may be overwritten by setting a `-p / --project` or `-d / --description` parameter.
+This continues the last activity. If an activity is currently tracked, bartib stops and restarts this activity. The associated project and description may be overwritten by setting a `-p / --project` or `-d / --description` option.
 
 ### List all currently running activities
 
@@ -87,6 +87,20 @@ List activities of special days:
 ```
 bartib list --today
 bartib list --yesterday
+```
+
+### Edit activities
+
+To change tracked activities, just open the file with your activities log in any text editor. To facilitate this, bartib offers the `edit` subcommand:
+
+```
+bartib edit
+```
+
+This will open your log in the editor you have defined in your `EDITOR` environment variable. Alternatively you can specify the editor command via the `-e/--editor` option:
+
+```
+bartib edit -e vim
 ```
 
 ### Show last activity

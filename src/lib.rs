@@ -1,8 +1,9 @@
-use anyhow::{bail, Context, Result, Error};
+use anyhow::{anyhow, bail, Context, Result, Error};
 use chrono::{naive, NaiveDate};
 
 use crate::bartib_file::Line;
 use crate::activity::Activity;
+use std::process::Command;
 
 mod activity;
 pub mod bartib_file;
@@ -142,6 +143,21 @@ pub fn continue_last_activity(file_name: &str, project_name: Option<&str>, activ
         save_new_activity(file_name, &mut file_content, new_activity)
     } else {
         bail!("No activity has been started before.")
+    }
+}
+
+pub fn start_editor(file_name: &str, optional_editor_command: Option<&str>) -> Result<()> {
+    let editor_command = optional_editor_command.context("editor command is missing")?;
+    let command = Command::new(editor_command).arg(file_name).spawn();
+
+    match command {
+        Ok(mut child) => {
+            child.wait().context("editor did not execute")?;
+            Ok(())
+        }
+        Err(e) => {
+            Err(anyhow!(e))
+        }
     }
 }
 

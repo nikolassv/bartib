@@ -125,9 +125,22 @@ fn main() -> Result<()> {
         .subcommand(
             SubCommand::with_name("projects").about("list all projects")
         )
+        .subcommand(
+            SubCommand::with_name("edit")
+                .about("opens the activity log in an editor")
+                .arg(
+                    Arg::with_name("editor")
+                        .short("e")
+                        .value_name("editor")
+                        .help("the command to start your prefered text editor")
+                        .env("EDITOR")
+                        .takes_value(true),
+                )
+        )
         .get_matches();
 
-    let file_name = matches.value_of("file").context("Please specify a file with your activity log either as -f option or as BARTIB_FILE environment variable")?;
+    let file_name = matches.value_of("file")
+        .context("Please specify a file with your activity log either as -f option or as BARTIB_FILE environment variable")?;
 
     run_subcommand(&matches, file_name)
 }
@@ -172,6 +185,10 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         },
         ("projects", Some(_)) => bartib::list_projects(file_name),
         ("last", Some(_)) => bartib::display_last_activity(file_name),
+        ("edit", Some(sub_m)) => {
+            let optional_editor_command = sub_m.value_of("editor");
+            bartib::start_editor(file_name, optional_editor_command)
+        },
         _ => bail!("Unknown command"),
     }
 }
