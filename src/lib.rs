@@ -184,6 +184,13 @@ fn stop_all_running_activities(file_content: &mut [bartib_file::Line]) {
         if let Ok(activity) = &mut line.activity {
             if !activity.is_stopped() {
                 activity.stop();
+                println!(
+                    "Stopped activity: \"{}\" ({}) started at {}",
+                    activity.description,
+                    activity.project,
+                    activity.start.format(conf::FORMAT_DATETIME)
+                );
+
                 line.set_changed();
             }
         }
