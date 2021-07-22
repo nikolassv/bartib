@@ -185,10 +185,11 @@ fn stop_all_running_activities(file_content: &mut [bartib_file::Line]) {
             if !activity.is_stopped() {
                 activity.stop();
                 println!(
-                    "Stopped activity: \"{}\" ({}) started at {}",
+                    "Stopped activity: \"{}\" ({}) started at {} ({})",
                     activity.description,
                     activity.project,
-                    activity.start.format(conf::FORMAT_DATETIME)
+                    activity.start.format(conf::FORMAT_DATETIME),
+                    format_util::format_duration(&activity.get_duration()),
                 );
 
                 line.set_changed();

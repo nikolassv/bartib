@@ -12,10 +12,10 @@ pub fn format_duration(duration: &Duration) -> String {
     }
 
     if duration.num_minutes() > 0 {
-        duration_string.push_str(&format!("{}m ", duration.num_minutes() % 60));
+        duration_string.push_str(&format!("{}m", duration.num_minutes() % 60));
+    } else {
+        duration_string.push_str(&format!("{}s", duration.num_seconds() % 60));
     }
-
-    duration_string.push_str(&format!("{}s", duration.num_seconds() % 60));
 
     duration_string
 }
