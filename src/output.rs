@@ -1,3 +1,4 @@
+use termion::color;
 use chrono::NaiveDate;
 use std::collections::BTreeMap;
 
@@ -14,18 +15,19 @@ pub fn list_activities(activities: &[&activity::Activity], with_start_dates: boo
     }
 
     let mut activity_table = table::Table::new(vec![
-        "   ",
-        "Started",
-        "Stopped",
-        "Description",
-        "Project",
-        "Duration",
+        "Started".to_string(),
+        "Stopped".to_string(),
+        "Description".to_string(),
+        "Project".to_string(),
+        "Duration".to_string(),
     ]);
 
-    activities
+    let rows: Vec<table::Row> = activities
         .iter()
         .map(|t| get_activity_table_row(&t, with_start_dates))
-        .for_each(|row| activity_table.add_row(row));
+        .collect();
+
+    rows.iter().for_each(|row| activity_table.add_row(&row));
 
     println!("\n{}", activity_table);
 }
@@ -52,19 +54,26 @@ pub fn list_running_activities(running_activities: &[&activity::Activity]) {
         println!("No Activity is currently running");
     } else {
         let mut activity_table =
-            table::Table::new(vec!["Started At", "Description", "Project", "Duration"]);
+            table::Table::new(vec![
+                "Started At".to_string(), 
+                "Description".to_string(), 
+                "Project".to_string(), 
+                "Duration".to_string()
+            ]);
 
-        running_activities
+        let rows: Vec<table::Row> = running_activities
             .iter()
-            .map(|activity| {
+            .map(|activity | {
                 table::Row::new(vec![
                     activity.start.format(conf::FORMAT_DATETIME).to_string(),
                     activity.description.clone(),
-                    activity.project.to_string(),
+                    activity.project.clone(),
                     format_util::format_duration(&activity.get_duration()),
                 ])
             })
-            .for_each(|row| activity_table.add_row(row));
+            .collect();
+        
+        rows.iter().for_each(|row| activity_table.add_row(&row));
 
         println!("\n{}", activity_table);
     }
@@ -104,18 +113,19 @@ fn get_activity_table_row(activity: &&activity::Activity, with_start_dates: bool
         conf::FORMAT_TIME
     };
 
-    table::Row::new(vec![
-        if !activity.is_stopped() {
-            " * ".to_string()
-        } else {
-            " ".to_string()
-        },
+    let mut new_row = table::Row::new(vec![
         activity.start.format(start_format).to_string(),
         display_end,
         activity.description.clone(),
-        activity.project.to_string(),
+        activity.project.clone(),
         format_util::format_duration(&activity.get_duration()),
-    ])
+    ]);
+
+    if !activity.is_stopped() {
+        new_row.with_format(color::Fg(color::Green).to_string(), color::Fg(color::Reset).to_string());
+    }
+
+    new_row
 }
 
 // groups activities in vectors of activities that started at the same day
