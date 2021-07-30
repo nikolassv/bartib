@@ -1,4 +1,4 @@
-use termion::color;
+use ansi_term::Colour;
 use chrono::NaiveDate;
 use std::collections::BTreeMap;
 
@@ -22,12 +22,10 @@ pub fn list_activities(activities: &[&activity::Activity], with_start_dates: boo
         "Duration".to_string(),
     ]);
 
-    let rows: Vec<table::Row> = activities
+    activities
         .iter()
         .map(|t| get_activity_table_row(&t, with_start_dates))
-        .collect();
-
-    rows.iter().for_each(|row| activity_table.add_row(&row));
+        .for_each(|row| activity_table.add_row(row));
 
     println!("\n{}", activity_table);
 }
@@ -61,7 +59,7 @@ pub fn list_running_activities(running_activities: &[&activity::Activity]) {
                 "Duration".to_string()
             ]);
 
-        let rows: Vec<table::Row> = running_activities
+        running_activities
             .iter()
             .map(|activity | {
                 table::Row::new(vec![
@@ -71,9 +69,7 @@ pub fn list_running_activities(running_activities: &[&activity::Activity]) {
                     format_util::format_duration(&activity.get_duration()),
                 ])
             })
-            .collect();
-        
-        rows.iter().for_each(|row| activity_table.add_row(&row));
+            .for_each(|row| activity_table.add_row(row));
 
         println!("\n{}", activity_table);
     }
@@ -122,7 +118,7 @@ fn get_activity_table_row(activity: &&activity::Activity, with_start_dates: bool
     ]);
 
     if !activity.is_stopped() {
-        new_row.with_format(color::Fg(color::Green).to_string(), color::Fg(color::Reset).to_string());
+        new_row.set_color(Colour::Green);
     }
 
     new_row

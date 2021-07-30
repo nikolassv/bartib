@@ -7,7 +7,7 @@ Bartib is a time tracker for the command line. It safes a journal of all tracked
 Build it with cargo:
 
 ```
-cargo build --release
+cargo build --release --bin bartib
 ```
 
 ## The journal file
