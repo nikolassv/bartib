@@ -1,4 +1,4 @@
-use ansi_term::Colour;
+use nu_ansi_term::Color;
 use chrono::NaiveDate;
 use std::collections::BTreeMap;
 
@@ -37,13 +37,24 @@ pub fn list_activities_grouped_by_date(activities: &[&activity::Activity]) {
         return;
     }
 
-    let activities_by_date = group_activities_by_date(activities);
+    let mut activity_table = table::Table::new(vec![
+        "Started".to_string(),
+        "Stopped".to_string(),
+        "Description".to_string(),
+        "Project".to_string(),
+        "Duration".to_string(),
+    ]);
 
-    for (date, activity_list) in activities_by_date {
-        println!("{}", date);
-        list_activities(&activity_list, false);
-        println!();
-    }
+    group_activities_by_date(activities).iter()
+        .map(|(date, activity_list)| create_activites_group(&format!("{}", date), activity_list.as_slice()))
+        .for_each(|g| activity_table.add_group(g));
+
+    println!("\n{}", activity_table);
+}
+
+fn create_activites_group(title: &str, activities:  &[&activity::Activity]) -> table::Group {
+    let rows = activities.iter().map(|a| get_activity_table_row(&a, false)).collect();
+    table::Group::new(Some(title.to_string()), rows)
 }
 
 // displays a table with running activities (no end time)
@@ -118,7 +129,7 @@ fn get_activity_table_row(activity: &&activity::Activity, with_start_dates: bool
     ]);
 
     if !activity.is_stopped() {
-        new_row.set_color(Colour::Green);
+        new_row.set_color(Color::Green.normal());
     }
 
     new_row
