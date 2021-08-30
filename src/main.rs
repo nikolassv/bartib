@@ -1,8 +1,15 @@
 use anyhow::{bail, Context, Result};
 use chrono::{NaiveDate, Local, Duration};
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+use nu_ansi_term::enable_ansi_support;
 
 fn main() -> Result<()> {
+
+    #[cfg(windows)]
+    if let Err(e) = enable_ansi_support() {
+        println!("Could not enable ansi support! Errorcode: {}", e);
+    }
+
     let matches = App::new("bartib")
         .version("0.1")
         .author("Nikolas Schmidt-Voigt <nikolas.schmidt-voigt@posteo.de>")
