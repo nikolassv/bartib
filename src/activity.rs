@@ -23,17 +23,17 @@ pub enum ActivityError {
 }
 
 impl Activity {
-    pub fn start(project: String, description: String) -> Activity {
+    pub fn start(project: String, description: String, time: Option<NaiveDateTime>) -> Activity {
         Activity {
-            start: Local::now().naive_local(),
+            start: time.unwrap_or_else(|| Local::now().naive_local()),
             end: None,
             project,
             description,
         }
     }
 
-    pub fn stop(&mut self) {
-        self.end = Some(Local::now().naive_local());
+    pub fn stop(&mut self, time: Option<NaiveDateTime>) {
+        self.end = time.or_else(|| Some(Local::now().naive_local()));
     }
 
     pub fn is_stopped(&self) -> bool {
@@ -174,12 +174,14 @@ fn split_with_escaped_delimeter(s: &str) -> StringSplitter {
 mod tests {
     use super::*;
     use chrono::{Datelike, Timelike};
+    use std::option::Option::None;
 
     #[test]
     fn start() {
         let t = Activity::start(
             "test project".to_string(),
             "test description".to_string(),
+            None,
         );
         assert_eq!(t.description, "test description".to_string());
         assert_eq!(t.project, "test project".to_string());
@@ -191,8 +193,9 @@ mod tests {
         let mut t = Activity::start(
             "test project".to_string(),
             "test description".to_string(),
+            None,
         );
-        t.stop();
+        t.stop(None);
         assert_ne!(t.end, None);
     }
 
@@ -201,6 +204,7 @@ mod tests {
         let mut t = Activity::start(
             "test project| 1".to_string(),
             "test\\description".to_string(),
+            None,
         );
         t.start = NaiveDateTime::parse_from_str("2021-02-16 16:14", conf::FORMAT_DATETIME).unwrap();
         assert_eq!(
@@ -282,8 +286,9 @@ mod tests {
         let mut t = Activity::start(
             "ex\\ample\\\\pro|ject".to_string(),
             "e\\\\xam|||ple tas\t\t\nk".to_string(),
+            None,
         );
-        t.stop();
+        t.stop(None);
         let t2 = Activity::from_str(format!("{}", t).as_str()).unwrap();
 
         assert_eq!(

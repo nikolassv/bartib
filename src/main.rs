@@ -1,14 +1,20 @@
 use anyhow::{bail, Context, Result};
-use chrono::{NaiveDate, Local, Duration};
+use chrono::{Duration, Local, NaiveDate, NaiveTime};
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use nu_ansi_term::enable_ansi_support;
 
 fn main() -> Result<()> {
-
     #[cfg(windows)]
     if let Err(e) = enable_ansi_support() {
         println!("Could not enable ansi support! Errorcode: {}", e);
     }
+
+    let arg_time = Arg::with_name("time")
+        .short("t")
+        .long("time")
+        .value_name("TIME")
+        .help("the time for changing the activity status (HH:MM)")
+        .takes_value(true);
 
     let matches = App::new("bartib")
         .version("0.1")
@@ -42,7 +48,8 @@ fn main() -> Result<()> {
                         .help("a description of the new activity")
                         .required(true)
                         .takes_value(true),
-                ),
+                )
+                .arg(&arg_time),
         )
         .subcommand(
             SubCommand::with_name("continue")
@@ -60,9 +67,14 @@ fn main() -> Result<()> {
                         .value_name("DESCRIPTION")
                         .help("a description of the new activity")
                         .takes_value(true),
-                ),
+                )
+                .arg(&arg_time),
         )
-        .subcommand(SubCommand::with_name("stop").about("stops all currently running activities"))
+        .subcommand(
+            SubCommand::with_name("stop")
+                .about("stops all currently running activities")
+                .arg(&arg_time),
+        )
         .subcommand(
             SubCommand::with_name("current").about("lists all currently running activities"),
         )
@@ -110,7 +122,7 @@ fn main() -> Result<()> {
                         .help("show activities of the current day")
                         .required(false)
                         .conflicts_with_all(&["from_date", "to_date", "date", "yesterday"])
-                        .takes_value(false)
+                        .takes_value(false),
                 )
                 .arg(
                     Arg::with_name("yesterday")
@@ -118,7 +130,7 @@ fn main() -> Result<()> {
                         .help("show yesterdays activities")
                         .required(false)
                         .conflicts_with_all(&["from_date", "to_date", "date", "today"])
-                        .takes_value(false)
+                        .takes_value(false),
                 )
                 .arg(
                     Arg::with_name("no_grouping")
@@ -126,12 +138,8 @@ fn main() -> Result<()> {
                         .help("do not group activities by date in list"),
                 ),
         )
-        .subcommand(
-            SubCommand::with_name("last").about("displays last finished acitivity")
-        )
-        .subcommand(
-            SubCommand::with_name("projects").about("list all projects")
-        )
+        .subcommand(SubCommand::with_name("last").about("displays last finished acitivity"))
+        .subcommand(SubCommand::with_name("projects").about("list all projects"))
         .subcommand(
             SubCommand::with_name("edit")
                 .about("opens the activity log in an editor")
@@ -142,7 +150,7 @@ fn main() -> Result<()> {
                         .help("the command to start your prefered text editor")
                         .env("EDITOR")
                         .takes_value(true),
-                )
+                ),
         )
         .get_matches();
 
@@ -157,16 +165,25 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("start", Some(sub_m)) => {
             let project_name = sub_m.value_of("project").unwrap();
             let activity_description = sub_m.value_of("description").unwrap();
+            let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
+                .map(|t| Local::today().naive_local().and_time(t));
 
-            bartib::start(file_name, project_name, activity_description)
-        },
+            bartib::start(file_name, project_name, activity_description, time)
+        }
         ("continue", Some(sub_m)) => {
             let project_name = sub_m.value_of("project");
             let activity_description = sub_m.value_of("description");
+            let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
+                .map(|t| Local::today().naive_local().and_time(t));
 
-            bartib::continue_last_activity(file_name, project_name, activity_description)
-        },
-        ("stop", Some(_)) => bartib::stop(file_name),
+            bartib::continue_last_activity(file_name, project_name, activity_description, time)
+        }
+        ("stop", Some(sub_m)) => {
+            let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
+                .map(|t| Local::today().naive_local().and_time(t));
+
+            bartib::stop(file_name, time)
+        }
         ("current", Some(_)) => bartib::list_running(file_name),
         ("list", Some(sub_m)) => {
             let mut filter = bartib::ActivityFilter {
@@ -189,13 +206,13 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
 
             let do_group_activities = !sub_m.is_present("no_grouping") && !filter.date.is_some();
             bartib::list(file_name, filter, do_group_activities)
-        },
+        }
         ("projects", Some(_)) => bartib::list_projects(file_name),
         ("last", Some(_)) => bartib::display_last_activity(file_name),
         ("edit", Some(sub_m)) => {
             let optional_editor_command = sub_m.value_of("editor");
             bartib::start_editor(file_name, optional_editor_command)
-        },
+        }
         _ => bail!("Unknown command"),
     }
 }
@@ -234,6 +251,28 @@ fn get_date_argument_or_ignore(
                 println!(
                     "Can not parse \"{}\" as date. Argument for {} is ignored ({})",
                     date_string, argument_name, parsing_error
+                );
+                None
+            }
+        }
+    } else {
+        None
+    }
+}
+
+fn get_time_argument_or_ignore(
+    time_argument: Option<&str>,
+    argument_name: &str,
+) -> Option<NaiveTime> {
+    if let Some(time_string) = time_argument {
+        let parsing_result = NaiveTime::parse_from_str(time_string, bartib::conf::FORMAT_TIME);
+
+        match parsing_result {
+            Ok(date) => Some(date),
+            Err(parsing_error) => {
+                println!(
+                    "Can not parse \"{}\" as time. Argument for {} is ignored ({})",
+                    time_string, argument_name, parsing_error
                 );
                 None
             }

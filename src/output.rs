@@ -1,5 +1,5 @@
-use nu_ansi_term::Color;
 use chrono::NaiveDate;
+use nu_ansi_term::Color;
 use std::collections::BTreeMap;
 
 use crate::activity;
@@ -45,15 +45,21 @@ pub fn list_activities_grouped_by_date(activities: &[&activity::Activity]) {
         "Duration".to_string(),
     ]);
 
-    group_activities_by_date(activities).iter()
-        .map(|(date, activity_list)| create_activites_group(&format!("{}", date), activity_list.as_slice()))
+    group_activities_by_date(activities)
+        .iter()
+        .map(|(date, activity_list)| {
+            create_activites_group(&format!("{}", date), activity_list.as_slice())
+        })
         .for_each(|g| activity_table.add_group(g));
 
     println!("\n{}", activity_table);
 }
 
-fn create_activites_group(title: &str, activities:  &[&activity::Activity]) -> table::Group {
-    let rows = activities.iter().map(|a| get_activity_table_row(&a, false)).collect();
+fn create_activites_group(title: &str, activities: &[&activity::Activity]) -> table::Group {
+    let rows = activities
+        .iter()
+        .map(|a| get_activity_table_row(&a, false))
+        .collect();
     table::Group::new(Some(title.to_string()), rows)
 }
 
@@ -62,17 +68,16 @@ pub fn list_running_activities(running_activities: &[&activity::Activity]) {
     if running_activities.is_empty() {
         println!("No Activity is currently running");
     } else {
-        let mut activity_table =
-            table::Table::new(vec![
-                "Started At".to_string(), 
-                "Description".to_string(), 
-                "Project".to_string(), 
-                "Duration".to_string()
-            ]);
+        let mut activity_table = table::Table::new(vec![
+            "Started At".to_string(),
+            "Description".to_string(),
+            "Project".to_string(),
+            "Duration".to_string(),
+        ]);
 
         running_activities
             .iter()
-            .map(|activity | {
+            .map(|activity| {
                 table::Row::new(vec![
                     activity.start.format(conf::FORMAT_DATETIME).to_string(),
                     activity.description.clone(),
@@ -92,7 +97,10 @@ pub fn display_single_activity(activity: &activity::Activity) {
 
     if let Some(end) = activity.end {
         println!("End: {}", end.format(conf::FORMAT_DATETIME));
-        println!("Duration: {}", format_util::format_duration(&activity.get_duration()));
+        println!(
+            "Duration: {}",
+            format_util::format_duration(&activity.get_duration())
+        );
     }
 
     println!("Project: {}", activity.project);

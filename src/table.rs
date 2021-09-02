@@ -57,7 +57,8 @@ impl Table {
     }
 
     fn get_all_rows(&self) -> Vec<&Row> {
-        self.groups.iter()
+        self.groups
+            .iter()
             .flat_map(|g| g.rows.as_slice())
             .chain(self.rows.as_slice())
             .collect()
@@ -67,7 +68,8 @@ impl Table {
         let mut column_width: Vec<usize> = self.header.iter().map(|e| e.chars().count()).collect();
 
         for row in self.get_all_rows() {
-            row.content.iter()
+            row.content
+                .iter()
                 .map(|cell| cell.chars().count())
                 .enumerate()
                 .for_each(|(i, char_count)| {
@@ -87,7 +89,12 @@ impl fmt::Display for Table {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let column_width = self.get_column_width();
 
-        write_cells(f, &self.header, &column_width, Some(Style::new().underline()))?;
+        write_cells(
+            f,
+            &self.header,
+            &column_width,
+            Some(Style::new().underline()),
+        )?;
         writeln!(f)?;
 
         for row in &self.rows {
@@ -102,7 +109,11 @@ impl fmt::Display for Table {
     }
 }
 
-fn write_group(f: &mut fmt::Formatter<'_>, group: &Group, column_width: &Vec<usize>) -> fmt::Result {
+fn write_group(
+    f: &mut fmt::Formatter<'_>,
+    group: &Group,
+    column_width: &Vec<usize>,
+) -> fmt::Result {
     let empty_string = "".to_string();
     let title = group.title.as_ref().unwrap_or(&empty_string);
 
@@ -113,10 +124,10 @@ fn write_group(f: &mut fmt::Formatter<'_>, group: &Group, column_width: &Vec<usi
         write_row(f, row, &column_width)?;
     }
 
-    Ok(())    
+    Ok(())
 }
 
-fn write_row(f: &mut fmt::Formatter<'_>, row: &Row, column_width : &Vec<usize>) -> fmt::Result {
+fn write_row(f: &mut fmt::Formatter<'_>, row: &Row, column_width: &Vec<usize>) -> fmt::Result {
     write_cells(f, &row.content, &column_width, row.style)?;
     writeln!(f)?;
     Ok(())
@@ -128,7 +139,8 @@ fn write_cells<T: AsRef<str> + std::fmt::Display>(
     column_width: &[usize],
     style: Option<Style>,
 ) -> fmt::Result {
-    let cells_with_width : Vec<(Option<&usize>, &str)> = cells.iter()
+    let cells_with_width: Vec<(Option<&usize>, &str)> = cells
+        .iter()
         .map(|cell| cell.as_ref())
         .enumerate()
         .map(|(i, cell)| (column_width.get(i), cell))
@@ -152,11 +164,13 @@ fn write_with_width_and_style(
     let style_suffix = opt_style.map_or("".to_string(), |style| style.suffix().to_string());
     let width = opt_width.unwrap_or(&content_length);
 
-    write!(f, "{prefix}{content:<width$}{suffix} ",
-           prefix = style_prefix,
-           content = content,
-           width = width,
-           suffix = style_suffix
+    write!(
+        f,
+        "{prefix}{content:<width$}{suffix} ",
+        prefix = style_prefix,
+        content = content,
+        width = width,
+        suffix = style_suffix
     )
 }
 
