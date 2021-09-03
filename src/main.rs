@@ -1,6 +1,8 @@
 use anyhow::{bail, Context, Result};
 use chrono::{Duration, Local, NaiveDate, NaiveTime};
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+
+#[cfg(windows)]
 use nu_ansi_term::enable_ansi_support;
 
 fn main() -> Result<()> {

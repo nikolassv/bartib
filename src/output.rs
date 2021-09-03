@@ -110,14 +110,16 @@ pub fn display_single_activity(activity: &activity::Activity) {
 // create a row for a activity
 //
 // the date of the end is shown when it is not the same date as the start
-fn get_activity_table_row(activity: &&activity::Activity, with_start_dates: bool) -> table::Row {
+fn get_activity_table_row(activity: &activity::Activity, with_start_dates: bool) -> table::Row {
+    let more_then_one_day = activity.end.map_or(false, |end| activity.start.date() != end.date());
+
     let display_end = activity.end.map_or_else(
         || "-".to_string(),
         |end| {
-            if activity.start.date() == end.date() {
-                end.format(conf::FORMAT_TIME).to_string()
-            } else {
+            if more_then_one_day {
                 end.format(conf::FORMAT_DATETIME).to_string()
+            } else {
+                end.format(conf::FORMAT_TIME).to_string()
             }
         },
     );
@@ -138,6 +140,8 @@ fn get_activity_table_row(activity: &&activity::Activity, with_start_dates: bool
 
     if !activity.is_stopped() {
         new_row.set_color(Color::Green.normal());
+    } else if more_then_one_day {
+        new_row.set_color(Color::Yellow.normal());
     }
 
     new_row
