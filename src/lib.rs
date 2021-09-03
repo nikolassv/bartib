@@ -120,7 +120,7 @@ pub fn list_projects(file_name: &str) -> Result<()> {
     all_projects.dedup();
 
     for project in all_projects {
-        println!("{}", project);
+        println!("\"{}\"", project);
     }
 
     Ok(())

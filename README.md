@@ -108,3 +108,17 @@ bartib edit -e vim
 ```
 bartib last
 ```
+
+### List all projects
+
+This command lists all projects for which an activity has ever been logged:
+
+```
+bartib projects
+```
+
+This is especially useful for autocompletion. For example, adding this line to the `.bashrc` enables autocompletion for project names:
+
+```
+complete -W "$(bartib projects)" bartib
+```
