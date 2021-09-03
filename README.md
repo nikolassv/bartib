@@ -34,6 +34,12 @@ bartib start -p "The name of the associated project" -d "A description of the ac
 
 All currently tracked activites will be stopped. If the specified file does not exist yet it will be created.
 
+The `-t/--time` option specifies at which time of the current day the new activity starts (and any currently running activity stops):
+
+```
+bartib start -p "The name of the associated project" -d "A description of the activity" -t 13:45
+```
+
 ### Stop a running activity
 
 Stops the currently running activity:
@@ -42,6 +48,8 @@ Stops the currently running activity:
 bartib stop
 ```
 
+The `-t/--time` option specifies at which time of the current day the activities stop.
+
 ### Continue the last activity
 
 ```
@@ -49,6 +57,8 @@ bartib continue [-p "Another project"] [-d "Another description"]
 ```
 
 This continues the last activity. If an activity is currently tracked, bartib stops and restarts this activity. The associated project and description may be overwritten by setting a `-p / --project` or `-d / --description` option.
+
+The `-t/--time` option specifies at which time of the current day the  activity (re-)starts.
 
 ### List all currently running activities
 
