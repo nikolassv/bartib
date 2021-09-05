@@ -170,7 +170,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
                 .map(|t| Local::today().naive_local().and_time(t));
 
-            bartib::start(file_name, project_name, activity_description, time)
+            bartib::manipulation_commands::start(file_name, project_name, activity_description, time)
         }
         ("continue", Some(sub_m)) => {
             let project_name = sub_m.value_of("project");
@@ -178,17 +178,17 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
                 .map(|t| Local::today().naive_local().and_time(t));
 
-            bartib::continue_last_activity(file_name, project_name, activity_description, time)
+            bartib::manipulation_commands::continue_last_activity(file_name, project_name, activity_description, time)
         }
         ("stop", Some(sub_m)) => {
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
                 .map(|t| Local::today().naive_local().and_time(t));
 
-            bartib::stop(file_name, time)
+            bartib::manipulation_commands::stop(file_name, time)
         }
-        ("current", Some(_)) => bartib::list_running(file_name),
+        ("current", Some(_)) => bartib::list_commands::list_running(file_name),
         ("list", Some(sub_m)) => {
-            let mut filter = bartib::ActivityFilter {
+            let mut filter = bartib::list_commands::ActivityFilter {
                 number_of_activities: get_number_argument_or_ignore(
                     sub_m.value_of("number"),
                     "-n/--number",
@@ -207,13 +207,13 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             }
 
             let do_group_activities = !sub_m.is_present("no_grouping") && !filter.date.is_some();
-            bartib::list(file_name, filter, do_group_activities)
+            bartib::list_commands::list(file_name, filter, do_group_activities)
         }
-        ("projects", Some(_)) => bartib::list_projects(file_name),
-        ("last", Some(_)) => bartib::display_last_activity(file_name),
+        ("projects", Some(_)) => bartib::list_commands::list_projects(file_name),
+        ("last", Some(_)) => bartib::list_commands::display_last_activity(file_name),
         ("edit", Some(sub_m)) => {
             let optional_editor_command = sub_m.value_of("editor");
-            bartib::start_editor(file_name, optional_editor_command)
+            bartib::manipulation_commands::start_editor(file_name, optional_editor_command)
         }
         _ => bail!("Unknown command"),
     }
