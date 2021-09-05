@@ -4,9 +4,9 @@ use std::process::Command;
 
 use crate::data::activity;
 use crate::data::bartib_file;
+use crate::data::getter;
 use crate::conf;
 use crate::view::format_util;
-use crate::controller;
 
 // starts a new activity
 pub fn start(
@@ -71,7 +71,7 @@ pub fn continue_last_activity(
     let mut file_content = bartib_file::get_file_content(file_name)?;
 
     let optional_last_activity =
-        controller::list::get_last_activity_by_start(&file_content).or(controller::list::get_last_activity_by_end(&file_content));
+        getter::get_last_activity_by_start(&file_content).or(getter::get_last_activity_by_end(&file_content));
 
     if let Some(last_activity) = optional_last_activity {
         let new_activity = activity::Activity::start(

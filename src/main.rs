@@ -188,7 +188,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         }
         ("current", Some(_)) => bartib::controller::list::list_running(file_name),
         ("list", Some(sub_m)) => {
-            let mut filter = bartib::controller::list::ActivityFilter {
+            let mut filter = bartib::data::getter::ActivityFilter {
                 number_of_activities: get_number_argument_or_ignore(
                     sub_m.value_of("number"),
                     "-n/--number",
