@@ -4,7 +4,7 @@ use std::io;
 use std::io::{BufRead, BufReader, Write};
 use std::str::FromStr;
 
-use crate::activity;
+use crate::data::activity;
 
 pub enum LineStatus {
     Unchanged,

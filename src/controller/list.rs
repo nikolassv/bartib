@@ -1,9 +1,9 @@
 use anyhow::Result;
 use chrono::{naive, NaiveDate};
 
-use crate::activity;
-use crate::bartib_file;
-use crate::output;
+use crate::data::activity;
+use crate::data::bartib_file;
+use crate::view::output;
 
 pub struct ActivityFilter {
     pub number_of_activities: Option<usize>,

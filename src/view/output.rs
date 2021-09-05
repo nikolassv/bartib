@@ -2,10 +2,10 @@ use chrono::NaiveDate;
 use nu_ansi_term::Color;
 use std::collections::BTreeMap;
 
-use crate::activity;
+use crate::data::activity;
 use crate::conf;
-use crate::format_util;
-use crate::table;
+use crate::view::format_util;
+use crate::view::table;
 
 // displays a table with activities
 pub fn list_activities(activities: &[&activity::Activity], with_start_dates: bool) {
