@@ -3,13 +3,13 @@ use anyhow::Result;
 use crate::data::activity;
 use crate::data::bartib_file;
 use crate::data::getter;
-use crate::view::output;
+use crate::view::list;
 
 // lists all currently runninng activities.
 pub fn list_running(file_name: &str) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
     let running_activities = getter::get_running_activities(&file_content);
-    output::list_running_activities(&running_activities);
+    list::list_running_activities(&running_activities);
 
     Ok(())
 }
@@ -29,12 +29,12 @@ pub fn list(file_name: &str, filter: getter::ActivityFilter, do_group_activities
         get_index_of_first_element(filtered_activities.len(), filter.number_of_activities);
 
     if do_group_activities {
-        output::list_activities_grouped_by_date(
+        list::list_activities_grouped_by_date(
             &filtered_activities[first_element..filtered_activities.len()],
         );
     } else {
         let with_start_dates = !filter.date.is_some();
-        output::list_activities(
+        list::list_activities(
             &filtered_activities[first_element..filtered_activities.len()],
             with_start_dates,
         );
@@ -68,7 +68,7 @@ pub fn display_last_activity(file_name: &str) -> Result<()> {
     let last_activity = getter::get_last_activity_by_end(&file_content);
 
     if let Some(activity) = last_activity {
-        output::display_single_activity(&activity);
+        list::display_single_activity(&activity);
     } else {
         println!("No activity has been finished yet.")
     }
