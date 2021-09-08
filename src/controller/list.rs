@@ -21,7 +21,7 @@ pub fn list(file_name: &str, filter: getter::ActivityFilter, do_group_activities
     let file_content = bartib_file::get_file_content(file_name)?;
     let activities = getter::get_activities(&file_content);
     let mut filtered_activities: Vec<&activity::Activity> =
-    getter::filter_activities(activities, &filter).collect();
+        getter::filter_activities(activities, &filter).collect();
 
     filtered_activities.sort_by_key(|activity| activity.start);
 

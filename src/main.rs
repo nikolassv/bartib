@@ -97,7 +97,6 @@ fn main() -> Result<()> {
                         .long("from")
                         .value_name("FROM_DATE")
                         .help("begin of date range (inclusive)")
-                        .requires("to_date")
                         .takes_value(true),
                 )
                 .arg(
@@ -105,7 +104,6 @@ fn main() -> Result<()> {
                         .long("to")
                         .value_name("TO_DATE")
                         .help("end of date range (inclusive)")
-                        .requires("from_date")
                         .takes_value(true),
                 )
                 .arg(
