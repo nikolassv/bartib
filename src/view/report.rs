@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::fmt;
 
 use crate::data::activity;
 
@@ -28,6 +29,38 @@ impl<'a> Report<'a> {
     }
 }
 
+impl<'a> fmt::Display for Report<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+
+        let project_map = self.get_project_map();
+        let longest_project_line = project_map.keys().map(|p| p.chars().count()).max();
+        let longest_activity_line = project_map.values().flatten().map(|a| a.description.chars().count() + 4).max();
+        let longest_line = get_max_option(longest_project_line, longest_activity_line);
+
+        for (project, activities) in project_map.iter() {
+            write!(f, "{}", project)?;
+
+            for activity in activities.iter() {
+                write!(f, "{}", activity)?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+fn get_max_option(o1 : Option<usize>, o2: Option<usize>) -> Option<usize> {
+    if let Some(s1) = o1 {
+        if let Some(s2) = o2 {
+            if s1 > s2 { o1 } else { o2 }
+        } else {
+            o1
+        }
+    } else {
+        o2
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -46,5 +79,15 @@ mod tests {
         let m = r.get_project_map();
 
         assert_eq!(m.len(), 2);
+    }
+
+    #[test]
+    fn get_max_option_test() {
+        assert_eq!(get_max_option(None, None), None);
+        assert_eq!(get_max_option(Some(1), None).unwrap(), 1);
+        assert_eq!(get_max_option(None, Some(1)).unwrap(), 1);
+        assert_eq!(get_max_option(Some(1), Some(1)).unwrap(), 1);
+        assert_eq!(get_max_option(Some(2), Some(1)).unwrap(), 2);
+        assert_eq!(get_max_option(Some(1), Some(2)).unwrap(), 2);
     }
 }
