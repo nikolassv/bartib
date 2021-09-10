@@ -33,9 +33,7 @@ impl<'a> fmt::Display for Report<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 
         let project_map = self.get_project_map();
-        let longest_project_line = project_map.keys().map(|p| p.chars().count()).max();
-        let longest_activity_line = project_map.values().flatten().map(|a| a.description.chars().count() + 4).max();
-        let longest_line = get_max_option(longest_project_line, longest_activity_line);
+        let longest_line = get_longest_line(&project_map);
 
         for (project, activities) in project_map.iter() {
             write!(f, "{}", project)?;
@@ -47,6 +45,12 @@ impl<'a> fmt::Display for Report<'a> {
 
         Ok(())
     }
+}
+
+fn get_longest_line(project_map : &BTreeMap<&str, Vec<&activity::Activity>>) -> Option<usize> {
+    let longest_project_line = project_map.keys().map(|p| p.chars().count()).max();
+    let longest_activity_line = project_map.values().flatten().map(|a| a.description.chars().count() + 4).max();
+    get_max_option(longest_project_line, longest_activity_line)
 }
 
 fn get_max_option(o1 : Option<usize>, o2: Option<usize>) -> Option<usize> {
@@ -79,6 +83,38 @@ mod tests {
         let m = r.get_project_map();
 
         assert_eq!(m.len(), 2);
+    }
+
+    #[test]
+    fn get_longest_line_test() {
+        let mut r = Report::new();
+        let project_map1 = r.get_project_map();
+
+        // keine Einträge -> keine Längste Zeile
+        assert_eq!(get_longest_line(&project_map1), None);
+
+        let a1 = activity::Activity::start("p1".to_string(), "d1".to_string(), None);
+        let a2 = activity::Activity::start("p1".to_string(), "d2".to_string(), None);
+        let a3 = activity::Activity::start("p2".to_string(), "d1".to_string(), None);
+        let a4 = activity::Activity::start("p2".to_string(), "d1".to_string(), None);
+        let a5 = activity::Activity::start("p2".to_string(), "d1".to_string(), None);
+
+        r.add(&a1);
+        r.add(&a2);
+        r.add(&a3);
+        r.add(&a4);
+        r.add(&a5);
+
+        // längste Zeile ist Description + 4
+        let project_map2 = r.get_project_map();
+        assert_eq!(get_longest_line(&project_map2).unwrap(), 6);
+
+        // längste Zeile ist Projektname mit 8 Zeichen
+        let a6 = activity::Activity::start("p1234567".to_string(), "d1".to_string(), None);
+        r.add(&a6);
+        let project_map3 = r.get_project_map();
+        assert_eq!(get_longest_line(&project_map3).unwrap(), 8);
+
     }
 
     #[test]
