@@ -60,12 +60,6 @@ This continues the last activity. If an activity is currently tracked, bartib st
 
 The `-t/--time` option specifies at which time of the current day the  activity (re-)starts.
 
-### List all currently running activities
-
-```
-bartib current
-```
-
 ### List activities
 
 All activities:
@@ -97,6 +91,12 @@ List activities of special days:
 ```
 bartib list --today
 bartib list --yesterday
+```
+
+### List all currently running activities
+
+```
+bartib current
 ```
 
 ### Edit activities

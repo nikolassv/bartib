@@ -25,8 +25,7 @@ pub fn list(file_name: &str, filter: getter::ActivityFilter, do_group_activities
 
     filtered_activities.sort_by_key(|activity| activity.start);
 
-    let first_element =
-        get_index_of_first_element(filtered_activities.len(), filter.number_of_activities);
+    let first_element  =filtered_activities.len().saturating_sub(filter.number_of_activities.unwrap_or(filtered_activities.len()));
 
     if do_group_activities {
         list::list_activities_grouped_by_date(
@@ -74,12 +73,4 @@ pub fn display_last_activity(file_name: &str) -> Result<()> {
     }
 
     Ok(())
-}
-
-fn get_index_of_first_element(length: usize, sub: Option<usize>) -> usize {
-    if let Some(s) = sub {
-        length.saturating_sub(s)
-    } else {
-        0
-    }
 }

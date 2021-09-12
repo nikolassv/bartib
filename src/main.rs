@@ -18,6 +18,41 @@ fn main() -> Result<()> {
         .help("the time for changing the activity status (HH:MM)")
         .takes_value(true);
 
+    let arg_from_date = Arg::with_name("from_date")
+        .long("from")
+        .value_name("FROM_DATE")
+        .help("begin of date range (inclusive)")
+        .takes_value(true);
+
+    let arg_to_date = Arg::with_name("to_date")
+        .long("to")
+        .value_name("TO_DATE")
+        .help("end of date range (inclusive)")
+        .takes_value(true);
+
+    let arg_date = Arg::with_name("date")
+        .short("d")
+        .long("date")
+        .value_name("DATE")
+        .help("show activities of a certain date only")
+        .required(false)
+        .conflicts_with_all(&["from_date", "to_date"])
+        .takes_value(true);
+
+    let arg_today = Arg::with_name("today")
+        .long("today")
+        .help("show activities of the current day")
+        .required(false)
+        .conflicts_with_all(&["from_date", "to_date", "date", "yesterday"])
+        .takes_value(false);
+
+    let arg_yesterday = Arg::with_name("yesterday")
+        .long("yesterday")
+        .help("show yesterdays activities")
+        .required(false)
+        .conflicts_with_all(&["from_date", "to_date", "date", "today"])
+        .takes_value(false);
+
     let matches = App::new("bartib")
         .version("0.1")
         .author("Nikolas Schmidt-Voigt <nikolas.schmidt-voigt@posteo.de>")
@@ -83,6 +118,16 @@ fn main() -> Result<()> {
         .subcommand(
             SubCommand::with_name("list")
                 .about("list recent activities")
+                .arg(&arg_from_date)
+                .arg(&arg_to_date)
+                .arg(&arg_date)
+                .arg(&arg_today)
+                .arg(&arg_yesterday)
+                .arg(
+                    Arg::with_name("no_grouping")
+                        .long("no_grouping")
+                        .help("do not group activities by date in list"),
+                )
                 .arg(
                     Arg::with_name("number")
                         .short("n")
@@ -91,52 +136,16 @@ fn main() -> Result<()> {
                         .help("maximum number of activities to display")
                         .required(false)
                         .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("from_date")
-                        .long("from")
-                        .value_name("FROM_DATE")
-                        .help("begin of date range (inclusive)")
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("to_date")
-                        .long("to")
-                        .value_name("TO_DATE")
-                        .help("end of date range (inclusive)")
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("date")
-                        .short("d")
-                        .long("date")
-                        .value_name("DATE")
-                        .help("show activities of a certain date only")
-                        .required(false)
-                        .conflicts_with_all(&["from_date", "to_date"])
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("today")
-                        .long("today")
-                        .help("show activities of the current day")
-                        .required(false)
-                        .conflicts_with_all(&["from_date", "to_date", "date", "yesterday"])
-                        .takes_value(false),
-                )
-                .arg(
-                    Arg::with_name("yesterday")
-                        .long("yesterday")
-                        .help("show yesterdays activities")
-                        .required(false)
-                        .conflicts_with_all(&["from_date", "to_date", "date", "today"])
-                        .takes_value(false),
-                )
-                .arg(
-                    Arg::with_name("no_grouping")
-                        .long("no_grouping")
-                        .help("do not group activities by date in list"),
                 ),
+        )
+        .subcommand(
+            SubCommand::with_name("report")
+                .about("reports duration of tracked activities")
+                .arg(&arg_from_date)
+                .arg(&arg_to_date)
+                .arg(&arg_date)
+                .arg(&arg_today)
+                .arg(&arg_yesterday),
         )
         .subcommand(SubCommand::with_name("last").about("displays last finished acitivity"))
         .subcommand(SubCommand::with_name("projects").about("list all projects"))
@@ -187,6 +196,25 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("current", Some(_)) => bartib::controller::list::list_running(file_name),
         ("list", Some(sub_m)) => {
             let mut filter = bartib::data::getter::ActivityFilter {
+                number_of_activities: None,
+                from_date: get_date_argument_or_ignore(sub_m.value_of("from_date"), "--from"),
+                to_date: get_date_argument_or_ignore(sub_m.value_of("to_date"), "--to"),
+                date: get_date_argument_or_ignore(sub_m.value_of("date"), "-d/--date"),
+            };
+
+            if sub_m.is_present("today") {
+                filter.date = Some(Local::now().naive_local().date());
+            }
+
+            if sub_m.is_present("yesterday") {
+                filter.date = Some(Local::now().naive_local().date() - Duration::days(1));
+            }
+
+            let do_group_activities = !sub_m.is_present("no_grouping") && !filter.date.is_some();
+            bartib::controller::list::list(file_name, filter, do_group_activities)
+        }
+        ("report", Some(sub_m)) => {
+            let mut filter = bartib::data::getter::ActivityFilter {
                 number_of_activities: get_number_argument_or_ignore(
                     sub_m.value_of("number"),
                     "-n/--number",
@@ -204,10 +232,9 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
                 filter.date = Some(Local::now().naive_local().date() - Duration::days(1));
             }
 
-            let do_group_activities = !sub_m.is_present("no_grouping") && !filter.date.is_some();
-            bartib::controller::list::list(file_name, filter, do_group_activities)
+            bartib::controller::report::show_report(file_name, filter)
         }
-        ("projects", Some(_)) => bartib::controller::list::list_projects(file_name),
+       ("projects", Some(_)) => bartib::controller::list::list_projects(file_name),
         ("last", Some(_)) => bartib::controller::list::display_last_activity(file_name),
         ("edit", Some(sub_m)) => {
             let optional_editor_command = sub_m.value_of("editor");
