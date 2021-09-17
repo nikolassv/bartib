@@ -99,6 +99,23 @@ bartib list --yesterday
 bartib current
 ```
 
+### Create a report
+
+This will create a report of how much time has been spent on which projects and activities:
+
+```
+bartib report
+```
+
+The `report` subcommand accepts most of the arguments that the `list` subcommand accepts:
+
+```
+bartib report --today
+bartib report --yesterday
+bartib report --from 2021-09-01 --to 2021-09-05
+bartib report --date 2021-09-03
+```
+
 ### Edit activities
 
 To change tracked activities, just open the file with your activities log in any text editor. To facilitate this, bartib offers the `edit` subcommand:
