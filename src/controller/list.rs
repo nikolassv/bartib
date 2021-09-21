@@ -64,13 +64,8 @@ pub fn list_projects(file_name: &str) -> Result<()> {
 pub fn display_last_activity(file_name: &str) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
 
-    let last_activity = getter::get_last_activity_by_end(&file_content);
-
-    if let Some(activity) = last_activity {
-        list::display_single_activity(&activity);
-    } else {
-        println!("No activity has been finished yet.")
-    }
+    let descriptions_and_projects : Vec<(&String, &String)> = getter::get_descriptions_and_projects(&file_content).into_iter().collect();
+    list::list_descriptions_and_projects(&descriptions_and_projects[..]);
 
     Ok(())
 }
