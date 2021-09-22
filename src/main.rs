@@ -105,6 +105,16 @@ fn main() -> Result<()> {
                         .help("a description of the new activity")
                         .takes_value(true),
                 )
+                .arg(
+                    Arg::with_name("number")
+                        .short("n")
+                        .long("number")
+                        .value_name("NUMBER")
+                        .help("maximum number of activities to display")
+                        .required(false)
+                        .takes_value(true)
+                        .default_value("0")
+                )
                 .arg(&arg_time),
         )
         .subcommand(
@@ -147,7 +157,20 @@ fn main() -> Result<()> {
                 .arg(&arg_today)
                 .arg(&arg_yesterday),
         )
-        .subcommand(SubCommand::with_name("last").about("displays last finished acitivity"))
+        .subcommand(
+            SubCommand::with_name("last")
+                .about("displays last finished acitivity")
+                .arg(
+                    Arg::with_name("number")
+                        .short("n")
+                        .long("number")
+                        .value_name("NUMBER")
+                        .help("maximum number of activities to display")
+                        .required(false)
+                        .takes_value(true)
+                        .default_value("10")
+                )
+        )
         .subcommand(SubCommand::with_name("projects").about("list all projects"))
         .subcommand(
             SubCommand::with_name("edit")
@@ -184,8 +207,12 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let activity_description = sub_m.value_of("description");
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
                 .map(|t| Local::today().naive_local().and_time(t));
+            let number = get_number_argument_or_ignore(
+                sub_m.value_of("number"),
+                "-n/--number",
+            ).unwrap_or(0);
 
-            bartib::controller::manipulation::continue_last_activity(file_name, project_name, activity_description, time)
+            bartib::controller::manipulation::continue_last_activity(file_name, project_name, activity_description, time, number)
         }
         ("stop", Some(sub_m)) => {
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
@@ -195,25 +222,6 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         }
         ("current", Some(_)) => bartib::controller::list::list_running(file_name),
         ("list", Some(sub_m)) => {
-            let mut filter = bartib::data::getter::ActivityFilter {
-                number_of_activities: None,
-                from_date: get_date_argument_or_ignore(sub_m.value_of("from_date"), "--from"),
-                to_date: get_date_argument_or_ignore(sub_m.value_of("to_date"), "--to"),
-                date: get_date_argument_or_ignore(sub_m.value_of("date"), "-d/--date"),
-            };
-
-            if sub_m.is_present("today") {
-                filter.date = Some(Local::now().naive_local().date());
-            }
-
-            if sub_m.is_present("yesterday") {
-                filter.date = Some(Local::now().naive_local().date() - Duration::days(1));
-            }
-
-            let do_group_activities = !sub_m.is_present("no_grouping") && !filter.date.is_some();
-            bartib::controller::list::list(file_name, filter, do_group_activities)
-        }
-        ("report", Some(sub_m)) => {
             let mut filter = bartib::data::getter::ActivityFilter {
                 number_of_activities: get_number_argument_or_ignore(
                     sub_m.value_of("number"),
@@ -232,10 +240,35 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
                 filter.date = Some(Local::now().naive_local().date() - Duration::days(1));
             }
 
+            let do_group_activities = !sub_m.is_present("no_grouping") && !filter.date.is_some();
+            bartib::controller::list::list(file_name, filter, do_group_activities)
+        }
+        ("report", Some(sub_m)) => {
+            let mut filter = bartib::data::getter::ActivityFilter {
+                number_of_activities: None,
+                from_date: get_date_argument_or_ignore(sub_m.value_of("from_date"), "--from"),
+                to_date: get_date_argument_or_ignore(sub_m.value_of("to_date"), "--to"),
+                date: get_date_argument_or_ignore(sub_m.value_of("date"), "-d/--date"),
+            };
+
+            if sub_m.is_present("today") {
+                filter.date = Some(Local::now().naive_local().date());
+            }
+
+            if sub_m.is_present("yesterday") {
+                filter.date = Some(Local::now().naive_local().date() - Duration::days(1));
+            }
+
             bartib::controller::report::show_report(file_name, filter)
         }
-       ("projects", Some(_)) => bartib::controller::list::list_projects(file_name),
-        ("last", Some(_)) => bartib::controller::list::display_last_activity(file_name),
+        ("projects", Some(_)) => bartib::controller::list::list_projects(file_name),
+        ("last", Some(sub_m)) => {
+            let number = get_number_argument_or_ignore(
+                sub_m.value_of("number"),
+                "-n/--number",
+            ).unwrap_or(10);
+            bartib::controller::list::list_last_activities(file_name, number)
+        }
         ("edit", Some(sub_m)) => {
             let optional_editor_command = sub_m.value_of("editor");
             bartib::controller::manipulation::start_editor(file_name, optional_editor_command)

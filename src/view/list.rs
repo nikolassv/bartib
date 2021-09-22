@@ -97,18 +97,19 @@ pub fn list_descriptions_and_projects(descriptions_and_projects : &[(&String, &S
         println!("No activities have been tracked yet");
     } else {
         let mut descriptions_and_projects_table = table::Table::new(vec![
-            "Index".to_string(),
+            "#".to_string(),
             "Description".to_string(),
             "Project".to_string()
         ]);
 
-        let mut i  = 0;
+        let mut i  = descriptions_and_projects.len();
 
         for (description, project) in descriptions_and_projects {
+            i = i.saturating_sub(1);
+
             descriptions_and_projects_table.add_row(
-                table::Row::new(vec![i.to_string(), description.to_string(), project.to_string()])
+                table::Row::new(vec![format!("[{}]", i), description.to_string(), project.to_string()])
             );
-            i += 1;
         }
 
         println!("\n{}", descriptions_and_projects_table);

@@ -29,12 +29,12 @@ pub fn list(file_name: &str, filter: getter::ActivityFilter, do_group_activities
 
     if do_group_activities {
         list::list_activities_grouped_by_date(
-            &filtered_activities[first_element..filtered_activities.len()],
+            &filtered_activities[first_element..],
         );
     } else {
         let with_start_dates = !filter.date.is_some();
         list::list_activities(
-            &filtered_activities[first_element..filtered_activities.len()],
+            &filtered_activities[first_element..],
             with_start_dates,
         );
     }
@@ -61,11 +61,13 @@ pub fn list_projects(file_name: &str) -> Result<()> {
 }
 
 // return last finished activity
-pub fn display_last_activity(file_name: &str) -> Result<()> {
+pub fn list_last_activities(file_name: &str, number: usize) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
 
-    let descriptions_and_projects : Vec<(&String, &String)> = getter::get_descriptions_and_projects(&file_content).into_iter().collect();
-    list::list_descriptions_and_projects(&descriptions_and_projects[..]);
+    let descriptions_and_projects : Vec<(&String, &String)> = getter::get_descriptions_and_projects(&file_content);
+    let first_element = descriptions_and_projects.len().saturating_sub(number);
+
+    list::list_descriptions_and_projects(&descriptions_and_projects[first_element..]);
 
     Ok(())
 }

@@ -1,4 +1,4 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashSet;
 use chrono::{naive, NaiveDate};
 
 use crate::data::activity;
@@ -11,17 +11,19 @@ pub struct ActivityFilter {
     pub date: Option<NaiveDate>,
 }
 
-pub fn get_descriptions_and_projects(file_content: &[bartib_file::Line]) -> VecDeque<(&String, &String)> {
-    let mut known_descriptions_and_projects : HashSet<(&String, &String)> = HashSet::new();
-    let mut descriptions_and_projects : VecDeque<(&String, &String)> = VecDeque::new();
+pub fn get_descriptions_and_projects(file_content: &[bartib_file::Line]) -> Vec<(&String, &String)> {
+    let mut activities : Vec<&activity::Activity> = get_activities(file_content).collect();
+    activities.sort_by_key(|activity| activity.start);
+    activities.reverse();
 
-    // TODO: sortierung nach Start-Zeit
+    let mut known_descriptions_and_projects : HashSet<(&String, &String)> = HashSet::new();
+    let mut descriptions_and_projects : Vec<(&String, &String)> = Vec::new();
+
     for description_and_project in get_activities(file_content).map(|a| (&a.description, &a.project))  {
         if !known_descriptions_and_projects.contains(&description_and_project) {
             known_descriptions_and_projects.insert(description_and_project);
-            descriptions_and_projects.push_back(description_and_project);
+            descriptions_and_projects.push(description_and_project);
         }
-
     }
 
     descriptions_and_projects
