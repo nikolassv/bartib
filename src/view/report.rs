@@ -62,7 +62,6 @@ fn print_descriptions_with_durations<'a>(f: &mut fmt::Formatter<'_>, activities 
             duration = format_util::format_duration(&description_duration)
         )?;
     }
-    writeln!(f, "")?;
 
     Ok(())
 }
