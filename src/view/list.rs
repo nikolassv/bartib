@@ -91,20 +91,29 @@ pub fn list_running_activities(running_activities: &[&activity::Activity]) {
     }
 }
 
-// displays a single activity
-pub fn display_single_activity(activity: &activity::Activity) {
-    println!("Begin: {}", activity.start.format(conf::FORMAT_DATETIME));
+// display a list of projects and descriptions with index number
+pub fn list_descriptions_and_projects(descriptions_and_projects : &[(&String, &String)]) {
+    if descriptions_and_projects.is_empty() {
+        println!("No activities have been tracked yet");
+    } else {
+        let mut descriptions_and_projects_table = table::Table::new(vec![
+            " # ".to_string(),
+            "Description".to_string(),
+            "Project".to_string()
+        ]);
 
-    if let Some(end) = activity.end {
-        println!("End: {}", end.format(conf::FORMAT_DATETIME));
-        println!(
-            "Duration: {}",
-            format_util::format_duration(&activity.get_duration())
-        );
+        let mut i  = descriptions_and_projects.len();
+
+        for (description, project) in descriptions_and_projects {
+            i = i.saturating_sub(1);
+
+            descriptions_and_projects_table.add_row(
+                table::Row::new(vec![format!("[{}]", i), description.to_string(), project.to_string()])
+            );
+        }
+
+        println!("\n{}", descriptions_and_projects_table);
     }
-
-    println!("Project: {}", activity.project);
-    println!("Description: {}", activity.description);
 }
 
 // create a row for a activity

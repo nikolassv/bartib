@@ -67,24 +67,33 @@ pub fn continue_last_activity(
     project_name: Option<&str>,
     activity_description: Option<&str>,
     time: Option<NaiveDateTime>,
+    number: usize
 ) -> Result<()> {
     let mut file_content = bartib_file::get_file_content(file_name)?;
 
-    let optional_last_activity =
-        getter::get_last_activity_by_start(&file_content).or(getter::get_last_activity_by_end(&file_content));
+    let descriptions_and_projects : Vec<(&String, &String)> = getter::get_descriptions_and_projects(&file_content);
 
-    if let Some(last_activity) = optional_last_activity {
+    if descriptions_and_projects.is_empty() {
+        bail!("No activity has been started before.")
+    }
+
+    if number > descriptions_and_projects.len() {
+        bail!(format!("Less than {} distinct activities have been logged yet", number));
+    }
+
+    let i = descriptions_and_projects.len().saturating_sub(number).saturating_sub(1);
+    let optional_description_and_project = descriptions_and_projects.get(i);
+
+    if let Some((description, project)) = optional_description_and_project {
         let new_activity = activity::Activity::start(
-            project_name.unwrap_or(&last_activity.project).to_string(),
-            activity_description
-                .unwrap_or(&last_activity.description)
-                .to_string(),
+            project_name.unwrap_or(project).to_string(),
+            activity_description.unwrap_or(description).to_string(),
             time,
         );
         stop_all_running_activities(&mut file_content, time);
         save_new_activity(file_name, &mut file_content, new_activity)
     } else {
-        bail!("No activity has been started before.")
+        bail!(format!("Less than {} distinct activities have been logged yet", number));
     }
 }
 
