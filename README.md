@@ -24,7 +24,9 @@ Print help information:
 bartib -h
 ```
 
-### Start a new activity
+### Tracking activities
+
+#### Start a new activity
 
 Start a new activity with a short description and an associated project:
 
@@ -40,7 +42,7 @@ The `-t/--time` option specifies at which time of the current day the new activi
 bartib start -p "The name of the associated project" -d "A description of the activity" -t 13:45
 ```
 
-### Stop a running activity
+#### Stop a running activity
 
 Stops the currently running activity:
 
@@ -50,17 +52,47 @@ bartib stop
 
 The `-t/--time` option specifies at which time of the current day the activities stop.
 
-### Continue the last activity
+#### Continue a recent activity
+
+Instead of typing a project and a description for each new activity, it is possible to continue a recent activity. The `last` subcommand prints a list of recently 
+used projects and descriptions. Per default it prints 10 lines. The `-n/--number` option may be used to print a longer list.
 
 ```
-bartib continue [-p "Another project"] [-d "Another description"]
+bartib last [-n 25]
 ```
 
-This continues the last activity. If an activity is currently tracked, bartib stops and restarts this activity. The associated project and description may be overwritten by setting a `-p / --project` or `-d / --description` option.
+In the list each activity will be asigned an index. This index can be used with the `continue` subcommand to restart the selected activitiy. The description
+and or the project of this activity can be overwritten for the new activity with the help of the `-d/--description` respectively the `-p/--project` argument.
+The `-t/--time` option may be used to specify at which time of the current day the activity should be restarted. If an activity is currently tracked, bartib 
+stops it at the time the new activity starts.
 
-The `-t/--time` option specifies at which time of the current day the  activity (re-)starts.
+```
+bartib continue [3] [-p "Another project"] [-d "Another description"] [-t 8:45]
+```
 
-### List activities
+The default value for the index parameter is `0` which always points to the most recently tracked activity. Therefore `bartib continue` without any parameters
+or options may be used to continue the most recently tracked activity.
+
+### Reporting and listing activities
+
+#### Create a report
+
+This will create a report of how much time has been spent on which projects and activities:
+
+```
+bartib report
+```
+
+The `report` subcommand accepts most of the arguments that the `list` subcommand accepts:
+
+```
+bartib report --today
+bartib report --yesterday
+bartib report --from 2021-09-01 --to 2021-09-05
+bartib report --date 2021-09-03
+```
+
+#### List activities
 
 All activities:
 
@@ -93,30 +125,10 @@ bartib list --today
 bartib list --yesterday
 ```
 
-### List all currently running activities
+### Miscellaneous commands
 
-```
-bartib current
-```
 
-### Create a report
-
-This will create a report of how much time has been spent on which projects and activities:
-
-```
-bartib report
-```
-
-The `report` subcommand accepts most of the arguments that the `list` subcommand accepts:
-
-```
-bartib report --today
-bartib report --yesterday
-bartib report --from 2021-09-01 --to 2021-09-05
-bartib report --date 2021-09-03
-```
-
-### Edit activities
+#### Edit activities
 
 To change tracked activities, just open the file with your activities log in any text editor. To facilitate this, bartib offers the `edit` subcommand:
 
@@ -130,13 +142,15 @@ This will open your log in the editor you have defined in your `EDITOR` environm
 bartib edit -e vim
 ```
 
-### Show last activity
+
+#### List all currently running activities
 
 ```
-bartib last
+bartib current
 ```
 
-### List all projects
+
+#### List all projects
 
 This command lists all projects for which an activity has ever been logged:
 

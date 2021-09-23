@@ -53,6 +53,18 @@ fn main() -> Result<()> {
         .conflicts_with_all(&["from_date", "to_date", "date", "today"])
         .takes_value(false);
 
+    let arg_description = Arg::with_name("description")
+        .short("d")
+        .value_name("DESCRIPTION")
+        .help("the description of the new activity")
+        .takes_value(true);
+
+    let arg_project = Arg::with_name("project")
+        .short("p")
+        .value_name("PROJECT")
+        .help("the project to which the new activity belongs")
+        .takes_value(true);
+
     let matches = App::new("bartib")
         .version("0.1")
         .author("Nikolas Schmidt-Voigt <nikolas.schmidt-voigt@posteo.de>")
@@ -70,47 +82,19 @@ fn main() -> Result<()> {
         .subcommand(
             SubCommand::with_name("start")
                 .about("starts a new activity")
-                .arg(
-                    Arg::with_name("project")
-                        .short("p")
-                        .value_name("PROJECT")
-                        .help("the project to which the new activity belong")
-                        .required(true)
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("description")
-                        .short("d")
-                        .value_name("DESCRIPTION")
-                        .help("a description of the new activity")
-                        .required(true)
-                        .takes_value(true),
-                )
+                .arg(&arg_description)
+                .arg(&arg_project)
                 .arg(&arg_time),
         )
         .subcommand(
             SubCommand::with_name("continue")
-                .about("continues the last activity")
-                .arg(
-                    Arg::with_name("project")
-                        .short("p")
-                        .value_name("PROJECT")
-                        .help("the project to which the new activity belong")
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("description")
-                        .short("d")
-                        .value_name("DESCRIPTION")
-                        .help("a description of the new activity")
-                        .takes_value(true),
-                )
+                .about("continues a previous activity")
+                .arg(&arg_description)
+                .arg(&arg_project)
                 .arg(
                     Arg::with_name("number")
-                        .short("n")
-                        .long("number")
                         .value_name("NUMBER")
-                        .help("maximum number of activities to display")
+                        .help("the number of the activity to continue (see subcommand `last`)")
                         .required(false)
                         .takes_value(true)
                         .default_value("0")
@@ -159,13 +143,13 @@ fn main() -> Result<()> {
         )
         .subcommand(
             SubCommand::with_name("last")
-                .about("displays last finished acitivity")
+                .about("displays the descriptions and projects of recent activities")
                 .arg(
                     Arg::with_name("number")
                         .short("n")
                         .long("number")
                         .value_name("NUMBER")
-                        .help("maximum number of activities to display")
+                        .help("maximum number of lines to display")
                         .required(false)
                         .takes_value(true)
                         .default_value("10")

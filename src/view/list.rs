@@ -97,7 +97,7 @@ pub fn list_descriptions_and_projects(descriptions_and_projects : &[(&String, &S
         println!("No activities have been tracked yet");
     } else {
         let mut descriptions_and_projects_table = table::Table::new(vec![
-            "#".to_string(),
+            " # ".to_string(),
             "Description".to_string(),
             "Project".to_string()
         ]);
