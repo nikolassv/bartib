@@ -14,13 +14,7 @@ pub fn list_activities(activities: &[&activity::Activity], with_start_dates: boo
         return;
     }
 
-    let mut activity_table = table::Table::new(vec![
-        "Started".to_string(),
-        "Stopped".to_string(),
-        "Description".to_string(),
-        "Project".to_string(),
-        "Duration".to_string(),
-    ]);
+    let mut activity_table = create_activity_table();
 
     activities
         .iter()
@@ -37,13 +31,7 @@ pub fn list_activities_grouped_by_date(activities: &[&activity::Activity]) {
         return;
     }
 
-    let mut activity_table = table::Table::new(vec![
-        "Started".to_string(),
-        "Stopped".to_string(),
-        "Description".to_string(),
-        "Project".to_string(),
-        "Duration".to_string(),
-    ]);
+    let mut activity_table = create_activity_table();
 
     group_activities_by_date(activities)
         .iter()
@@ -53,6 +41,16 @@ pub fn list_activities_grouped_by_date(activities: &[&activity::Activity]) {
         .for_each(|g| activity_table.add_group(g));
 
     println!("\n{}", activity_table);
+}
+
+fn create_activity_table() -> table::Table {
+    table::Table::new(vec![
+        table::Column{ label: "Started".to_string(), wrap: table::Wrap::NoWrap },
+        table::Column{ label: "Stopped".to_string(), wrap: table::Wrap::NoWrap },
+        table::Column{ label: "Description".to_string(), wrap: table::Wrap::Wrap },
+        table::Column{ label: "Project".to_string(), wrap: table::Wrap::Wrap },
+        table::Column{ label: "Duration".to_string(), wrap: table::Wrap::NoWrap },
+    ])
 }
 
 fn create_activites_group(title: &str, activities: &[&activity::Activity]) -> table::Group {
@@ -69,10 +67,10 @@ pub fn list_running_activities(running_activities: &[&activity::Activity]) {
         println!("No Activity is currently running");
     } else {
         let mut activity_table = table::Table::new(vec![
-            "Started At".to_string(),
-            "Description".to_string(),
-            "Project".to_string(),
-            "Duration".to_string(),
+            table::Column{ label: "Started At".to_string(), wrap: table::Wrap::NoWrap },
+            table::Column{ label: "Description".to_string(), wrap: table::Wrap::Wrap },
+            table::Column{ label: "Project".to_string(), wrap: table::Wrap::Wrap },
+            table::Column{ label: "Duration".to_string(), wrap: table::Wrap::NoWrap },
         ]);
 
         running_activities
@@ -97,9 +95,9 @@ pub fn list_descriptions_and_projects(descriptions_and_projects : &[(&String, &S
         println!("No activities have been tracked yet");
     } else {
         let mut descriptions_and_projects_table = table::Table::new(vec![
-            " # ".to_string(),
-            "Description".to_string(),
-            "Project".to_string()
+            table::Column{ label: " # ".to_string(), wrap: table::Wrap::NoWrap },
+            table::Column{ label: "Description".to_string(), wrap: table::Wrap::Wrap },
+            table::Column{ label: "Project".to_string(), wrap: table::Wrap::Wrap },
         ]);
 
         let mut i  = descriptions_and_projects.len();
