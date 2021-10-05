@@ -1,8 +1,11 @@
 use std::cmp;
 use std::fmt;
 use std::str;
+use std::borrow::Cow;
 
 use nu_ansi_term::Style;
+use textwrap;
+use crate::conf;
 
 pub enum Wrap {
     Wrap,
@@ -74,6 +77,11 @@ impl Table {
             .collect()
     }
 
+    /* Calculates the widths for the columns in a table
+
+        If the width of the longest line in the table exceeds the maximum width for the output
+        all the wrapable columns shrink to an acceptable size.
+     */
     fn get_column_width(&self, max_width: usize) -> Vec<usize> {
         let mut max_column_width = self.get_max_column_width();
 
@@ -82,10 +90,11 @@ impl Table {
         let mut number_of_wrappable_columns : usize = columns_wrap.iter().filter(|w| matches!(w, Wrap::Wrap)).count();
 
         if width <= max_width || number_of_wrappable_columns == 0 {
-            // we do or can not wrap
+            // we do not need to or can not wrap
             return max_column_width;
         }
 
+        // the total width of the columns that we may not wrap
         let unwrapable_width : usize = max_column_width.iter().zip(columns_wrap.iter())
             .filter(|(_, wrap)| matches!(wrap, Wrap::NoWrap))
             .map(|(width, _)| width)
@@ -96,14 +105,14 @@ impl Table {
             return max_column_width;
         }
 
-        let mut available_width_for_wrappable_columns = max_width - unwrapable_width;
-
         // we start with a width of 0 for all the wrapable columns
         let mut column_width : Vec<usize> = max_column_width.iter().zip(columns_wrap.iter())
             .map(|(width, wrap)| if matches!(wrap, Wrap::NoWrap) { width.clone() } else { 0 })
             .collect();
 
         // then we distribute the available width to the wrappable columns
+        let mut available_width_for_wrappable_columns = max_width - unwrapable_width;
+
         while available_width_for_wrappable_columns > 0 && number_of_wrappable_columns > 0 {
 
             // the maximum additional width we give each column in this round
@@ -123,7 +132,7 @@ impl Table {
                         available_width_for_wrappable_columns -= *max_width - *width;
                         *width = *max_width;
 
-                        // this row won't need any more width
+                        // this column won't need any more width
                         number_of_wrappable_columns -= 1;
                     }
                 }
@@ -157,7 +166,11 @@ impl Table {
 
 impl fmt::Display for Table {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let column_width = self.get_column_width(1000); // TODO
+
+        let terminal_width = term_size::dimensions_stdout().map(|d| d.0)
+            .unwrap_or(conf::DEFAULT_WIDTH);
+
+        let column_width = self.get_column_width(terminal_width - self.columns.len());
 
         let labels : Vec<&String> = self.columns.iter().map(|c| &c.label).collect();
 
@@ -211,15 +224,33 @@ fn write_cells<T: AsRef<str> + std::fmt::Display>(
     column_width: &[usize],
     style: Option<Style>,
 ) -> fmt::Result {
-    let cells_with_width: Vec<(Option<&usize>, &str)> = cells
+
+    let wrapped_cells : Vec<Vec<Cow<str>>> = cells
         .iter()
-        .map(|cell| cell.as_ref())
         .enumerate()
-        .map(|(i, cell)| (column_width.get(i), cell))
+        .map(|(i, c)| match column_width.get(i) {
+            Some(s) => textwrap::wrap(c.as_ref(), textwrap::Options::new(*s)),
+            None => {
+                let mut lines = Vec::new();
+                lines.push(Cow::from(c.as_ref()));
+                lines
+            }
+        })
         .collect();
 
-    for (width, cell) in cells_with_width {
-        write_with_width_and_style(f, cell, width, style)?;
+    let most_lines : usize = wrapped_cells.iter().map(|c| c.len()).max().unwrap_or(1);
+
+    for line in 0..most_lines {
+        for (width, wrapped_cell) in column_width.iter().zip(wrapped_cells.iter()) {
+
+            match wrapped_cell.get(line) {
+                Some(c) =>  write_with_width_and_style(f, c, width, style)?,
+                None => write!(f, "{} ", "\u{a0}".repeat(*width))?
+            }
+        }
+
+        let is_last_line = line + 1 < most_lines;
+        if is_last_line { writeln!(f)?; }
     }
 
     Ok(())
@@ -228,17 +259,17 @@ fn write_cells<T: AsRef<str> + std::fmt::Display>(
 fn write_with_width_and_style(
     f: &mut fmt::Formatter<'_>,
     content: &str,
-    opt_width: Option<&usize>,
+    width: &usize,
     opt_style: Option<Style>,
 ) -> fmt::Result {
-    let content_length = content.chars().count();
     let style_prefix = opt_style.map_or("".to_string(), |style| style.prefix().to_string());
     let style_suffix = opt_style.map_or("".to_string(), |style| style.suffix().to_string());
-    let width = opt_width.unwrap_or(&content_length);
 
+    // cells are filled with non-breaking white space. Contrary to normal spaces non-breaking white
+    // space will be styled (e.g. underlined)
     write!(
         f,
-        "{prefix}{content:<width$}{suffix} ",
+        "{prefix}{content:\u{a0}<width$}{suffix} ",
         prefix = style_prefix,
         content = content,
         width = width,
@@ -371,7 +402,7 @@ mod tests {
 
         assert_eq!(
             format!("{}", t),
-            "\u{1b}[4ma  \u{1b}[0m \u{1b}[4mb   \u{1b}[0m \u{1b}[4mc   \u{1b}[0m \nabc defg \na   b    cdef \n"
+            "\u{1b}[4ma\u{a0}\u{a0}\u{1b}[0m \u{1b}[4mb\u{a0}\u{a0}\u{a0}\u{1b}[0m \u{1b}[4mc\u{a0}\u{a0}\u{a0}\u{1b}[0m \nabc defg \na\u{a0}\u{a0} b\u{a0}\u{a0}\u{a0} cdef \n"
         );
     }
 
