@@ -5,6 +5,7 @@ use std::borrow::Cow;
 
 use nu_ansi_term::Style;
 use textwrap;
+
 use crate::conf;
 
 pub enum Wrap {
