@@ -14,20 +14,23 @@ use crate::view::format_util;
 type ProjectMap<'a> = BTreeMap<&'a str, (Vec<&'a activity::Activity>, Duration)>;
 
 struct Report<'a> {
-    activities: &'a [&'a activity::Activity],
+    project_map: ProjectMap<'a>,
+    total_duration: Duration
 }
 
 impl<'a> Report<'a> {
     fn new(activities: &'a [&'a activity::Activity]) -> Report<'a> {
-        Report { activities }
+        Report { 
+            project_map: create_project_map(&activities),
+            total_duration: sum_duration(&activities)
+        }
     }
 }
 
 impl<'a> fmt::Display for Report<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let project_map = create_project_map(self.activities);
-        let mut longest_line = get_longest_line(&project_map).unwrap_or(0);
-        let longest_duration_string = get_longest_duration_string(&project_map).unwrap_or(0);
+        let mut longest_line = get_longest_line(&self.project_map).unwrap_or(0);
+        let longest_duration_string = get_longest_duration_string(&self).unwrap_or(0);
 
         let terminal_width = term_size::dimensions_stdout().map(|d| d.0)
             .unwrap_or(conf::DEFAULT_WIDTH);
@@ -36,14 +39,14 @@ impl<'a> fmt::Display for Report<'a> {
             longest_line = terminal_width - longest_duration_string - 1;
         }
 
-        for (project, (activities, duration)) in project_map.iter() {
+        for (project, (activities, duration)) in self.project_map.iter() {
             print_project_heading(f, project, duration, longest_line, longest_duration_string)?;
 
             print_descriptions_with_durations(f, activities, longest_line, longest_duration_string)?;
             writeln!(f, "")?;
         }
 
-        print_total_duration(f, self.activities, longest_line)?;
+        print_total_duration(f, self.total_duration, longest_line)?;
 
         Ok(())
     }
@@ -52,6 +55,32 @@ impl<'a> fmt::Display for Report<'a> {
 pub fn show_activities<'a>(activities: &'a [&'a activity::Activity]) {
     let report = Report::new(activities);
     println!("\n{}", report);
+}
+
+fn create_project_map<'a>(activities: &'a [&'a activity::Activity]) -> ProjectMap {
+    let mut project_map: ProjectMap = BTreeMap::new();
+
+    activities.iter().for_each(|a| {
+        project_map.entry(&a.project)
+            .or_insert_with(|| (Vec::<&'a activity::Activity>::new(), Duration::seconds(0)))
+            .0.push(a);
+    });
+
+    for (_project, (activities, duration)) in project_map.iter_mut() {
+        *duration = sum_duration(activities);
+    }
+
+    project_map
+}
+
+fn sum_duration(activities: &[&activity::Activity]) -> Duration {
+    let mut duration = Duration::seconds(0);
+
+    for activity in activities {
+        duration = duration.add(activity.get_duration());
+    }
+
+    duration
 }
 
 fn print_project_heading(f: &mut Formatter, project: &&str, duration: &Duration, longest_line: usize, duration_width: usize) -> fmt::Result {
@@ -102,39 +131,16 @@ fn print_descriptions_with_durations<'a>(f: &mut fmt::Formatter<'_>, activities:
     Ok(())
 }
 
-fn print_total_duration<'a>(f: &mut fmt::Formatter<'_>, activities: &'a [&'a activity::Activity], line_width: usize) -> fmt::Result {
-    let total_duration = sum_duration(activities);
-
-    if activities.is_empty() {
-        writeln!(f, "You have not tracked any activities in the given time range")?;
-    } else {
-        writeln!(f, "{prefix}{total:.<width$} {duration}{suffix}",
-                 prefix = Style::new().bold().prefix(),
-                 total = "Total",
-                 width = line_width,
-                 duration = format_util::format_duration(&total_duration),
-                 suffix = Style::new().bold().infix(Style::new())
-        )?;
-    }
+fn print_total_duration<'a>(f: &mut fmt::Formatter<'_>, total_duration: Duration, line_width: usize) -> fmt::Result {
+    writeln!(f, "{prefix}{total:.<width$} {duration}{suffix}",
+                prefix = Style::new().bold().prefix(),
+                total = "Total",
+                width = line_width,
+                duration = format_util::format_duration(&total_duration),
+                suffix = Style::new().bold().infix(Style::new())
+    )?;
 
     Ok(())
-}
-
-
-fn create_project_map<'a>(activities: &'a [&'a activity::Activity]) -> ProjectMap {
-    let mut project_map: ProjectMap = BTreeMap::new();
-
-    activities.iter().for_each(|a| {
-        project_map.entry(&a.project)
-            .or_insert_with(|| (Vec::<&'a activity::Activity>::new(), Duration::seconds(0)))
-            .0.push(a);
-    });
-
-    for (_project, (activities, duration)) in project_map.iter_mut() {
-        *duration = sum_duration(activities);
-    }
-
-    project_map
 }
 
 fn group_activities_by_description<'a>(activities: &'a [&'a activity::Activity]) -> BTreeMap<&str, Vec<&'a activity::Activity>> {
@@ -149,16 +155,6 @@ fn group_activities_by_description<'a>(activities: &'a [&'a activity::Activity])
     activity_map
 }
 
-fn sum_duration(activities: &[&activity::Activity]) -> Duration {
-    let mut duration = Duration::seconds(0);
-
-    for activity in activities {
-        duration = duration.add(activity.get_duration());
-    }
-
-    duration
-}
-
 fn get_longest_line(project_map: &ProjectMap) -> Option<usize> {
     let longest_project_line = project_map.keys().map(|p| p.chars().count()).max();
     let longest_activity_line = project_map.values()
@@ -168,21 +164,22 @@ fn get_longest_line(project_map: &ProjectMap) -> Option<usize> {
     get_max_option(longest_project_line, longest_activity_line)
 }
 
-fn get_longest_duration_string(project_map: &ProjectMap) -> Option<usize> {
-    let longest_project_duration = project_map.values()
+fn get_longest_duration_string(report: &Report) -> Option<usize> {
+    let longest_project_duration = report.project_map.values()
         .map(|(_a, d)| format_util::format_duration(&d))
         .map(|s| s.chars().count())
         .max();
-    let longest_activity_duration = project_map.values()
+    let longest_activity_duration = report.project_map.values()
         .map(|(a, _d)| a)
         .flatten()
         .map(|a| format_util::format_duration(&a.get_duration()))
         .map(|s| s.chars().count())
         .max();
+        
+    let longest_single_duration = get_max_option(longest_project_duration, longest_activity_duration);
+    let length_of_total_duration = format_util::format_duration(&report.total_duration).chars().count();
 
-    // TODO: take string of total duration into account
-
-    get_max_option(longest_project_duration, longest_activity_duration)
+    get_max_option(longest_single_duration, Some(length_of_total_duration))
 }
 
 fn get_max_option(o1: Option<usize>, o2: Option<usize>) -> Option<usize> {
@@ -235,8 +232,8 @@ mod tests {
         let m = create_project_map(&activities);
 
         assert_eq!(m.len(), 2);
-        assert_eq!(m.get("p1").unwrap().len(), 2);
-        assert_eq!(m.get("p2").unwrap().len(), 1);
+        assert_eq!(m.get("p1").unwrap().0.len(), 2);
+        assert_eq!(m.get("p2").unwrap().0.len(), 1);
     }
 
     #[test]
