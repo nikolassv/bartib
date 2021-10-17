@@ -1,8 +1,22 @@
 use std::cmp;
 use std::fmt;
 use std::str;
+use std::borrow::Cow;
 
 use nu_ansi_term::Style;
+use textwrap;
+
+use crate::conf;
+
+pub enum Wrap {
+    Wrap,
+    NoWrap
+}
+
+pub struct Column {
+    pub label: String,
+    pub wrap: Wrap
+}
 
 pub struct Row {
     content: Vec<String>,
@@ -15,7 +29,7 @@ pub struct Group {
 }
 
 pub struct Table {
-    header: Vec<String>,
+    columns: Vec<Column>,
     rows: Vec<Row>,
     groups: Vec<Group>,
 }
@@ -40,9 +54,9 @@ impl Group {
 }
 
 impl Table {
-    pub fn new(header: Vec<String>) -> Table {
+    pub fn new(columns: Vec<Column>) -> Table {
         Table {
-            header,
+            columns,
             groups: Vec::new(),
             rows: Vec::new(),
         }
@@ -64,8 +78,75 @@ impl Table {
             .collect()
     }
 
-    fn get_column_width(&self) -> Vec<usize> {
-        let mut column_width: Vec<usize> = self.header.iter().map(|e| e.chars().count()).collect();
+    /* Calculates the widths for the columns in a table
+
+        If the width of the longest line in the table exceeds the maximum width for the output
+        all the wrapable columns shrink to an acceptable size.
+     */
+    fn get_column_width(&self, max_width: usize) -> Vec<usize> {
+        let mut max_column_width = self.get_max_column_width();
+
+        let width : usize = max_column_width.iter().sum();
+        let columns_wrap : Vec<&Wrap> = self.columns.iter().map(|c| &c.wrap).collect();
+        let mut number_of_wrappable_columns : usize = columns_wrap.iter().filter(|w| matches!(w, Wrap::Wrap)).count();
+
+        if width <= max_width || number_of_wrappable_columns == 0 {
+            // we do not need to or can not wrap
+            return max_column_width;
+        }
+
+        // the total width of the columns that we may not wrap
+        let unwrapable_width : usize = max_column_width.iter().zip(columns_wrap.iter())
+            .filter(|(_, wrap)| matches!(wrap, Wrap::NoWrap))
+            .map(|(width, _)| width)
+            .sum();
+
+        if unwrapable_width > max_width {
+            // In this case we can not get any decent layout with wrapping. We rather do not wrap at all
+            return max_column_width;
+        }
+
+        // we start with a width of 0 for all the wrapable columns
+        let mut column_width : Vec<usize> = max_column_width.iter().zip(columns_wrap.iter())
+            .map(|(width, wrap)| if matches!(wrap, Wrap::NoWrap) { width.clone() } else { 0 })
+            .collect();
+
+        // then we distribute the available width to the wrappable columns
+        let mut available_width_for_wrappable_columns = max_width - unwrapable_width;
+
+        while available_width_for_wrappable_columns > 0 && number_of_wrappable_columns > 0 {
+
+            // the maximum additional width we give each column in this round
+            let additional_width_for_each = cmp::max(1, available_width_for_wrappable_columns / number_of_wrappable_columns);
+            let width_data = column_width.iter_mut().zip(max_column_width.iter_mut()).zip(columns_wrap.iter());
+
+            for ((width, max_width), wrap) in width_data {
+                if available_width_for_wrappable_columns > 0 && matches!(wrap, Wrap::Wrap) && width < max_width {
+                    if max_width > &mut width.saturating_add(additional_width_for_each) {
+                        // While the maximum width for this column will not be reached, we add all
+                        // the additional width
+                        available_width_for_wrappable_columns -= additional_width_for_each;
+                        *width = width.saturating_add(additional_width_for_each);
+                    } else {
+                        // The column does not need all the additional width. We give it only the
+                        // additional width it needs
+                        available_width_for_wrappable_columns -= *max_width - *width;
+                        *width = *max_width;
+
+                        // this column won't need any more width
+                        number_of_wrappable_columns -= 1;
+                    }
+                }
+            }
+        }
+
+        column_width
+    }
+
+    fn get_max_column_width(&self) -> Vec<usize> {
+        let mut max_column_width: Vec<usize> = self.columns.iter()
+            .map(|c| c.label.chars().count())
+            .collect();
 
         for row in self.get_all_rows() {
             row.content
@@ -73,25 +154,30 @@ impl Table {
                 .map(|cell| cell.chars().count())
                 .enumerate()
                 .for_each(|(i, char_count)| {
-                    if let Some(old_w) = column_width.get(i) {
-                        column_width[i] = cmp::max(char_count, *old_w);
+                    if let Some(old_w) = max_column_width.get(i) {
+                        max_column_width[i] = cmp::max(char_count, *old_w);
                     } else {
-                        column_width.push(char_count);
+                        max_column_width.push(char_count);
                     }
                 });
         }
-
-        column_width
+        max_column_width
     }
 }
 
 impl fmt::Display for Table {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let column_width = self.get_column_width();
+
+        let terminal_width = term_size::dimensions_stdout().map(|d| d.0)
+            .unwrap_or(conf::DEFAULT_WIDTH);
+
+        let column_width = self.get_column_width(terminal_width - self.columns.len());
+
+        let labels : Vec<&String> = self.columns.iter().map(|c| &c.label).collect();
 
         write_cells(
             f,
-            &self.header,
+            &labels,
             &column_width,
             Some(Style::new().underline()),
         )?;
@@ -139,15 +225,33 @@ fn write_cells<T: AsRef<str> + std::fmt::Display>(
     column_width: &[usize],
     style: Option<Style>,
 ) -> fmt::Result {
-    let cells_with_width: Vec<(Option<&usize>, &str)> = cells
+
+    let wrapped_cells : Vec<Vec<Cow<str>>> = cells
         .iter()
-        .map(|cell| cell.as_ref())
         .enumerate()
-        .map(|(i, cell)| (column_width.get(i), cell))
+        .map(|(i, c)| match column_width.get(i) {
+            Some(s) => textwrap::wrap(c.as_ref(), textwrap::Options::new(*s)),
+            None => {
+                let mut lines = Vec::new();
+                lines.push(Cow::from(c.as_ref()));
+                lines
+            }
+        })
         .collect();
 
-    for (width, cell) in cells_with_width {
-        write_with_width_and_style(f, cell, width, style)?;
+    let most_lines : usize = wrapped_cells.iter().map(|c| c.len()).max().unwrap_or(1);
+
+    for line in 0..most_lines {
+        for (width, wrapped_cell) in column_width.iter().zip(wrapped_cells.iter()) {
+
+            match wrapped_cell.get(line) {
+                Some(c) =>  write_with_width_and_style(f, c, width, style)?,
+                None => write!(f, "{} ", "\u{a0}".repeat(*width))?
+            }
+        }
+
+        let is_last_line = line + 1 < most_lines;
+        if is_last_line { writeln!(f)?; }
     }
 
     Ok(())
@@ -156,17 +260,17 @@ fn write_cells<T: AsRef<str> + std::fmt::Display>(
 fn write_with_width_and_style(
     f: &mut fmt::Formatter<'_>,
     content: &str,
-    opt_width: Option<&usize>,
+    width: &usize,
     opt_style: Option<Style>,
 ) -> fmt::Result {
-    let content_length = content.chars().count();
     let style_prefix = opt_style.map_or("".to_string(), |style| style.prefix().to_string());
     let style_suffix = opt_style.map_or("".to_string(), |style| style.suffix().to_string());
-    let width = opt_width.unwrap_or(&content_length);
 
+    // cells are filled with non-breaking white space. Contrary to normal spaces non-breaking white
+    // space will be styled (e.g. underlined)
     write!(
         f,
-        "{prefix}{content:<width$}{suffix} ",
+        "{prefix}{content:\u{a0}<width$}{suffix} ",
         prefix = style_prefix,
         content = content,
         width = width,
@@ -179,15 +283,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn get_column_width() {
-        let mut t = Table::new(vec!["a".to_string(), "b".to_string(), "c".to_string()]);
+    fn get_column_width_without_wrapping() {
+        let mut t = Table::new(get_columns());
         let row1 = Row::new(vec!["abc".to_string(), "defg".to_string()]);
         let row2 = Row::new(vec!["a".to_string(), "b".to_string(), "cdef".to_string()]);
 
         t.add_row(row1);
         t.add_row(row2);
 
-        let column_width = t.get_column_width();
+        let column_width = t.get_column_width(100);
 
         assert_eq!(column_width[0], 3);
         assert_eq!(column_width[1], 4);
@@ -195,8 +299,102 @@ mod tests {
     }
 
     #[test]
+    fn get_column_width_with_wrapping() {
+        let mut t = Table::new(vec![
+            Column{ label: "a".to_string(), wrap: Wrap::NoWrap },
+            Column{ label: "b".to_string(), wrap: Wrap::Wrap },
+            Column{ label: "c".to_string(), wrap: Wrap::NoWrap },
+            Column{ label: "d".to_string(), wrap: Wrap::Wrap },
+            Column{ label: "e".to_string(), wrap: Wrap::Wrap },
+            Column{ label: "e".to_string(), wrap: Wrap::Wrap },
+        ]);
+        let row1 = Row::new(vec![
+            "abcdefg".to_string(), // 7
+            "abcdefghijkl".to_string(), // 12 -> muss gewrapt werden
+            "abcde".to_string(), // 5
+            "abc".to_string(), // 3 -> muss nicht gewrapt werden
+            "abcdefghijklmno".to_string(), // 15 -> muss gewrapt werden
+            "abcdefg".to_string() // 7 -> muss nicht gewrapt werden
+        ]);
+
+        t.add_row(row1);
+
+        let column_width = t.get_column_width(7 + 5 + 25);
+
+        assert_eq!(column_width[0], 7);
+        assert_eq!(column_width[1], 8);
+        assert_eq!(column_width[2], 5);
+        assert_eq!(column_width[3], 3);
+        assert_eq!(column_width[4], 7);
+        assert_eq!(column_width[5], 7);
+    }
+
+
+    #[test]
+    fn get_column_width_with_wrapping_not_possible() {
+        let mut t = Table::new(vec![
+            Column{ label: "a".to_string(), wrap: Wrap::NoWrap },
+            Column{ label: "b".to_string(), wrap: Wrap::NoWrap },
+            Column{ label: "c".to_string(), wrap: Wrap::NoWrap },
+            Column{ label: "d".to_string(), wrap: Wrap::NoWrap },
+            Column{ label: "e".to_string(), wrap: Wrap::NoWrap },
+            Column{ label: "e".to_string(), wrap: Wrap::NoWrap },
+        ]);
+        let row1 = Row::new(vec![
+            "abcdefg".to_string(), // 7
+            "abcdefghijkl".to_string(), // 12
+            "abcde".to_string(), // 5
+            "abc".to_string(), // 3
+            "abcdefghijklmno".to_string(), // 15
+            "abcdefg".to_string() // 7
+        ]);
+
+        t.add_row(row1);
+
+        let column_width = t.get_column_width(10);
+
+        assert_eq!(column_width[0], 7);
+        assert_eq!(column_width[1], 12);
+        assert_eq!(column_width[2], 5);
+        assert_eq!(column_width[3], 3);
+        assert_eq!(column_width[4], 15);
+        assert_eq!(column_width[5], 7);
+    }
+
+    #[test]
+    fn get_column_width_with_wrapping_not_enough_wrappable_space() {
+        let mut t = Table::new(vec![
+            Column{ label: "a".to_string(), wrap: Wrap::NoWrap },
+            Column{ label: "b".to_string(), wrap: Wrap::Wrap },
+            Column{ label: "c".to_string(), wrap: Wrap::NoWrap },
+            Column{ label: "d".to_string(), wrap: Wrap::Wrap },
+            Column{ label: "e".to_string(), wrap: Wrap::Wrap },
+            Column{ label: "e".to_string(), wrap: Wrap::Wrap },
+        ]);
+        let row1 = Row::new(vec![
+            "abcdefg".to_string(), // 7
+            "abcdefghijkl".to_string(), // 12
+            "abcde".to_string(), // 5
+            "abc".to_string(), // 3
+            "abcdefghijklmno".to_string(), // 15
+            "abcdefg".to_string() // 7
+        ]);
+
+        t.add_row(row1);
+
+        let column_width = t.get_column_width(10);
+
+        assert_eq!(column_width[0], 7);
+        assert_eq!(column_width[1], 12);
+        assert_eq!(column_width[2], 5);
+        assert_eq!(column_width[3], 3);
+        assert_eq!(column_width[4], 15);
+        assert_eq!(column_width[5], 7);
+    }
+
+    #[test]
     fn display() {
-        let mut t = Table::new(vec!["a".to_string(), "b".to_string(), "c".to_string()]);
+        let mut t = Table::new(get_columns());
         let row1 = Row::new(vec!["abc".to_string(), "defg".to_string()]);
         let row2 = Row::new(vec!["a".to_string(), "b".to_string(), "cdef".to_string()]);
 
@@ -205,7 +403,15 @@ mod tests {
 
         assert_eq!(
             format!("{}", t),
-            "\u{1b}[4ma  \u{1b}[0m \u{1b}[4mb   \u{1b}[0m \u{1b}[4mc   \u{1b}[0m \nabc defg \na   b    cdef \n"
+            "\u{1b}[4ma\u{a0}\u{a0}\u{1b}[0m \u{1b}[4mb\u{a0}\u{a0}\u{a0}\u{1b}[0m \u{1b}[4mc\u{a0}\u{a0}\u{a0}\u{1b}[0m \nabc defg \na\u{a0}\u{a0} b\u{a0}\u{a0}\u{a0} cdef \n"
         );
+    }
+
+    fn get_columns() -> Vec<Column> {
+        vec![
+            Column{ label: "a".to_string(), wrap: Wrap::NoWrap },
+            Column{ label: "b".to_string(), wrap: Wrap::NoWrap },
+            Column{ label: "c".to_string(), wrap: Wrap::NoWrap },
+        ]
     }
 }
