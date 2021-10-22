@@ -73,6 +73,14 @@ bartib continue [3] [-p "Another project"] [-d "Another description"] [-t 8:45]
 The default value for the index parameter is `0` which always points to the most recently tracked activity. Therefore `bartib continue` without any parameters
 or options may be used to continue the most recently tracked activity.
 
+#### Cancel all running activities
+
+This command cancels all running activities by deleting their entry in the activity log:
+
+```
+bartib cancel
+```
+
 ### Reporting and listing activities
 
 #### Create a report
