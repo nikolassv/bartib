@@ -60,6 +60,32 @@ pub fn stop(file_name: &str, time: Option<NaiveDateTime>) -> Result<()> {
         .context(format!("Could not write to file: {}", file_name))
 }
 
+// cancels all currently running activities
+pub fn cancel(file_name: &str) -> Result<()> {
+    let file_content = bartib_file::get_file_content(file_name)?;
+    let mut new_file_content : Vec<bartib_file::Line> = Vec::new();
+
+    for line in file_content {
+        match &line.activity {
+            Ok(activity) => {
+                if activity.is_stopped() {
+                    new_file_content.push(line);
+                } else {
+                    println!("Canceled activity: \"{}\" ({}) started at {}",
+                             activity.description,
+                             activity.project,
+                             activity.start.format(conf::FORMAT_DATETIME)
+                    );
+                }
+            },
+            Err(_) => new_file_content.push(line)
+        }
+    }
+
+    bartib_file::write_to_file(file_name, &new_file_content)
+        .context(format!("Could not write to file: {}", file_name))
+}
+
 
 // continue last activity
 pub fn continue_last_activity(

@@ -6,12 +6,14 @@ use std::str::FromStr;
 
 use crate::data::activity;
 
+#[derive(Debug)]
 pub enum LineStatus {
     Unchanged,
     Changed,
 }
 
 // a line in a bartib file
+#[derive(Debug)]
 pub struct Line {
     // the plaintext of the line as it has been read from the file
     // we save this to be able write untouched lines back to file without chaning them
@@ -78,5 +80,9 @@ pub fn write_to_file(file_name: &str, file_content: &[Line]) -> Result<(), io::E
 
 // create a write handle to a file
 fn get_bartib_file_writable(file_name: &str) -> Result<File, io::Error> {
-    OpenOptions::new().create(true).write(true).open(file_name)
+    OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(file_name)
 }

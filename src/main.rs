@@ -107,6 +107,10 @@ fn main() -> Result<()> {
                 .arg(&arg_time),
         )
         .subcommand(
+            SubCommand::with_name("cancel")
+                .about("cancels all currently running activities")
+        )
+        .subcommand(
             SubCommand::with_name("current").about("lists all currently running activities"),
         )
         .subcommand(
@@ -204,6 +208,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
 
             bartib::controller::manipulation::stop(file_name, time)
         }
+        ("cancel", Some(_)) => bartib::controller::manipulation::cancel(file_name),
         ("current", Some(_)) => bartib::controller::list::list_running(file_name),
         ("list", Some(sub_m)) => {
             let mut filter = bartib::data::getter::ActivityFilter {
