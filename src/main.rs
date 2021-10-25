@@ -55,12 +55,14 @@ fn main() -> Result<()> {
 
     let arg_description = Arg::with_name("description")
         .short("d")
+        .long("description")
         .value_name("DESCRIPTION")
         .help("the description of the new activity")
         .takes_value(true);
 
     let arg_project = Arg::with_name("project")
         .short("p")
+        .long("project")
         .value_name("PROJECT")
         .help("the project to which the new activity belongs")
         .takes_value(true);
@@ -122,6 +124,15 @@ fn main() -> Result<()> {
                 .arg(&arg_today)
                 .arg(&arg_yesterday)
                 .arg(
+                    Arg::with_name("project")
+                        .short("p")
+                        .long("project")
+                        .value_name("PROJECT")
+                        .help("do list activities for this project only")
+                        .takes_value(true)
+                        .required(false)
+                )
+                .arg(
                     Arg::with_name("no_grouping")
                         .long("no_grouping")
                         .help("do not group activities by date in list"),
@@ -143,8 +154,17 @@ fn main() -> Result<()> {
                 .arg(&arg_to_date)
                 .arg(&arg_date)
                 .arg(&arg_today)
-                .arg(&arg_yesterday),
-        )
+                .arg(&arg_yesterday)
+                .arg(
+                    Arg::with_name("project")
+                        .short("p")
+                        .long("project")
+                        .value_name("PROJECT")
+                        .help("do report activities for this project only")
+                        .takes_value(true)
+                        .required(false)
+                )
+       )
         .subcommand(
             SubCommand::with_name("last")
                 .about("displays the descriptions and projects of recent activities")
@@ -219,6 +239,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
                 from_date: get_date_argument_or_ignore(sub_m.value_of("from_date"), "--from"),
                 to_date: get_date_argument_or_ignore(sub_m.value_of("to_date"), "--to"),
                 date: get_date_argument_or_ignore(sub_m.value_of("date"), "-d/--date"),
+                project: sub_m.value_of("project")
             };
 
             if sub_m.is_present("today") {
@@ -238,6 +259,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
                 from_date: get_date_argument_or_ignore(sub_m.value_of("from_date"), "--from"),
                 to_date: get_date_argument_or_ignore(sub_m.value_of("to_date"), "--to"),
                 date: get_date_argument_or_ignore(sub_m.value_of("date"), "-d/--date"),
+                project: sub_m.value_of("project")
             };
 
             if sub_m.is_present("today") {

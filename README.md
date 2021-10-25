@@ -91,13 +91,14 @@ This will create a report of how much time has been spent on which projects and 
 bartib report
 ```
 
-The `report` subcommand accepts most of the arguments that the `list` subcommand accepts:
+The `report` subcommand accepts several arguments to refine the selection of activities:
 
 ```
 bartib report --today
 bartib report --yesterday
 bartib report --from 2021-09-01 --to 2021-09-05
 bartib report --date 2021-09-03
+bartib report --project "The most exciting project"
 ```
 
 #### List activities
@@ -114,27 +115,17 @@ Do not group activities by date:
 bartib list --no_grouping
 ```
 
-List activities in a given time range:
-
-```
-bartib list --from 2021-03-01 --to 2021-11-01
-```
-
-List activities on a given day:
-
-```
-bartib list --date 2021-05-17
-```
-
-List activities of special days:
+The `list` subcommand accepts several arguments to refine the selection of activities:
 
 ```
 bartib list --today
 bartib list --yesterday
+bartib list --from 2021-09-01 --to 2021-09-05
+bartib list --date 2021-09-03
+bartib list --project "The most exciting project"
 ```
 
 ### Miscellaneous commands
-
 
 #### Edit activities
 

@@ -25,7 +25,7 @@ pub fn list(file_name: &str, filter: getter::ActivityFilter, do_group_activities
 
     filtered_activities.sort_by_key(|activity| activity.start);
 
-    let first_element  =filtered_activities.len().saturating_sub(filter.number_of_activities.unwrap_or(filtered_activities.len()));
+    let first_element = filtered_activities.len().saturating_sub(filter.number_of_activities.unwrap_or(filtered_activities.len()));
 
     if do_group_activities {
         list::list_activities_grouped_by_date(

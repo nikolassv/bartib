@@ -5,11 +5,12 @@ use crate::data::activity;
 use crate::data::bartib_file;
 use crate::data::activity::Activity;
 
-pub struct ActivityFilter {
+pub struct ActivityFilter<'a> {
     pub number_of_activities: Option<usize>,
     pub from_date: Option<NaiveDate>,
     pub to_date: Option<NaiveDate>,
     pub date: Option<NaiveDate>,
+    pub project: Option<&'a str>
 }
 
 pub fn get_descriptions_and_projects(file_content: &[bartib_file::Line]) -> Vec<(&String, &String)> {
@@ -59,7 +60,7 @@ pub fn get_activities(file_content: &[bartib_file::Line]) -> impl Iterator<Item 
 
 pub fn filter_activities<'a>(
     activities: impl Iterator<Item = &'a activity::Activity>,
-    filter: &ActivityFilter,
+    filter: &'a ActivityFilter,
 ) -> impl Iterator<Item = &'a activity::Activity> {
     let from_date: NaiveDate;
     let to_date: NaiveDate;
@@ -72,9 +73,9 @@ pub fn filter_activities<'a>(
         to_date = filter.to_date.unwrap_or(naive::MAX_DATE);
     }
 
-    activities.filter(move |activity| {
-        activity.start.date() >= from_date && activity.start.date() <= to_date
-    })
+    activities
+        .filter(move |activity| {activity.start.date() >= from_date && activity.start.date() <= to_date})
+        .filter(move |activity| filter.project.map(|p| activity.project == *p).unwrap_or(true))
 }
 
 pub fn get_last_activity_by_end(file_content: &[bartib_file::Line]) -> Option<&activity::Activity> {
