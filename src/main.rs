@@ -192,6 +192,7 @@ fn main() -> Result<()> {
                         .takes_value(true),
                 ),
         )
+        .subcommand(SubCommand::with_name("check").about("checks file and reports parsing errors"))
         .get_matches();
 
     let file_name = matches.value_of("file")
@@ -284,6 +285,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let optional_editor_command = sub_m.value_of("editor");
             bartib::controller::manipulation::start_editor(file_name, optional_editor_command)
         }
+        ("check", Some(_)) => bartib::controller::list::check(file_name),
         _ => bail!("Unknown command"),
     }
 }

@@ -42,6 +42,32 @@ pub fn list(file_name: &str, filter: getter::ActivityFilter, do_group_activities
     Ok(())
 }
 
+// prints all errors that occured when reading the bartib file
+pub fn check(file_name: &str) -> Result<()> {
+    let file_content = bartib_file::get_file_content(file_name)?;
+
+    let number_of_errors = file_content.iter()
+        .filter(|line| line.activity.is_err())
+        .count();
+
+    if number_of_errors == 0 {
+        println!("All lines in the file have been successfully parsed as activities.");
+        return Ok(());
+    }
+
+    println!("Found {} line(s) with parsing errors", number_of_errors);
+
+    file_content.iter()
+        .filter(|line| line.activity.is_err() && line.plaintext.is_some())
+        .for_each(|line| {
+            if let Err(e) = &line.activity {
+                println!("\n{}\n  -> {} (Line: {})", line.plaintext.as_ref().unwrap(), e.to_string(), line.line_number.unwrap_or(0));
+            }
+        });
+
+    Ok(())
+}
+
 // lists all projects
 pub fn list_projects(file_name: &str) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;

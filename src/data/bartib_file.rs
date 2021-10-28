@@ -17,7 +17,9 @@ pub enum LineStatus {
 pub struct Line {
     // the plaintext of the line as it has been read from the file
     // we save this to be able write untouched lines back to file without chaning them
-    plaintext: String,
+    pub plaintext: Option<String>,
+    // the line number
+    pub line_number: Option<usize>,
     // the result of parsing this line to a activity
     pub activity: Result<activity::Activity, activity::ActivityError>,
     // the status of this activity
@@ -26,9 +28,10 @@ pub struct Line {
 
 impl Line {
     // creates a new line struct from plaintext
-    pub fn new(plaintext: &str) -> Line {
+    pub fn new(plaintext: &str, line_number: usize) -> Line {
         Line {
-            plaintext: plaintext.trim().to_string(),
+            plaintext: Some(plaintext.trim().to_string()),
+            line_number: Some(line_number),
             activity: activity::Activity::from_str(plaintext),
             status: LineStatus::Unchanged,
         }
@@ -37,7 +40,8 @@ impl Line {
     // creates a new line from an existing activity
     pub fn for_activity(activity: activity::Activity) -> Line {
         Line {
-            plaintext: "".to_string(),
+            plaintext: None,
+            line_number: None,
             activity: Ok(activity),
             status: LineStatus::Changed,
         }
@@ -58,7 +62,8 @@ pub fn get_file_content(file_name: &str) -> Result<Vec<Line>> {
     let lines = reader
         .lines()
         .filter_map(|line_result| line_result.ok())
-        .map(|line| Line::new(&line))
+        .enumerate()
+        .map(|(line_number, line)| Line::new(&line, line_number.saturating_add(1)))
         .collect();
 
     Ok(lines)
@@ -69,8 +74,14 @@ pub fn write_to_file(file_name: &str, file_content: &[Line]) -> Result<(), io::E
     let file_handler = get_bartib_file_writable(file_name)?;
 
     for line in file_content {
-        match line.status {
-            LineStatus::Unchanged => writeln!(&file_handler, "{}", line.plaintext)?,
+        match &line.status {
+            LineStatus::Unchanged => {
+                if let Some(plaintext) = &line.plaintext {
+                    writeln!(&file_handler, "{}", plaintext)?
+                } else {
+                    write!(&file_handler, "{}", line.activity.as_ref().unwrap())?
+                }
+            },
             LineStatus::Changed => write!(&file_handler, "{}", line.activity.as_ref().unwrap())?,
         }
     }

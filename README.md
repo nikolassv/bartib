@@ -162,3 +162,11 @@ This is especially useful for autocompletion. For example, adding this line to t
 ```
 complete -W "$(bartib projects)" bartib
 ```
+
+#### Check bartib file
+
+Checks the bartib file for lines that it can not parse as activities:
+
+```
+bartib check
+```
