@@ -4,7 +4,17 @@ Bartib is an easy to use time tracking tool for the command line. It safes a log
 
 1. [Tutorial](#tutorial)
 1. [How To ...](#how-to-)
+    1. [How to install Bartib](#how-to-install-bartib)
+    1. [How to build Bartib](#how-to-build-bartib)
+    1. [How to define in which file to save the log of your activities](#how-to-define-in-which-file-to-save-the-log-of-your-activities)
+    1. [How to edit or delete tracked activities](#how-to-edit-or-delete-tracked-activities)
+    1. [How to activate auto completion](#how-to-activate-auto-completion)
 1. [Command overview](#command-overview)
+    1. [The essentials](#the-essentials)
+    1. [Getting Help](#getting-help)
+    1. [Tracking activities](#tracking-activities)
+    1. [Reporting and listing activities](#reporting-and-listing-activities)
+    1. [Doing other stuff](#doing-other-stuff)
 
 ## Tutorial
 
@@ -142,7 +152,7 @@ If the specified log file does not exist yet Bartib creates it.
 
 ### How to edit or delete tracked activities
 
-Just edit your activitiy log in your favorite texte ditor to edit or delete former activities. You may even add new activities manually in this file. The format is self explanatory.
+Just open your activitiy log in your favorite text editor to edit or delete former activities. You may even add new activities manually in this file. The format is self explanatory.
 
 Bartib even offers the `bartib edit` command which opens the log in the editor defined by your `EDITOR` environment variable. If you are unsure whether your edits are readable by bartib, use the `bartib check` command. It will inform you about any parsing errors.
 
@@ -201,7 +211,7 @@ bartib list    # list all activities grouped by day
 bartib list --no_grouping    # list all activities but do not group them by day
 
 bartib list --today    # list todays activites
-bartib list --yesterday    # list yesterday activities
+bartib list --yesterday    # list yesterdays activities
 bartib list --from 2021-09-01 --to 2021-09-05    # list activities in a given time range
 bartib list --date 2021-09-03    # list activities on a given day
 bartib list --project "The most exciting project"    # list activities for a given project
