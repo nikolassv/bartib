@@ -1,14 +1,18 @@
 # Bartib
 
-Bartib is an easy to use time tracking tool for the command line. It safes a log of all tracked activities in a plaintext file and allows you to create flexible reports.
+Bartib is an easy to use time tracking tool for the command line. It safes a log of all tracked activities as a plaintext file and allows you to create flexible reports.
+
+1. [Tutorial](#tutorial)
+1. [How To ...](#how-to-)
+1. [Command overview](#command-overview)
 
 ## Tutorial
 
-Alice is not chasing white rabbits any more. She has a real job now with real clients and project managers. Therefore, she has to keep track of how she uses the hours of her working day. See how she uses Bartib for this and learn how you can use too.
+Alice is not chasing white rabbits any more. She has a real job now with real clients and project managers. Therefore, she has to keep track of how she uses the hours of her working day. See how Alice uses Bartib for this and learn how you can use too.
 
 At 8:00 in the morning, Alice arrives at the office. She got an email from her project manager who asks her to start working right away on _Urgent Task X_ from _Important Project A_. So Alice types on the command line:
 
-```
+```bash
 ~ $ bartib start -d "Urgent Task X" -p "Important Project"
 ```
 
@@ -18,16 +22,16 @@ And Bartib confirms:
 Started activity: "Urgent Task X" (Important Project) at 2021-10-29 08:00
 ```
 
-At 8:42 one of her colleagues drops by and they decide to have a coffee. As she cannot bill this time to her customers, Alice stops the running activity in Bartib:
+At 8:43 one of her colleagues drops by and they decide to have a coffee. As she cannot bill this time to her customers, Alice stops the running activity in Bartib:
 
-```
+```bash
 ~ $ bartib stop
-Stopped activity: "Urgent Task X" (Important Project) started at 2021-10-29 08:43 (43m)
+Stopped activity: "Urgent Task X" (Important Project) started at 2021-10-29 08:00 (43m)
 ```
 
 Almost 10 minutes later she is back at her desks and continues work:
 
-```
+```bash
 ~ $ bartib continue
 Started activity: "Urgent Task X" (Important Project) at 2021-10-29 08:51
 ``` 
@@ -36,7 +40,7 @@ At 10:13 another email arrives: _Urgent Task X_ has to wait! Now _More Urgent Ta
 
 Alice types:
 
-```
+```bash
 ~ $ bartib start -d "More Urgent Task Y" -p "Just Another Project B"
 Stopped activity: "Urgent Task X" (Important Project) started at 2021-10-29 09:01 (1h 12m)
 Started activity: "More Urgent Task Y" (Just Another Project B) at 2021-10-29 10:13
@@ -46,40 +50,40 @@ See how Bartib just stops the running activity when another one starts? No need 
 
 It was a productive morning. After _More Urgent Task Y_ Alice worked on other projects and other taks, but now it is time for lunch and Alice lets Bartib list all the activities she tracked today until now:
 
-```
+```bash
 ~ $ bartib list --today
 
-Started Stopped Description        Project                Duration 
-08:00   08:43   Urgent Task X      Important Project         43m      
-08:51   10:13   Urgent Task X      Important Project      1h 12m      
-10:13   10:35   More Urgent Task Y Just Another Project B    22m      
-10:35   10:53   Urgent Task X      Important Project         18m      
-10:53   11:45   Simple Task Z      Less Important Project    52m       
-11:45   12:34   Boring Task XY     Internal Project C        49m    
+Started Stopped Description        Project                Duration 
+08:00   08:43   Urgent Task X      Important Project         43m      
+08:51   10:13   Urgent Task X      Important Project      1h 22m      
+10:13   10:35   More Urgent Task Y Just Another Project B    22m      
+10:35   10:53   Urgent Task X      Important Project         18m      
+10:53   11:45   Simple Task Z      Less Important Project    52m       
+11:45   12:34   Boring Task XY     Internal Project C        49m    
 ```
 
 After her lunch break Alice wants to continue work on _More Urgent Task Y_. Instead of typing the task description and the project name again, she asks Bartib for a list of all the tasks she has recently worked on:
 
-```
+```bash
 ~ $ bartib last
 
- #  Description        Project                
+ #  Description        Project                
 [3] More Urgent Task Y Just Another Project B 
-[2] Urgent Task X      Important Project      
-[1] Simple Task Z      Less Important Project 
-[0] Boring Task XY     Internal Project C 
+[2] Urgent Task X      Important Project      
+[1] Simple Task Z      Less Important Project 
+[0] Boring Task XY     Internal Project C 
 ```
 
 And she instructs Bartib to continue task #3:
 
-```
+```bash
 ~ $ bartib continue 3
 Started activity: "More Urgent Task Y" (Just Another Project B) at 2021-10-29 12:52
 ```
 
 An exciting day at work continues. As it is a friday Alice decides to leave work already at shortly afer seven. She stops her latest activity and asks Bartib for a report:
 
-```
+```bash
 ~ $ bartib report --today
 
 Important Project................................. 2h 43m
@@ -102,7 +106,7 @@ Less Important Project............................ 2h 27m
 Total............................................. 9h 25m
 ```
 
-Another great day at the company for Alice! Thanks to Bartib tracking her time was breeze. She is happy.
+Alice is happy. This was just another great day at the company and thanks to Bartib tracking her time was a breeze.
 
 Do you want to be as happy as Alice? Start using Bartib!
 
@@ -116,7 +120,7 @@ Simply download a suitable executable from ---TODO--- and copy at somewhere in y
 
 Bartib is written in rust. You may build it yourself with the help of cargo. Just clone this repository and execute the `cargo build` command in its main directory:
 
-```
+```bash
 cargo build --release --bin bartib
 ```
 
@@ -124,46 +128,57 @@ cargo build --release --bin bartib
 
 You may either specify the path to your log as an extra parameter (`--file` or `-f`) to your bartib command:
 
-```
+```bash
 bartib -f ~/activities.bartib report
 ```
 
-Or you may set the environment variable `BARTIB_FILE` with the path. Just add this line to your `.profile` file:
+Or you may set the environment variable `BARTIB_FILE` to the path of your log. Just add this line to your `.profile` file:
 
-```
+```bash
 export BARTIB_FILE="~/activities.bartib"
 ```
 
+If the specified log file does not exist yet Bartib creates it.
+
 ### How to edit or delete tracked activities
 
-Just edit your activitiy log in your favorite texteditor to edit or delete former activities. You may even add new activities manually in this file. The format is self explanatory.
+Just edit your activitiy log in your favorite texte ditor to edit or delete former activities. You may even add new activities manually in this file. The format is self explanatory.
 
 Bartib even offers the `bartib edit` command which opens the log in the editor defined by your `EDITOR` environment variable. If you are unsure whether your edits are readable by bartib, use the `bartib check` command. It will inform you about any parsing errors.
 
 ### How to activate auto completion
 
-Bartib offers a simple auto completion for project names. This saves you from typing out long project names each time you start a new task. Just source the script ---TODO---- in your `.bashrc`.
+Bartib offers a simple auto completion for project names. This saves you from typing out long project names each time you start a new task. Just source the script [misc/bartibCompletion.sh](misc/bartibCompletion.sh) in your `.bashrc` to enable it.
 
 ## Command overview
 
-### Getting Help
+### The essentials
+```bash
+bartib -h    # get help
+bartib start -p "name of the project" -d "description of the activity"    # start a new activity
+bartib stop    # stop an activity
+bartib list --today    # list all activities of the current day
+bartib report --today    # create a report for today
 ```
+
+### Getting Help
+```bash
 bartib -h    # Print a concise help
 bartib start -h    # Print a help for any subcommand
 ```
 
 ### Tracking activities 
-```
+```bash
 bartib start -p "The name of the associated project" -d "A description of the activity"    # Start a new activity with a short description and an associated project
 bartib start -p "The name of the associated project" -d "A description of the activity" -t 13:45    # Start a new activity at a given time
 
 bartib stop    # Stop the currently running activity
 bartib stop -t 14:00    # Stop the currently running activity at a given time
 
-bartib last    # Print a list of recently used projects and descriptions
+bartib last    # Print a list of the ten most recently used projects and descriptions
 bartib last -n 25   # Prints a list of recently used projects and descriptions with more entries
 
-# All numbers used with the following commands refer to the indizees given the list created with `bartib last`
+# All numbers used with the following commands refer to the indizees in the list created with `bartib last`
 bartib continue 5    # Start an activity with a recently used project and description
 bartib continue    # Continue the latest activity
 bartib continue 3 -d "Another description"    # Continue activity number 3 but overwrite the description
@@ -174,7 +189,7 @@ bartib cancel    # Cancels a running activity by deleting its entry in the activ
 
 ### Reporting and listing activities
 
-```
+```bash
 bartib report    # create a report of how much time has been spent on which projects and activities
 bartib report --today    # create a report for today
 bartib report --yesterday    # create a report for yesterday
@@ -194,7 +209,7 @@ bartib list --project "The most exciting project"    # list activities for a giv
 
 ### Doing other stuff
 
-```
+```bash
 bartib current    # show currently running activity
 bartib projects    # list all projects ever used
 
