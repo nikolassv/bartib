@@ -1,6 +1,6 @@
 # Bartib
 
-Bartib is an easy to use time tracking tool for the command line. It safes a log of all tracked activities as a plaintext file and allows you to create flexible reports.
+Bartib is an easy to use time tracking tool for the command line. It saves a log of all tracked activities as a plaintext file and allows you to create flexible reports.
 
 1. [Tutorial](#tutorial)
 1. [How To ...](#how-to-)
@@ -18,9 +18,9 @@ Bartib is an easy to use time tracking tool for the command line. It safes a log
 
 ## Tutorial
 
-Alice is not chasing white rabbits any more. She has a real job now with real clients and project managers. Therefore, she has to keep track of how she uses the hours of her working day. See how Alice uses Bartib for this and learn how you can use too.
+Alice is not chasing white rabbits any more. She has a real job now with real clients and project managers. Therefore, she has to keep track of how she uses the hours of her working day. See how Alice uses Bartib for this and learn how you can use it, too.
 
-At 8:00 in the morning, Alice arrives at the office. She got an email from her project manager who asks her to start working right away on _Urgent Task X_ from _Important Project A_. So Alice types on the command line:
+At 8:00 a.m. Alice arrives at the office. She got an email from her project manager who asks her to start working right away on _Urgent Task X_ from _Important Project A_. So Alice types at the command line:
 
 ```console
 alice@work: ~ $ bartib start -d "Urgent Task X" -p "Important Project"
@@ -58,7 +58,7 @@ Started activity: "More Urgent Task Y" (Just Another Project B) at 2021-10-29 10
 
 See how Bartib just stops the running activity when another one starts? No need to stop it manually.
 
-It was a productive morning. After _More Urgent Task Y_ Alice worked on other projects and other taks, but now it is time for lunch and Alice lets Bartib list all the activities she tracked today until now:
+It is a productive morning. After _More Urgent Task Y_ Alice workes on other projects and other tasks, but now it is time for lunch and Alice lets Bartib list all the activities she has tracked today until now:
 
 ```console
 alice@work: ~ $ bartib list --today
@@ -91,7 +91,7 @@ alice@work: ~ $ bartib continue 3
 Started activity: "More Urgent Task Y" (Just Another Project B) at 2021-10-29 12:52
 ```
 
-An exciting day at work continues. As it is a friday Alice decides to leave work already at shortly afer seven. She stops her latest activity and asks Bartib for a report:
+An exciting day at work continues. As it is a Friday Alice decides to already leave work at shortly after seven. She stops her latest activity and asks Bartib for a report:
 
 ```console
 alice@work: ~ $ bartib report --today
@@ -124,14 +124,14 @@ Do you want to be as happy as Alice? Use Bartib!
 
 ### How to install Bartib
 
-Simply download a suitable executable from ---TODO--- and copy it in some directory that is listed in your `PATH` (e.g. ~/bin).
+Simply download a suitable executable from https://github.com/nikolassv/bartib/releases and copy it in some directory that is listed in your `PATH` (e.g. ~/bin).
 
 ### How to build Bartib
 
 Bartib is written in rust. You may build it yourself with the help of cargo. Just clone this repository and execute the `cargo build` command in its main directory:
 
 ```bash
-cargo build --release --bin bartib
+cargo build --release
 ```
 
 ### How to define in which file to save the log of your activities
@@ -161,6 +161,8 @@ Bartib even offers the `bartib edit` command which opens the log in the editor d
 Bartib offers a simple auto completion for project names. This saves you from typing out long project names each time you start a new task. Just source the script [misc/bartibCompletion.sh](misc/bartibCompletion.sh) in your `.bashrc` to enable it.
 
 ## Command overview
+
+All these commands require that you have set the `BARTIB_FILE` environment variable to the file path of your activity log. Otherwise they require an additional `-f/--file` parameter between `bartib` and the subcommand (see above: [How to define in which file to save the log of your activities](#how-to-define-in-which-file-to-save-the-log-of-your-activities)).
 
 ### The essentials
 ```bash
@@ -210,8 +212,8 @@ bartib report --project "The most exciting project"    # create a report for a g
 bartib list    # list all activities grouped by day
 bartib list --no_grouping    # list all activities but do not group them by day
 
-bartib list --today    # list todays activites
-bartib list --yesterday    # list yesterdays activities
+bartib list --today    # list todays' activites
+bartib list --yesterday    # list yesterdays' activities
 bartib list --from 2021-09-01 --to 2021-09-05    # list activities in a given time range
 bartib list --date 2021-09-03    # list activities on a given day
 bartib list --project "The most exciting project"    # list activities for a given project
