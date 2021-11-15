@@ -79,13 +79,13 @@ pub fn filter_activities<'a>(
 }
 
 pub fn get_last_activity_by_end(file_content: &[bartib_file::Line]) -> Option<&activity::Activity> {
-    get_activities(&file_content)
+    get_activities(file_content)
         .filter(|activity| activity.is_stopped())
-        .max_by_key(|activity| activity.end.unwrap_or(naive::MIN_DATE.and_hms(0, 0, 0)))
+        .max_by_key(|activity| activity.end.unwrap_or_else(||naive::MIN_DATE.and_hms(0, 0, 0)))
 }
 
-pub fn get_last_activity_by_start(file_content: &Vec<bartib_file::Line>) -> Option<&activity::Activity> {
-    get_activities(&file_content).max_by_key(|activity| activity.start)
+pub fn get_last_activity_by_start(file_content: &[bartib_file::Line]) -> Option<&activity::Activity> {
+    get_activities(file_content).max_by_key(|activity| activity.start)
 }
 
 #[cfg(test)]

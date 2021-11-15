@@ -48,7 +48,7 @@ fn save_new_activity(
     );
 
     file_content.push(bartib_file::Line::for_activity(activity));
-    bartib_file::write_to_file(file_name, &file_content)
+    bartib_file::write_to_file(file_name, file_content)
         .context(format!("Could not write to file: {}", file_name))
 }
 
