@@ -68,7 +68,7 @@ fn main() -> Result<()> {
         .takes_value(true);
 
     let matches = App::new("bartib")
-        .version("0.1")
+        .version("1.0.0")
         .author("Nikolas Schmidt-Voigt <nikolas.schmidt-voigt@posteo.de>")
         .about("A simple timetracker")
         .setting(AppSettings::SubcommandRequiredElseHelp)
