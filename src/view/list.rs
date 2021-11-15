@@ -18,7 +18,7 @@ pub fn list_activities(activities: &[&activity::Activity], with_start_dates: boo
 
     activities
         .iter()
-        .map(|t| get_activity_table_row(&t, with_start_dates))
+        .map(|t| get_activity_table_row(t, with_start_dates))
         .for_each(|row| activity_table.add_row(row));
 
     println!("\n{}", activity_table);
@@ -56,7 +56,7 @@ fn create_activity_table() -> table::Table {
 fn create_activites_group(title: &str, activities: &[&activity::Activity]) -> table::Group {
     let rows = activities
         .iter()
-        .map(|a| get_activity_table_row(&a, false))
+        .map(|a| get_activity_table_row(a, false))
         .collect();
     table::Group::new(Some(title.to_string()), rows)
 }
@@ -163,7 +163,7 @@ fn group_activities_by_date<'a>(
     for &activity in activities.iter() {
         activities_by_date
             .entry(activity.start.date())
-            .or_insert(Vec::new())
+            .or_insert_with(Vec::new)
             .push(activity);
     }
 

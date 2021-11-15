@@ -251,7 +251,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
                 filter.date = Some(Local::now().naive_local().date() - Duration::days(1));
             }
 
-            let do_group_activities = !sub_m.is_present("no_grouping") && !filter.date.is_some();
+            let do_group_activities = !sub_m.is_present("no_grouping") && filter.date.is_none();
             bartib::controller::list::list(file_name, filter, do_group_activities)
         }
         ("report", Some(sub_m)) => {

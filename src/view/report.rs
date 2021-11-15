@@ -21,8 +21,8 @@ struct Report<'a> {
 impl<'a> Report<'a> {
     fn new(activities: &'a [&'a activity::Activity]) -> Report<'a> {
         Report { 
-            project_map: create_project_map(&activities),
-            total_duration: sum_duration(&activities)
+            project_map: create_project_map(activities),
+            total_duration: sum_duration(activities)
         }
     }
 }
@@ -30,7 +30,7 @@ impl<'a> Report<'a> {
 impl<'a> fmt::Display for Report<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut longest_line = get_longest_line(&self.project_map).unwrap_or(0);
-        let longest_duration_string = get_longest_duration_string(&self).unwrap_or(0);
+        let longest_duration_string = get_longest_duration_string(self).unwrap_or(0);
 
         let terminal_width = term_size::dimensions_stdout().map(|d| d.0)
             .unwrap_or(conf::DEFAULT_WIDTH);
@@ -43,7 +43,7 @@ impl<'a> fmt::Display for Report<'a> {
             print_project_heading(f, project, duration, longest_line, longest_duration_string)?;
 
             print_descriptions_with_durations(f, activities, longest_line, longest_duration_string)?;
-            writeln!(f, "")?;
+            writeln!(f)?;
         }
 
         print_total_duration(f, self.total_duration, longest_line)?;
@@ -131,7 +131,7 @@ fn print_descriptions_with_durations<'a>(f: &mut fmt::Formatter<'_>, activities:
     Ok(())
 }
 
-fn print_total_duration<'a>(f: &mut fmt::Formatter<'_>, total_duration: Duration, line_width: usize) -> fmt::Result {
+fn print_total_duration(f: &mut fmt::Formatter<'_>, total_duration: Duration, line_width: usize) -> fmt::Result {
     writeln!(f, "{prefix}{total:.<width$} {duration}{suffix}",
                 prefix = Style::new().bold().prefix(),
                 total = "Total",
@@ -166,7 +166,7 @@ fn get_longest_line(project_map: &ProjectMap) -> Option<usize> {
 
 fn get_longest_duration_string(report: &Report) -> Option<usize> {
     let longest_project_duration = report.project_map.values()
-        .map(|(_a, d)| format_util::format_duration(&d))
+        .map(|(_a, d)| format_util::format_duration(d))
         .map(|s| s.chars().count())
         .max();
     let longest_activity_duration = report.project_map.values()
@@ -225,10 +225,7 @@ mod tests {
         let a2 = activity::Activity::start("p1".to_string(), "d2".to_string(), None);
         let a3 = activity::Activity::start("p2".to_string(), "d1".to_string(), None);
 
-        let mut activities: Vec<&activity::Activity> = Vec::new();
-        activities.push(&a1);
-        activities.push(&a2);
-        activities.push(&a3);
+        let activities = vec![&a1, &a2, &a3];
         let m = create_project_map(&activities);
 
         assert_eq!(m.len(), 2);
@@ -243,11 +240,7 @@ mod tests {
         let a3 = activity::Activity::start("p2".to_string(), "d1".to_string(), None);
         let a4 = activity::Activity::start("p2".to_string(), "d1".to_string(), None);
 
-        let mut activities: Vec<&activity::Activity> = Vec::new();
-        activities.push(&a1);
-        activities.push(&a2);
-        activities.push(&a3);
-        activities.push(&a4);
+        let activities = vec![&a1, &a2, &a3, &a4];
         let m = group_activities_by_description(&activities);
 
         assert_eq!(m.len(), 2);

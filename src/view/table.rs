@@ -108,7 +108,7 @@ impl Table {
 
         // we start with a width of 0 for all the wrapable columns
         let mut column_width : Vec<usize> = max_column_width.iter().zip(columns_wrap.iter())
-            .map(|(width, wrap)| if matches!(wrap, Wrap::NoWrap) { width.clone() } else { 0 })
+            .map(|(width, wrap)| if matches!(wrap, Wrap::NoWrap) { *width } else { 0 })
             .collect();
 
         // then we distribute the available width to the wrappable columns
@@ -198,7 +198,7 @@ impl fmt::Display for Table {
 fn write_group(
     f: &mut fmt::Formatter<'_>,
     group: &Group,
-    column_width: &Vec<usize>,
+    column_width: &[usize],
 ) -> fmt::Result {
     let empty_string = "".to_string();
     let title = group.title.as_ref().unwrap_or(&empty_string);
@@ -207,14 +207,14 @@ fn write_group(
     writeln!(f, "{}", Style::new().bold().paint(title))?;
 
     for row in &group.rows {
-        write_row(f, row, &column_width)?;
+        write_row(f, row, column_width)?;
     }
 
     Ok(())
 }
 
-fn write_row(f: &mut fmt::Formatter<'_>, row: &Row, column_width: &Vec<usize>) -> fmt::Result {
-    write_cells(f, &row.content, &column_width, row.style)?;
+fn write_row(f: &mut fmt::Formatter<'_>, row: &Row, column_width: &[usize]) -> fmt::Result {
+    write_cells(f, &row.content, column_width, row.style)?;
     writeln!(f)?;
     Ok(())
 }
@@ -232,9 +232,7 @@ fn write_cells<T: AsRef<str> + std::fmt::Display>(
         .map(|(i, c)| match column_width.get(i) {
             Some(s) => textwrap::wrap(c.as_ref(), textwrap::Options::new(*s)),
             None => {
-                let mut lines = Vec::new();
-                lines.push(Cow::from(c.as_ref()));
-                lines
+                vec![Cow::from(c.as_ref())]
             }
         })
         .collect();
