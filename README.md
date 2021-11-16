@@ -126,6 +126,12 @@ Do you want to be as happy as Alice? Use Bartib!
 
 Simply download a suitable executable from https://github.com/nikolassv/bartib/releases and copy it in some directory that is listed in your `PATH` (e.g. ~/bin).
 
+You may also use cargo to install Bartib from crates.io:
+
+```bash
+cargo install bartib
+```
+
 ### How to build Bartib
 
 Bartib is written in rust. You may build it yourself with the help of cargo. Just clone this repository and execute the `cargo build` command in its main directory:
