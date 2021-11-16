@@ -1,6 +1,14 @@
 # Bartib
 
+![Illustration of the White Rabbit from Alice in Wonderland](misc/white-rabbit.png "Oh dear! Oh dear! I shall be to late") 
+
 Bartib is an easy to use time tracking tool for the command line. It saves a log of all tracked activities as a plaintext file and allows you to create flexible reports.
+
+[![Crates info](https://img.shields.io/crates/v/bartib.svg)](https://crates.io/crates/bartib)
+[![License: GPL](https://img.shields.io/badge/license-GPL-blue)](LICENSE)
+[![Number of Stars](https://img.shields.io/github/stars/nikolassv/bartib.svg?style=flat&logo=github&colorB=green&label=stars)](https://github.com/nikolassv/bartib/stargazers)
+
+## Contents
 
 1. [Tutorial](#tutorial)
 1. [How To ...](#how-to-)
