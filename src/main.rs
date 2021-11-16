@@ -77,7 +77,7 @@ fn main() -> Result<()> {
             Arg::with_name("file")
                 .short("f")
                 .value_name("FILE")
-                .help("the file in wich bartib tracks all the activities")
+                .help("the file in which bartib tracks all the activities")
                 .env("BARTIB_FILE")
                 .takes_value(true),
         )
