@@ -3,8 +3,13 @@ name = "bartib"
 version = "1.0.0"
 authors = ["Nikolas Schmidt-Voigt <nikolas.schmidt-voigt@posteo.de>"]
 description = "A simple timetracker for the command line"
+homepage = "https://github.com/nikolassv/bartib"
+repository = "https://github.com/nikolassv/bartib"
 edition = "2018"
 license = "GPL-3.0-or-later"
+readme = "README.md"
+keywords = ["cli"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 chrono = "0.4"
