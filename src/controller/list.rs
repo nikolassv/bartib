@@ -32,7 +32,7 @@ pub fn list(file_name: &str, filter: getter::ActivityFilter, do_group_activities
             &filtered_activities[first_element..],
         );
     } else {
-        let with_start_dates = !filter.date.is_some();
+        let with_start_dates = filter.date.is_none();
         list::list_activities(
             &filtered_activities[first_element..],
             with_start_dates,

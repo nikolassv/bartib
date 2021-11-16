@@ -96,24 +96,24 @@ An exciting day at work continues. As it is a Friday Alice decides to already le
 ```console
 alice@work: ~ $ bartib report --today
 
-Important Project................................. 2h 43m
-    Another Task xyz..............................    15m
-    Important Call with the Client................    35m
-    Urgent Task X................................. 1h 53m
+Important Project.................................  2h 43m
+    Another Task xyz..............................     15m
+    Important Call with the Client................     35m
+    Urgent Task X.................................  1h 53m
 
-Internal Project C................................ 4h 30m
-    Another Meeting...............................    45m
-    Boring Task XY................................ 1h 15m
-    Long Meeting with Everyone from the Department 2h 30m
+Internal Project C................................  4h 30m
+    Another Meeting...............................     45m
+    Boring Task XY................................  1h 15m
+    Long Meeting with Everyone from the Department  2h 30m
 
-Just Another Project B............................    45m
-    More Urgent Task Y............................    45m
+Just Another Project B............................     45m
+    More Urgent Task Y............................     45m
 
-Less Important Project............................ 2h 27m
-    Simple Task No. 5............................. 1h 35m
-    Simple Task Z.................................    52m
+Less Important Project............................  2h 27m
+    Simple Task No. 5.............................  1h 35m
+    Simple Task Z.................................     52m
 
-Total............................................. 9h 25m
+Total............................................. 10h 25m
 ```
 
 Alice is happy. This was just another great day at the company and thanks to Bartib tracking her time was a breeze.

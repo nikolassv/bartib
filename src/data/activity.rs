@@ -51,7 +51,7 @@ impl Activity {
 
 impl fmt::Display for Activity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let escaped_project_name = escape_special_chars(&format!("{}", self.project));
+        let escaped_project_name = escape_special_chars(self.project.as_str());
         let escaped_description = escape_special_chars(&self.description);
 
         match self.end {
