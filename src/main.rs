@@ -84,8 +84,16 @@ fn main() -> Result<()> {
         .subcommand(
             SubCommand::with_name("start")
                 .about("starts a new activity")
-                .arg(&arg_description)
-                .arg(&arg_project)
+                .arg(
+                    arg_project
+                        .clone()
+                        .required(true)
+                )
+                .arg(
+                    arg_description
+                        .clone()
+                        .required(true)
+                )
                 .arg(&arg_time),
         )
         .subcommand(
