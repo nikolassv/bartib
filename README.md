@@ -150,16 +150,16 @@ cargo build --release
 
 ### How to define in which file to save the log of your activities
 
-You may either specify the path to your log as an extra parameter (`--file` or `-f`) to your bartib command:
+You may either specify the absolute path to your log as an extra parameter (`--file` or `-f`) to your bartib command:
 
 ```bash
-bartib -f ~/activities.bartib report
+bartib -f /home/username/activities.bartib report
 ```
 
 Or you may set the environment variable `BARTIB_FILE` to the path of your log. Just add this line to your `.profile` file:
 
 ```bash
-export BARTIB_FILE="~/activities.bartib"
+export BARTIB_FILE="/home/username/activities.bartib"
 ```
 
 If the specified log file does not exist yet Bartib creates it.
