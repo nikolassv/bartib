@@ -1,9 +1,10 @@
 use anyhow::{bail, Context, Result};
-use chrono::{Duration, Local, NaiveDate, NaiveTime};
+use chrono::{Datelike, Duration, Local, NaiveDate, NaiveTime};
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 #[cfg(windows)]
 use nu_ansi_term::enable_ansi_support;
+use bartib::data::getter::ActivityFilter;
 
 fn main() -> Result<()> {
     #[cfg(windows)]
@@ -43,14 +44,28 @@ fn main() -> Result<()> {
         .long("today")
         .help("show activities of the current day")
         .required(false)
-        .conflicts_with_all(&["from_date", "to_date", "date", "yesterday"])
+        .conflicts_with_all(&["from_date", "to_date", "date"])
         .takes_value(false);
 
     let arg_yesterday = Arg::with_name("yesterday")
         .long("yesterday")
-        .help("show yesterdays activities")
+        .help("show yesterdays' activities")
         .required(false)
         .conflicts_with_all(&["from_date", "to_date", "date", "today"])
+        .takes_value(false);
+
+    let arg_current_week = Arg::with_name("current_week")
+        .long("current_week")
+        .help("show activities of the current week")
+        .required(false)
+        .conflicts_with_all(&["from_date", "to_date", "date", "today", "yesterday"])
+        .takes_value(false);
+
+    let arg_last_week = Arg::with_name("last_week")
+        .long("last_week")
+        .help("show activities of the last week")
+        .required(false)
+        .conflicts_with_all(&["from_date", "to_date", "date", "today", "yesterday", "current_week"])
         .takes_value(false);
 
     let arg_description = Arg::with_name("description")
@@ -131,6 +146,8 @@ fn main() -> Result<()> {
                 .arg(&arg_date)
                 .arg(&arg_today)
                 .arg(&arg_yesterday)
+                .arg(&arg_current_week)
+                .arg(&arg_last_week)
                 .arg(
                     Arg::with_name("project")
                         .short("p")
@@ -163,6 +180,8 @@ fn main() -> Result<()> {
                 .arg(&arg_date)
                 .arg(&arg_today)
                 .arg(&arg_yesterday)
+                .arg(&arg_current_week)
+                .arg(&arg_last_week)
                 .arg(
                     Arg::with_name("project")
                         .short("p")
@@ -240,45 +259,12 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("cancel", Some(_)) => bartib::controller::manipulation::cancel(file_name),
         ("current", Some(_)) => bartib::controller::list::list_running(file_name),
         ("list", Some(sub_m)) => {
-            let mut filter = bartib::data::getter::ActivityFilter {
-                number_of_activities: get_number_argument_or_ignore(
-                    sub_m.value_of("number"),
-                    "-n/--number",
-                ),
-                from_date: get_date_argument_or_ignore(sub_m.value_of("from_date"), "--from"),
-                to_date: get_date_argument_or_ignore(sub_m.value_of("to_date"), "--to"),
-                date: get_date_argument_or_ignore(sub_m.value_of("date"), "-d/--date"),
-                project: sub_m.value_of("project")
-            };
-
-            if sub_m.is_present("today") {
-                filter.date = Some(Local::now().naive_local().date());
-            }
-
-            if sub_m.is_present("yesterday") {
-                filter.date = Some(Local::now().naive_local().date() - Duration::days(1));
-            }
-
+            let filter = create_filter_for_arguments(sub_m);
             let do_group_activities = !sub_m.is_present("no_grouping") && filter.date.is_none();
             bartib::controller::list::list(file_name, filter, do_group_activities)
         }
         ("report", Some(sub_m)) => {
-            let mut filter = bartib::data::getter::ActivityFilter {
-                number_of_activities: None,
-                from_date: get_date_argument_or_ignore(sub_m.value_of("from_date"), "--from"),
-                to_date: get_date_argument_or_ignore(sub_m.value_of("to_date"), "--to"),
-                date: get_date_argument_or_ignore(sub_m.value_of("date"), "-d/--date"),
-                project: sub_m.value_of("project")
-            };
-
-            if sub_m.is_present("today") {
-                filter.date = Some(Local::now().naive_local().date());
-            }
-
-            if sub_m.is_present("yesterday") {
-                filter.date = Some(Local::now().naive_local().date() - Duration::days(1));
-            }
-
+            let filter = create_filter_for_arguments(sub_m);
             bartib::controller::report::show_report(file_name, filter)
         }
         ("projects", Some(_)) => bartib::controller::list::list_projects(file_name),
@@ -296,6 +282,40 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("check", Some(_)) => bartib::controller::list::check(file_name),
         _ => bail!("Unknown command"),
     }
+}
+
+fn create_filter_for_arguments<'a>(sub_m: &'a ArgMatches) -> ActivityFilter<'a> {
+    let mut filter = bartib::data::getter::ActivityFilter {
+        number_of_activities: get_number_argument_or_ignore(
+            sub_m.value_of("number"),
+            "-n/--number",
+        ),
+        from_date: get_date_argument_or_ignore(sub_m.value_of("from_date"), "--from"),
+        to_date: get_date_argument_or_ignore(sub_m.value_of("to_date"), "--to"),
+        date: get_date_argument_or_ignore(sub_m.value_of("date"), "-d/--date"),
+        project: sub_m.value_of("project")
+    };
+
+    let today = Local::now().naive_local().date();
+    if sub_m.is_present("today") {
+        filter.date = Some(today);
+    }
+
+    if sub_m.is_present("yesterday") {
+        filter.date = Some(today - Duration::days(1));
+    }
+
+    if sub_m.is_present("current_week") {
+        filter.from_date = Some(today - Duration::days(today.weekday().num_days_from_monday() as i64));
+        filter.to_date = Some(today - Duration::days(today.weekday().num_days_from_monday() as i64) + Duration::days(6));
+    }
+
+    if sub_m.is_present("last_week") {
+        filter.from_date = Some(today - Duration::days(today.weekday().num_days_from_monday() as i64) - Duration::weeks(1));
+        filter.to_date = Some(today - Duration::days(today.weekday().num_days_from_monday() as i64) - Duration::weeks(1) + Duration::days(6) )
+    }
+
+    filter
 }
 
 fn get_number_argument_or_ignore(

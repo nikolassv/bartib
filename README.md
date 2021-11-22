@@ -40,7 +40,7 @@ And Bartib confirms:
 Started activity: "Urgent Task X" (Important Project) at 2021-10-29 08:00
 ```
 
-At 8:43 one of her colleagues drops by and they decide to have a coffee. As she cannot bill this time to her customers, Alice stops the running activity in Bartib:
+At 8:43 one of her colleagues drops by and they decide to have a coffee. As she cannot bill this time to her clients, Alice stops the running activity in Bartib:
 
 ```console
 alice@work: ~ $ bartib stop
@@ -219,6 +219,8 @@ bartib cancel    # Cancels a running activity by deleting its entry in the activ
 bartib report    # create a report of how much time has been spent on which projects and activities
 bartib report --today    # create a report for today
 bartib report --yesterday    # create a report for yesterday
+bartib report --current_week    # create a report for the current week (since monday)
+bartib report --last_week    # create a report for the last week
 bartib report --date 2021-09-03    # create a report for a given day
 bartib report --from 2021-09-01 --to 2021-09-05    # create a report for a given time range
 bartib report --project "The most exciting project"    # create a report for a given project
@@ -228,8 +230,10 @@ bartib list --no_grouping    # list all activities but do not group them by day
 
 bartib list --today    # list todays' activites
 bartib list --yesterday    # list yesterdays' activities
-bartib list --from 2021-09-01 --to 2021-09-05    # list activities in a given time range
+bartib list --current_week    # list activities of the current week (since monday)
+bartib list --last_week    # list activities of the last week
 bartib list --date 2021-09-03    # list activities on a given day
+bartib list --from 2021-09-01 --to 2021-09-05    # list activities in a given time range
 bartib list --project "The most exciting project"    # list activities for a given project
 ```
 
