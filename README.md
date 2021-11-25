@@ -7,6 +7,7 @@ Bartib is an easy to use time tracking tool for the command line. It saves a log
 [![Crates info](https://img.shields.io/crates/v/bartib.svg)](https://crates.io/crates/bartib)
 [![License: GPL](https://img.shields.io/badge/license-GPL-blue)](LICENSE)
 [![Number of Stars](https://img.shields.io/github/stars/nikolassv/bartib.svg?style=flat&logo=github&colorB=green&label=stars)](https://github.com/nikolassv/bartib/stargazers)
+![Rust](https://img.shields.io/github/languages/top/nikolassv/bartib?color=orange)
 
 ## Contents
 

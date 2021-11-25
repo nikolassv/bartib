@@ -1,6 +1,6 @@
 [package]
 name = "bartib"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Nikolas Schmidt-Voigt <nikolas.schmidt-voigt@posteo.de>"]
 description = "A simple timetracker for the command line"
 homepage = "https://github.com/nikolassv/bartib"
