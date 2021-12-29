@@ -3,12 +3,8 @@ use chrono::Duration;
 pub fn format_duration(duration: &Duration) -> String {
     let mut duration_string = String::new();
 
-    if duration.num_days() > 0 {
-        duration_string.push_str(&format!("{}d ", duration.num_days()));
-    }
-
     if duration.num_hours() > 0 {
-        duration_string.push_str(&format!("{}h ", duration.num_hours() % 24));
+        duration_string.push_str(&format!("{}h ", duration.num_hours().to_string()));
     }
 
     if duration.num_minutes() > 0 {
