@@ -62,7 +62,17 @@ fn create_activites_group(title: &str, activities: &[&activity::Activity]) -> ta
 }
 
 // displays a table with running activities (no end time)
-pub fn list_running_activities(running_activities: &[&activity::Activity]) {
+pub fn list_running_activities(running_activities: &[&activity::Activity], compact_mode: bool) {
+    if compact_mode {
+        print!("{}",
+            running_activities
+                .iter()
+                .map(|a|a.project.clone())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        return
+    }
     if running_activities.is_empty() {
         println!("No Activity is currently running");
     } else {

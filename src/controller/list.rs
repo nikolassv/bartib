@@ -6,10 +6,10 @@ use crate::data::getter;
 use crate::view::list;
 
 // lists all currently runninng activities.
-pub fn list_running(file_name: &str) -> Result<()> {
+pub fn list_running(file_name: &str, only_project: bool) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
     let running_activities = getter::get_running_activities(&file_content);
-    list::list_running_activities(&running_activities);
+    list::list_running_activities(&running_activities, only_project);
 
     Ok(())
 }

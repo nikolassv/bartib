@@ -136,7 +136,14 @@ fn main() -> Result<()> {
                 .about("cancels all currently running activities")
         )
         .subcommand(
-            SubCommand::with_name("current").about("lists all currently running activities"),
+            SubCommand::with_name("current")
+                .about("lists all currently running activities")
+                .arg(
+                    Arg::with_name("compact_mode")
+                    .long("compact")
+                    .short("c")
+                    .help("Compact mode. Report only projects names. Nothing if no current project. Useful for shell plugins")
+                )
         )
         .subcommand(
             SubCommand::with_name("list")
@@ -257,7 +264,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             bartib::controller::manipulation::stop(file_name, time)
         }
         ("cancel", Some(_)) => bartib::controller::manipulation::cancel(file_name),
-        ("current", Some(_)) => bartib::controller::list::list_running(file_name),
+        ("current", Some(sub_m)) => bartib::controller::list::list_running(file_name, sub_m.is_present("compact_mode") ),
         ("list", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
             let do_group_activities = !sub_m.is_present("no_grouping") && filter.date.is_none();
