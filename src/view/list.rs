@@ -62,18 +62,8 @@ fn create_activites_group(title: &str, activities: &[&activity::Activity]) -> ta
 }
 
 // displays a table with running activities (no end time)
-pub fn list_running_activities(running_activities: &[&activity::Activity], compact_mode: bool) {
-    if compact_mode {
-        print!("{}",
-            running_activities
-                .iter()
-                .map(|a|a.project.clone())
-                .collect::<Vec<_>>()
-                .join(", ")
-        );
-        return
-    }
-    if running_activities.is_empty() {
+pub fn list_running_activities(activities: &[&activity::Activity]) {
+    if activities.is_empty() {
         println!("No Activity is currently running");
     } else {
         let mut activity_table = table::Table::new(vec![
@@ -83,7 +73,7 @@ pub fn list_running_activities(running_activities: &[&activity::Activity], compa
             table::Column{ label: "Duration".to_string(), wrap: table::Wrap::NoWrap },
         ]);
 
-        running_activities
+        activities
             .iter()
             .map(|activity| {
                 table::Row::new(vec![

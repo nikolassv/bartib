@@ -138,12 +138,6 @@ fn main() -> Result<()> {
         .subcommand(
             SubCommand::with_name("current")
                 .about("lists all currently running activities")
-                .arg(
-                    Arg::with_name("compact_mode")
-                    .long("compact")
-                    .short("c")
-                    .help("Compact mode. Report only projects names. Nothing if no current project. Useful for shell plugins")
-                )
         )
         .subcommand(
             SubCommand::with_name("list")
@@ -213,7 +207,18 @@ fn main() -> Result<()> {
                         .default_value("10")
                 )
         )
-        .subcommand(SubCommand::with_name("projects").about("list all projects"))
+        .subcommand(
+            SubCommand::with_name("projects")
+                .about("list all projects")
+                .arg(
+                    Arg::with_name("current")
+                        .short("c")
+                        .long("current")
+                        .help("prints currently running projects only")
+                        .takes_value(false)
+                        .required(false)
+                )
+        )
         .subcommand(
             SubCommand::with_name("edit")
                 .about("opens the activity log in an editor")
@@ -264,7 +269,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             bartib::controller::manipulation::stop(file_name, time)
         }
         ("cancel", Some(_)) => bartib::controller::manipulation::cancel(file_name),
-        ("current", Some(sub_m)) => bartib::controller::list::list_running(file_name, sub_m.is_present("compact_mode") ),
+        ("current", Some(_)) => bartib::controller::list::list_running(file_name),
         ("list", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
             let do_group_activities = !sub_m.is_present("no_grouping") && filter.date.is_none();
@@ -274,7 +279,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let filter = create_filter_for_arguments(sub_m);
             bartib::controller::report::show_report(file_name, filter)
         }
-        ("projects", Some(_)) => bartib::controller::list::list_projects(file_name),
+        ("projects", Some(sub_m)) => bartib::controller::list::list_projects(file_name, sub_m.is_present("current")),
         ("last", Some(sub_m)) => {
             let number = get_number_argument_or_ignore(
                 sub_m.value_of("number"),
