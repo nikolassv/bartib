@@ -144,7 +144,7 @@ You may also use cargo to install Bartib from crates.io:
 cargo install bartib
 ```
 
-### From the AUR (Arch Linux)
+#### From the AUR (Arch Linux)
 
 ```sh
 yay -S bartib
