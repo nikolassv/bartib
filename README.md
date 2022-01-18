@@ -134,12 +134,20 @@ Do you want to be as happy as Alice? Use Bartib!
 
 ### How to install Bartib
 
+#### With Cargo
+
 Simply download a suitable executable from https://github.com/nikolassv/bartib/releases and copy it in some directory that is listed in your `PATH` (e.g. ~/bin).
 
 You may also use cargo to install Bartib from crates.io:
 
 ```bash
 cargo install bartib
+```
+
+#### From the AUR (Arch Linux)
+
+```sh
+yay -S bartib
 ```
 
 ### How to build Bartib
