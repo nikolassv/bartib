@@ -136,7 +136,8 @@ fn main() -> Result<()> {
                 .about("cancels all currently running activities")
         )
         .subcommand(
-            SubCommand::with_name("current").about("lists all currently running activities"),
+            SubCommand::with_name("current")
+                .about("lists all currently running activities")
         )
         .subcommand(
             SubCommand::with_name("list")
@@ -206,7 +207,18 @@ fn main() -> Result<()> {
                         .default_value("10")
                 )
         )
-        .subcommand(SubCommand::with_name("projects").about("list all projects"))
+        .subcommand(
+            SubCommand::with_name("projects")
+                .about("list all projects")
+                .arg(
+                    Arg::with_name("current")
+                        .short("c")
+                        .long("current")
+                        .help("prints currently running projects only")
+                        .takes_value(false)
+                        .required(false)
+                )
+        )
         .subcommand(
             SubCommand::with_name("edit")
                 .about("opens the activity log in an editor")
@@ -267,7 +279,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let filter = create_filter_for_arguments(sub_m);
             bartib::controller::report::show_report(file_name, filter)
         }
-        ("projects", Some(_)) => bartib::controller::list::list_projects(file_name),
+        ("projects", Some(sub_m)) => bartib::controller::list::list_projects(file_name, sub_m.is_present("current")),
         ("last", Some(sub_m)) => {
             let number = get_number_argument_or_ignore(
                 sub_m.value_of("number"),

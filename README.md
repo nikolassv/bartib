@@ -252,6 +252,7 @@ bartib list --project "The most exciting project"    # list activities for a giv
 ```bash
 bartib current    # show currently running activity
 bartib projects    # list all projects ever used
+bartib projects -c # show current project only
 
 bartib edit   # open the activity log in the editor you have defined in your `EDITOR` environment variable
 bartib edit -e vim    # open the activity log in a given editor
