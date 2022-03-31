@@ -20,6 +20,10 @@ pub enum ActivityError {
     DateTimeParseError,
     #[error("could not parse activity")]
     GeneralParseError,
+    #[error("the activity ended before it started")]
+    NegativeDurationError,
+    #[error("the activity was started before the previous ended")]
+    InvalidOrderError,
 }
 
 impl Activity {
@@ -46,6 +50,26 @@ impl Activity {
         } else {
             Local::now().naive_local().signed_duration_since(self.start)
         }
+    }
+
+    pub fn parse_with_preceeding(
+        plaintext: &str,
+        preceeding: Option<&Activity>,
+    ) -> Result<Activity, ActivityError> {
+        let activity = Activity::from_str(plaintext)?;
+
+        if let Some(preceeding) = preceeding {
+            match preceeding.end {
+                Some(preceeding_end) => {
+                    if preceeding_end > activity.start {
+                        return Err(ActivityError::InvalidOrderError);
+                    }
+                }
+                None => return Err(ActivityError::InvalidOrderError),
+            }
+        }
+
+        Ok(activity)
     }
 }
 
@@ -76,7 +100,7 @@ impl fmt::Display for Activity {
 
 // escapes the pipe character, so we can use it to separate the distinct parts of a activity
 fn escape_special_chars(s: &str) -> String {
-    s.replace("\\", "\\\\").replace("|", "\\|")
+    s.replace('\\', "\\\\").replace('|', "\\|")
 }
 
 impl FromStr for Activity {
@@ -91,22 +115,17 @@ impl FromStr for Activity {
 
         let time_parts: Vec<&str> = parts[0].split(" - ").collect();
 
-        let starttime =
-            match NaiveDateTime::parse_from_str(time_parts[0].trim(), conf::FORMAT_DATETIME) {
-                Ok(t) => t,
-                Err(_) => return Err(ActivityError::DateTimeParseError),
-            };
-
-        let endtime: Option<NaiveDateTime>;
-
-        if time_parts.len() > 1 {
-            endtime =
-                match NaiveDateTime::parse_from_str(time_parts[1].trim(), conf::FORMAT_DATETIME) {
-                    Ok(t) => Some(t),
-                    Err(_) => return Err(ActivityError::DateTimeParseError),
-                }
+        let starttime = parse_timepart(time_parts[0])?;
+        let endtime: Option<NaiveDateTime> = if time_parts.len() > 1 {
+            Some(parse_timepart(time_parts[1])?)
         } else {
-            endtime = None;
+            None
+        };
+
+        if let Some(endtime) = endtime {
+            if endtime < starttime {
+                return Err(ActivityError::NegativeDurationError);
+            }
         }
 
         let project = parts[1].trim();
@@ -121,6 +140,11 @@ impl FromStr for Activity {
 
         Ok(activity)
     }
+}
+
+fn parse_timepart(time_part: &str) -> Result<NaiveDateTime, ActivityError> {
+    NaiveDateTime::parse_from_str(time_part.trim(), conf::FORMAT_DATETIME)
+        .map_err(|_| ActivityError::DateTimeParseError)
 }
 
 /**
@@ -316,5 +340,29 @@ mod tests {
 
         let t = Activity::from_str("asb - 2021- | project");
         assert!(matches!(t, Err(ActivityError::DateTimeParseError)));
+
+        let t = Activity::from_str("2022-03-31 21:31 - 2022-03-31 21:15 | project");
+        assert!(matches!(t, Err(ActivityError::NegativeDurationError)));
+    }
+
+    #[test]
+    fn parse_with_preceeding_errors() {
+        let p = Activity::from_str("2022-03-31 21:31 - 2022-03-31 21:35 | project").unwrap();
+        let t = Activity::parse_with_preceeding("2022-03-31 21:30 | project", Some(&p));
+        assert!(matches!(t, Err(ActivityError::InvalidOrderError)));
+
+        let p = Activity::from_str("2022-03-31 21:31 | project").unwrap();
+        let t = Activity::parse_with_preceeding("2022-03-31 21:30 | project", Some(&p));
+        assert!(matches!(t, Err(ActivityError::InvalidOrderError)));
+    }
+
+    #[test]
+    fn parse_with_preceeding_ok() {
+        let t = Activity::parse_with_preceeding("2022-03-31 21:30 | project", None);
+        assert!(t.is_ok());
+
+        let p = Activity::from_str("2022-03-31 21:31 - 2022-03-31 21:35 | project").unwrap();
+        let t = Activity::parse_with_preceeding("2022-03-31 21:35 | project", Some(&p));
+        assert!(t.is_ok());
     }
 }

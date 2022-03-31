@@ -2,7 +2,6 @@ use anyhow::{Context, Result};
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::{BufRead, BufReader, Write};
-use std::str::FromStr;
 
 use crate::data::activity;
 
@@ -28,11 +27,15 @@ pub struct Line {
 
 impl Line {
     // creates a new line struct from plaintext
-    pub fn new(plaintext: &str, line_number: usize) -> Line {
+    pub fn new(plaintext: &str, line_number: usize, preceeding_line: Option<&Line>) -> Line {
+        let preceeding_activity = preceeding_line
+            .map(|line| line.activity.as_ref().ok())
+            .flatten();
+
         Line {
             plaintext: Some(plaintext.trim().to_string()),
             line_number: Some(line_number),
-            activity: activity::Activity::from_str(plaintext),
+            activity: activity::Activity::parse_with_preceeding(plaintext, preceeding_activity),
             status: LineStatus::Unchanged,
         }
     }
@@ -63,8 +66,14 @@ pub fn get_file_content(file_name: &str) -> Result<Vec<Line>> {
         .lines()
         .filter_map(|line_result| line_result.ok())
         .enumerate()
-        .map(|(line_number, line)| Line::new(&line, line_number.saturating_add(1)))
-        .collect();
+        .fold(Vec::new(), |mut lines, (line_number, line)| {
+            lines.push(Line::new(
+                &line,
+                line_number.saturating_add(1),
+                lines.last(),
+            ));
+            lines
+        });
 
     Ok(lines)
 }
@@ -81,7 +90,7 @@ pub fn write_to_file(file_name: &str, file_content: &[Line]) -> Result<(), io::E
                 } else {
                     write!(&file_handler, "{}", line.activity.as_ref().unwrap())?
                 }
-            },
+            }
             LineStatus::Changed => write!(&file_handler, "{}", line.activity.as_ref().unwrap())?,
         }
     }

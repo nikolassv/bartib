@@ -18,7 +18,11 @@ pub fn list_running(file_name: &str) -> Result<()> {
 // lists tracked activities
 //
 // the activities will be ordered chronologically.
-pub fn list(file_name: &str, filter: getter::ActivityFilter, do_group_activities: bool) -> Result<()> {
+pub fn list(
+    file_name: &str,
+    filter: getter::ActivityFilter,
+    do_group_activities: bool,
+) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
     let activities = getter::get_activities(&file_content);
     let mut filtered_activities: Vec<&activity::Activity> =
@@ -26,18 +30,17 @@ pub fn list(file_name: &str, filter: getter::ActivityFilter, do_group_activities
 
     filtered_activities.sort_by_key(|activity| activity.start);
 
-    let first_element = filtered_activities.len().saturating_sub(filter.number_of_activities.unwrap_or(filtered_activities.len()));
+    let first_element = filtered_activities.len().saturating_sub(
+        filter
+            .number_of_activities
+            .unwrap_or(filtered_activities.len()),
+    );
 
     if do_group_activities {
-        list::list_activities_grouped_by_date(
-            &filtered_activities[first_element..],
-        );
+        list::list_activities_grouped_by_date(&filtered_activities[first_element..]);
     } else {
         let with_start_dates = filter.date.is_none();
-        list::list_activities(
-            &filtered_activities[first_element..],
-            with_start_dates,
-        );
+        list::list_activities(&filtered_activities[first_element..], with_start_dates);
     }
 
     Ok(())
@@ -47,7 +50,8 @@ pub fn list(file_name: &str, filter: getter::ActivityFilter, do_group_activities
 pub fn check(file_name: &str) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
 
-    let number_of_errors = file_content.iter()
+    let number_of_errors = file_content
+        .iter()
         .filter(|line| line.activity.is_err())
         .count();
 
@@ -58,11 +62,17 @@ pub fn check(file_name: &str) -> Result<()> {
 
     println!("Found {} line(s) with parsing errors", number_of_errors);
 
-    file_content.iter()
+    file_content
+        .iter()
         .filter(|line| line.activity.is_err() && line.plaintext.is_some())
         .for_each(|line| {
             if let Err(e) = &line.activity {
-                println!("\n{}\n  -> {} (Line: {})", line.plaintext.as_ref().unwrap(), e.to_string(), line.line_number.unwrap_or(0));
+                println!(
+                    "\n{}\n  -> {} (Line: {})",
+                    line.plaintext.as_ref().unwrap(),
+                    e.to_string(),
+                    line.line_number.unwrap_or(0)
+                );
             }
         });
 
@@ -92,7 +102,8 @@ pub fn list_projects(file_name: &str, current: bool) -> Result<()> {
 pub fn list_last_activities(file_name: &str, number: usize) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
 
-    let descriptions_and_projects : Vec<(&String, &String)> = getter::get_descriptions_and_projects(&file_content);
+    let descriptions_and_projects: Vec<(&String, &String)> =
+        getter::get_descriptions_and_projects(&file_content);
     let first_element = descriptions_and_projects.len().saturating_sub(number);
 
     list::list_descriptions_and_projects(&descriptions_and_projects[first_element..]);

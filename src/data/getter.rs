@@ -1,34 +1,38 @@
-use std::collections::HashSet;
 use chrono::{naive, NaiveDate};
+use std::collections::HashSet;
 
 use crate::data::activity;
-use crate::data::bartib_file;
 use crate::data::activity::Activity;
+use crate::data::bartib_file;
 
 pub struct ActivityFilter<'a> {
     pub number_of_activities: Option<usize>,
     pub from_date: Option<NaiveDate>,
     pub to_date: Option<NaiveDate>,
     pub date: Option<NaiveDate>,
-    pub project: Option<&'a str>
+    pub project: Option<&'a str>,
 }
 
-pub fn get_descriptions_and_projects(file_content: &[bartib_file::Line]) -> Vec<(&String, &String)> {
-    let mut activities : Vec<&activity::Activity> = get_activities(file_content).collect();
+pub fn get_descriptions_and_projects(
+    file_content: &[bartib_file::Line],
+) -> Vec<(&String, &String)> {
+    let mut activities: Vec<&activity::Activity> = get_activities(file_content).collect();
     get_descriptions_and_projects_from_activities(&mut activities)
 }
 
-fn get_descriptions_and_projects_from_activities<'a>(activities: &mut [&'a Activity]) -> Vec<(&'a String, &'a String)> {
+fn get_descriptions_and_projects_from_activities<'a>(
+    activities: &mut [&'a Activity],
+) -> Vec<(&'a String, &'a String)> {
     activities.sort_by_key(|activity| activity.start);
 
     /* each activity should be placed in the list in the descending order of when it had been
-        started last. To achieve this we reverse the order of the activities before we extract the
-        set of descriptions and activities. Afterwards we also reverse the list of descriptions and
-        activities.
+       started last. To achieve this we reverse the order of the activities before we extract the
+       set of descriptions and activities. Afterwards we also reverse the list of descriptions and
+       activities.
 
-        e.g. if tasks have been started in this order: a, b, c, a, c the list of descriptions and
-            activities should have this order: b, a, c
-     */
+       e.g. if tasks have been started in this order: a, b, c, a, c the list of descriptions and
+           activities should have this order: b, a, c
+    */
     activities.reverse();
 
     let mut known_descriptions_and_projects: HashSet<(&String, &String)> = HashSet::new();
@@ -51,11 +55,21 @@ pub fn get_running_activities(file_content: &[bartib_file::Line]) -> Vec<&activi
         .collect()
 }
 
-pub fn get_activities(file_content: &[bartib_file::Line]) -> impl Iterator<Item = &activity::Activity> {
+pub fn get_activities(
+    file_content: &[bartib_file::Line],
+) -> impl Iterator<Item = &activity::Activity> {
     file_content
         .iter()
-        .map(|line| line.activity.as_ref())
-        .filter_map(|activity_result| activity_result.ok())
+        .filter_map(|line: &bartib_file::Line| match &line.activity {
+            Ok(activity) => Some(activity),
+            Err(_) => {
+                println!(
+                    "Warning: Ignoring line {}. Please see `bartib check` for further information",
+                    line.line_number.unwrap_or(0),
+                );
+                None
+            }
+        })
 }
 
 pub fn filter_activities<'a>(
@@ -74,17 +88,30 @@ pub fn filter_activities<'a>(
     }
 
     activities
-        .filter(move |activity| {activity.start.date() >= from_date && activity.start.date() <= to_date})
-        .filter(move |activity| filter.project.map(|p| activity.project == *p).unwrap_or(true))
+        .filter(move |activity| {
+            activity.start.date() >= from_date && activity.start.date() <= to_date
+        })
+        .filter(move |activity| {
+            filter
+                .project
+                .map(|p| activity.project == *p)
+                .unwrap_or(true)
+        })
 }
 
 pub fn get_last_activity_by_end(file_content: &[bartib_file::Line]) -> Option<&activity::Activity> {
     get_activities(file_content)
         .filter(|activity| activity.is_stopped())
-        .max_by_key(|activity| activity.end.unwrap_or_else(||naive::MIN_DATE.and_hms(0, 0, 0)))
+        .max_by_key(|activity| {
+            activity
+                .end
+                .unwrap_or_else(|| naive::MIN_DATE.and_hms(0, 0, 0))
+        })
 }
 
-pub fn get_last_activity_by_start(file_content: &[bartib_file::Line]) -> Option<&activity::Activity> {
+pub fn get_last_activity_by_start(
+    file_content: &[bartib_file::Line],
+) -> Option<&activity::Activity> {
     get_activities(file_content).max_by_key(|activity| activity.start)
 }
 
@@ -99,11 +126,18 @@ mod tests {
         let a3 = activity::Activity::start("p2".to_string(), "d1".to_string(), None);
         let mut activities = vec![&a1, &a2, &a3];
 
-        let descriptions_and_projects = get_descriptions_and_projects_from_activities(&mut activities);
+        let descriptions_and_projects =
+            get_descriptions_and_projects_from_activities(&mut activities);
 
         assert_eq!(descriptions_and_projects.len(), 2);
-        assert_eq!(*descriptions_and_projects.get(0).unwrap(), (&"d1".to_string(), &"p1".to_string()));
-        assert_eq!(*descriptions_and_projects.get(1).unwrap(), (&"d1".to_string(), &"p2".to_string()));
+        assert_eq!(
+            *descriptions_and_projects.get(0).unwrap(),
+            (&"d1".to_string(), &"p1".to_string())
+        );
+        assert_eq!(
+            *descriptions_and_projects.get(1).unwrap(),
+            (&"d1".to_string(), &"p2".to_string())
+        );
     }
 
     #[test]
@@ -113,10 +147,17 @@ mod tests {
         let a3 = activity::Activity::start("p1".to_string(), "d1".to_string(), None);
         let mut activities = vec![&a1, &a2, &a3];
 
-        let descriptions_and_projects = get_descriptions_and_projects_from_activities(&mut activities);
+        let descriptions_and_projects =
+            get_descriptions_and_projects_from_activities(&mut activities);
 
         assert_eq!(descriptions_and_projects.len(), 2);
-        assert_eq!(*descriptions_and_projects.get(0).unwrap(), (&"d1".to_string(), &"p2".to_string()));
-        assert_eq!(*descriptions_and_projects.get(1).unwrap(), (&"d1".to_string(), &"p1".to_string()));
+        assert_eq!(
+            *descriptions_and_projects.get(0).unwrap(),
+            (&"d1".to_string(), &"p2".to_string())
+        );
+        assert_eq!(
+            *descriptions_and_projects.get(1).unwrap(),
+            (&"d1".to_string(), &"p1".to_string())
+        );
     }
 }
