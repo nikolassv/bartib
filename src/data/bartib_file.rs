@@ -28,9 +28,7 @@ pub struct Line {
 impl Line {
     // creates a new line struct from plaintext
     pub fn new(plaintext: &str, line_number: usize, preceeding_line: Option<&Line>) -> Line {
-        let preceeding_activity = preceeding_line
-            .map(|line| line.activity.as_ref().ok())
-            .flatten();
+        let preceeding_activity = preceeding_line.and_then(|line| line.activity.as_ref().ok());
 
         Line {
             plaintext: Some(plaintext.trim().to_string()),

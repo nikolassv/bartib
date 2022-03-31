@@ -70,7 +70,7 @@ pub fn check(file_name: &str) -> Result<()> {
                 println!(
                     "\n{}\n  -> {} (Line: {})",
                     line.plaintext.as_ref().unwrap(),
-                    e.to_string(),
+                    e,
                     line.line_number.unwrap_or(0)
                 );
             }
