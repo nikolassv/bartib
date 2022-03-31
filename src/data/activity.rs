@@ -52,16 +52,16 @@ impl Activity {
         }
     }
 
-    pub fn parse_with_preceeding(
+    pub fn parse_with_preceding(
         plaintext: &str,
-        preceeding: Option<&Activity>,
+        preceding: Option<&Activity>,
     ) -> Result<Activity, ActivityError> {
         let activity = Activity::from_str(plaintext)?;
 
-        if let Some(preceeding) = preceeding {
-            match preceeding.end {
-                Some(preceeding_end) => {
-                    if preceeding_end > activity.start {
+        if let Some(preceding) = preceding {
+            match preceding.end {
+                Some(preceding_end) => {
+                    if preceding_end > activity.start {
                         return Err(ActivityError::InvalidOrderError);
                     }
                 }
@@ -346,23 +346,23 @@ mod tests {
     }
 
     #[test]
-    fn parse_with_preceeding_errors() {
+    fn parse_with_preceding_errors() {
         let p = Activity::from_str("2022-03-31 21:31 - 2022-03-31 21:35 | project").unwrap();
-        let t = Activity::parse_with_preceeding("2022-03-31 21:30 | project", Some(&p));
+        let t = Activity::parse_with_preceding("2022-03-31 21:30 | project", Some(&p));
         assert!(matches!(t, Err(ActivityError::InvalidOrderError)));
 
         let p = Activity::from_str("2022-03-31 21:31 | project").unwrap();
-        let t = Activity::parse_with_preceeding("2022-03-31 21:30 | project", Some(&p));
+        let t = Activity::parse_with_preceding("2022-03-31 21:30 | project", Some(&p));
         assert!(matches!(t, Err(ActivityError::InvalidOrderError)));
     }
 
     #[test]
-    fn parse_with_preceeding_ok() {
-        let t = Activity::parse_with_preceeding("2022-03-31 21:30 | project", None);
+    fn parse_with_preceding_ok() {
+        let t = Activity::parse_with_preceding("2022-03-31 21:30 | project", None);
         assert!(t.is_ok());
 
         let p = Activity::from_str("2022-03-31 21:31 - 2022-03-31 21:35 | project").unwrap();
-        let t = Activity::parse_with_preceeding("2022-03-31 21:35 | project", Some(&p));
+        let t = Activity::parse_with_preceding("2022-03-31 21:35 | project", Some(&p));
         assert!(t.is_ok());
     }
 }

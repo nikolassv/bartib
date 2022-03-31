@@ -27,13 +27,13 @@ pub struct Line {
 
 impl Line {
     // creates a new line struct from plaintext
-    pub fn new(plaintext: &str, line_number: usize, preceeding_line: Option<&Line>) -> Line {
-        let preceeding_activity = preceeding_line.and_then(|line| line.activity.as_ref().ok());
+    pub fn new(plaintext: &str, line_number: usize, preceding_line: Option<&Line>) -> Line {
+        let preceding_activity = preceding_line.and_then(|line| line.activity.as_ref().ok());
 
         Line {
             plaintext: Some(plaintext.trim().to_string()),
             line_number: Some(line_number),
-            activity: activity::Activity::parse_with_preceeding(plaintext, preceeding_activity),
+            activity: activity::Activity::parse_with_preceding(plaintext, preceding_activity),
             status: LineStatus::Unchanged,
         }
     }
