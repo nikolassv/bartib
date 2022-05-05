@@ -134,9 +134,11 @@ Do you want to be as happy as Alice? Use Bartib!
 
 ### How to install Bartib
 
-#### With Cargo
+#### Download an executable
 
 Simply download a suitable executable from https://github.com/nikolassv/bartib/releases and copy it in some directory that is listed in your `PATH` (e.g. ~/bin).
+
+#### With Cargo
 
 You may also use cargo to install Bartib from crates.io:
 
@@ -149,6 +151,20 @@ cargo install bartib
 ```sh
 yay -S bartib
 ```
+
+#### Via homebrew
+
+```sh
+brew install bartib
+```
+
+#### Via apk (Alpine Linux)
+
+```sh
+apk add bartib
+```
+
+(Currently bartib is only available in the [testing repository](https://pkgs.alpinelinux.org/packages?name=bartib))
 
 ### How to build Bartib
 
