@@ -4,7 +4,7 @@ pub fn format_duration(duration: &Duration) -> String {
     let mut duration_string = String::new();
 
     if duration.num_hours() > 0 {
-        duration_string.push_str(&format!("{}h ", duration.num_hours().to_string()));
+        duration_string.push_str(&format!("{}h ", duration.num_hours()));
     }
 
     if duration.num_minutes() > 0 {

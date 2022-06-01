@@ -19,7 +19,7 @@ pub enum ActivityError {
     #[error("could not parse date or time of activity")]
     DateTimeParseError,
     #[error("could not parse activity")]
-    GeneralParseError,
+    GeneralParseError
 }
 
 impl Activity {
@@ -76,7 +76,7 @@ impl fmt::Display for Activity {
 
 // escapes the pipe character, so we can use it to separate the distinct parts of a activity
 fn escape_special_chars(s: &str) -> String {
-    s.replace("\\", "\\\\").replace("|", "\\|")
+    s.replace('\\', "\\\\").replace('|', "\\|")
 }
 
 impl FromStr for Activity {
@@ -91,23 +91,12 @@ impl FromStr for Activity {
 
         let time_parts: Vec<&str> = parts[0].split(" - ").collect();
 
-        let starttime =
-            match NaiveDateTime::parse_from_str(time_parts[0].trim(), conf::FORMAT_DATETIME) {
-                Ok(t) => t,
-                Err(_) => return Err(ActivityError::DateTimeParseError),
-            };
-
-        let endtime: Option<NaiveDateTime>;
-
-        if time_parts.len() > 1 {
-            endtime =
-                match NaiveDateTime::parse_from_str(time_parts[1].trim(), conf::FORMAT_DATETIME) {
-                    Ok(t) => Some(t),
-                    Err(_) => return Err(ActivityError::DateTimeParseError),
-                }
+        let starttime = parse_timepart(time_parts[0])?;
+        let endtime: Option<NaiveDateTime> = if time_parts.len() > 1 {
+            Some(parse_timepart(time_parts[1])?)
         } else {
-            endtime = None;
-        }
+            None
+        };
 
         let project = parts[1].trim();
         let description = if parts.len() > 2 { parts[2].trim() } else { "" };
@@ -121,6 +110,11 @@ impl FromStr for Activity {
 
         Ok(activity)
     }
+}
+
+fn parse_timepart(time_part: &str) -> Result<NaiveDateTime, ActivityError> {
+    NaiveDateTime::parse_from_str(time_part.trim(), conf::FORMAT_DATETIME)
+        .map_err(|_| ActivityError::DateTimeParseError)
 }
 
 /**

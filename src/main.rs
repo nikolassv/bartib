@@ -232,6 +232,7 @@ fn main() -> Result<()> {
                 ),
         )
         .subcommand(SubCommand::with_name("check").about("checks file and reports parsing errors"))
+        .subcommand(SubCommand::with_name("sanity").about("checks sanity of bartib log"))
         .get_matches();
 
     let file_name = matches.value_of("file")
@@ -292,12 +293,13 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             bartib::controller::manipulation::start_editor(file_name, optional_editor_command)
         }
         ("check", Some(_)) => bartib::controller::list::check(file_name),
+        ("sanity", Some(_)) => bartib::controller::list::sanity_check(file_name),
         _ => bail!("Unknown command"),
     }
 }
 
 fn create_filter_for_arguments<'a>(sub_m: &'a ArgMatches) -> ActivityFilter<'a> {
-    let mut filter = bartib::data::getter::ActivityFilter {
+    let mut filter = ActivityFilter {
         number_of_activities: get_number_argument_or_ignore(
             sub_m.value_of("number"),
             "-n/--number",

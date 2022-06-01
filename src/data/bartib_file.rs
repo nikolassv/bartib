@@ -81,7 +81,7 @@ pub fn write_to_file(file_name: &str, file_content: &[Line]) -> Result<(), io::E
                 } else {
                     write!(&file_handler, "{}", line.activity.as_ref().unwrap())?
                 }
-            },
+            }
             LineStatus::Changed => write!(&file_handler, "{}", line.activity.as_ref().unwrap())?,
         }
     }
