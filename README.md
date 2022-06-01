@@ -274,4 +274,5 @@ bartib edit   # open the activity log in the editor you have defined in your `ED
 bartib edit -e vim    # open the activity log in a given editor
 
 bartib check    # check your activity log for invalid lines
+bartib sanity    # check for activities with logical errors (e.g activities with negative duration)
 ```

@@ -1,6 +1,9 @@
 use anyhow::Result;
+use chrono::NaiveDateTime;
 
+use crate::conf;
 use crate::data::activity;
+use crate::data::activity::Activity;
 use crate::data::bartib_file;
 use crate::data::getter;
 use crate::view::list;
@@ -44,6 +47,76 @@ pub fn list(
     }
 
     Ok(())
+}
+
+// checks the file content for sanity
+pub fn sanity_check(file_name: &str) -> Result<()> {
+    let file_content = bartib_file::get_file_content(file_name)?;
+    let mut lines_with_activities : Vec<(Option<usize>, Activity)> = file_content
+        .into_iter()
+        .filter_map(|line| {
+            match line.activity {
+                Ok(a) => Some((line.line_number, a)),
+                Err(_) => None
+            }
+        })
+        .collect();
+    lines_with_activities.sort_unstable_by_key(|(_, activity)| activity.start);
+
+    let mut has_finding : bool = false;
+    let mut last_end : Option<NaiveDateTime> = None;
+
+    for (line_number, activity) in lines_with_activities {
+        has_finding = !check_sanity(last_end, &activity, line_number) || has_finding;
+
+        if let Some(e) = last_end {
+            if let Some(this_end) = activity.end {
+                if this_end > e {
+                    last_end = Some(this_end.clone());
+                }
+            }
+        } else {
+            last_end = activity.end.clone();
+        }
+    }
+
+    if !has_finding {
+        println!("No unusual activities.");
+    }
+
+    Ok(())
+}
+
+fn check_sanity(last_end: Option<NaiveDateTime>, activity: &Activity, line_number: Option<usize>) -> bool {
+    let mut sane = true;
+    if activity.get_duration().num_milliseconds() < 0 {
+        println!("Activity has negative duration");
+        sane = false;
+    }
+
+    if let Some(e) = last_end {
+        if e > activity.start {
+            println!("Activity startet before another activity ended");
+            sane = false;
+        }
+    }
+
+    if !sane {
+        print_activity_with_line(&activity, line_number.unwrap_or(0));
+    }
+
+    return sane;
+}
+
+fn print_activity_with_line(activity: &Activity, line_number: usize) {
+    println!("{} (Started: {}, Ended: {}, Line: {})\n",
+             activity.description,
+             activity.start.format(conf::FORMAT_DATETIME),
+             activity.end
+                 .map(|end| end.format(conf::FORMAT_DATETIME).to_string())
+                 .unwrap_or(String::from("--")),
+             line_number
+    )
 }
 
 // prints all errors that occured when reading the bartib file

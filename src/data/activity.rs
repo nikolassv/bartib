@@ -19,11 +19,7 @@ pub enum ActivityError {
     #[error("could not parse date or time of activity")]
     DateTimeParseError,
     #[error("could not parse activity")]
-    GeneralParseError,
-    #[error("the activity ended before it started")]
-    NegativeDurationError,
-    #[error("the activity was started before the previous ended")]
-    InvalidOrderError,
+    GeneralParseError
 }
 
 impl Activity {
@@ -50,26 +46,6 @@ impl Activity {
         } else {
             Local::now().naive_local().signed_duration_since(self.start)
         }
-    }
-
-    pub fn parse_with_preceding(
-        plaintext: &str,
-        preceding: Option<&Activity>,
-    ) -> Result<Activity, ActivityError> {
-        let activity = Activity::from_str(plaintext)?;
-
-        if let Some(preceding) = preceding {
-            match preceding.end {
-                Some(preceding_end) => {
-                    if preceding_end > activity.start {
-                        return Err(ActivityError::InvalidOrderError);
-                    }
-                }
-                None => return Err(ActivityError::InvalidOrderError),
-            }
-        }
-
-        Ok(activity)
     }
 }
 
@@ -121,12 +97,6 @@ impl FromStr for Activity {
         } else {
             None
         };
-
-        if let Some(endtime) = endtime {
-            if endtime < starttime {
-                return Err(ActivityError::NegativeDurationError);
-            }
-        }
 
         let project = parts[1].trim();
         let description = if parts.len() > 2 { parts[2].trim() } else { "" };
@@ -340,29 +310,5 @@ mod tests {
 
         let t = Activity::from_str("asb - 2021- | project");
         assert!(matches!(t, Err(ActivityError::DateTimeParseError)));
-
-        let t = Activity::from_str("2022-03-31 21:31 - 2022-03-31 21:15 | project");
-        assert!(matches!(t, Err(ActivityError::NegativeDurationError)));
-    }
-
-    #[test]
-    fn parse_with_preceding_errors() {
-        let p = Activity::from_str("2022-03-31 21:31 - 2022-03-31 21:35 | project").unwrap();
-        let t = Activity::parse_with_preceding("2022-03-31 21:30 | project", Some(&p));
-        assert!(matches!(t, Err(ActivityError::InvalidOrderError)));
-
-        let p = Activity::from_str("2022-03-31 21:31 | project").unwrap();
-        let t = Activity::parse_with_preceding("2022-03-31 21:30 | project", Some(&p));
-        assert!(matches!(t, Err(ActivityError::InvalidOrderError)));
-    }
-
-    #[test]
-    fn parse_with_preceding_ok() {
-        let t = Activity::parse_with_preceding("2022-03-31 21:30 | project", None);
-        assert!(t.is_ok());
-
-        let p = Activity::from_str("2022-03-31 21:31 - 2022-03-31 21:35 | project").unwrap();
-        let t = Activity::parse_with_preceding("2022-03-31 21:35 | project", Some(&p));
-        assert!(t.is_ok());
     }
 }

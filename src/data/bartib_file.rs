@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::{BufRead, BufReader, Write};
+use std::str::FromStr;
 
 use crate::data::activity;
 
@@ -27,13 +28,11 @@ pub struct Line {
 
 impl Line {
     // creates a new line struct from plaintext
-    pub fn new(plaintext: &str, line_number: usize, preceding_line: Option<&Line>) -> Line {
-        let preceding_activity = preceding_line.and_then(|line| line.activity.as_ref().ok());
-
+    pub fn new(plaintext: &str, line_number: usize) -> Line {
         Line {
             plaintext: Some(plaintext.trim().to_string()),
             line_number: Some(line_number),
-            activity: activity::Activity::parse_with_preceding(plaintext, preceding_activity),
+            activity: activity::Activity::from_str(plaintext),
             status: LineStatus::Unchanged,
         }
     }
@@ -64,14 +63,8 @@ pub fn get_file_content(file_name: &str) -> Result<Vec<Line>> {
         .lines()
         .filter_map(|line_result| line_result.ok())
         .enumerate()
-        .fold(Vec::new(), |mut lines, (line_number, line)| {
-            lines.push(Line::new(
-                &line,
-                line_number.saturating_add(1),
-                lines.last(),
-            ));
-            lines
-        });
+        .map(|(line_number, line)| Line::new(&line, line_number.saturating_add(1)))
+        .collect();
 
     Ok(lines)
 }
