@@ -72,11 +72,11 @@ pub fn sanity_check(file_name: &str) -> Result<()> {
         if let Some(e) = last_end {
             if let Some(this_end) = activity.end {
                 if this_end > e {
-                    last_end = Some(this_end.clone());
+                    last_end = Some(this_end);
                 }
             }
         } else {
-            last_end = activity.end.clone();
+            last_end = activity.end;
         }
     }
 
@@ -102,10 +102,10 @@ fn check_sanity(last_end: Option<NaiveDateTime>, activity: &Activity, line_numbe
     }
 
     if !sane {
-        print_activity_with_line(&activity, line_number.unwrap_or(0));
+        print_activity_with_line(activity, line_number.unwrap_or(0));
     }
 
-    return sane;
+    sane
 }
 
 fn print_activity_with_line(activity: &Activity, line_number: usize) {
@@ -114,7 +114,7 @@ fn print_activity_with_line(activity: &Activity, line_number: usize) {
              activity.start.format(conf::FORMAT_DATETIME),
              activity.end
                  .map(|end| end.format(conf::FORMAT_DATETIME).to_string())
-                 .unwrap_or(String::from("--")),
+                 .unwrap_or_else(|| String::from("--")),
              line_number
     )
 }
