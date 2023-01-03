@@ -2,10 +2,10 @@ use anyhow::{anyhow, bail, Context, Error, Result};
 use chrono::NaiveDateTime;
 use std::process::Command;
 
+use crate::conf;
 use crate::data::activity;
 use crate::data::bartib_file;
 use crate::data::getter;
-use crate::conf;
 use crate::view::format_util;
 
 // starts a new activity
@@ -52,6 +52,50 @@ fn save_new_activity(
         .context(format!("Could not write to file: {}", file_name))
 }
 
+pub fn change(
+    file_name: &str,
+    project_name: Option<&str>,
+    activity_description: Option<&str>,
+    time: Option<NaiveDateTime>,
+) -> Result<()> {
+    let mut file_content = bartib_file::get_file_content(file_name)?;
+
+    for line in file_content.iter_mut() {
+        if let Ok(activity) = &mut line.activity {
+            if !activity.is_stopped() {
+                let mut changed = false;
+
+                if let Some(project_name) = project_name {
+                    activity.project = project_name.to_string();
+                    changed = true;
+                }
+
+                if let Some(activity_description) = activity_description {
+                    activity.description = activity_description.to_string();
+                    changed = true;
+                }
+
+                if let Some(time) = time {
+                    activity.start = time;
+                    changed = true;
+                }
+
+                if changed {
+                    println!(
+                        "Changed activity: \"{}\" ({}) started at {}",
+                        activity.description,
+                        activity.project,
+                        activity.start.format(conf::FORMAT_DATETIME)
+                    );
+                    line.set_changed();
+                }
+            }
+        }
+    }
+    bartib_file::write_to_file(file_name, &file_content)
+        .context(format!("Could not write to file: {}", file_name))
+}
+
 // stops all currently running activities
 pub fn stop(file_name: &str, time: Option<NaiveDateTime>) -> Result<()> {
     let mut file_content = bartib_file::get_file_content(file_name)?;
@@ -63,7 +107,7 @@ pub fn stop(file_name: &str, time: Option<NaiveDateTime>) -> Result<()> {
 // cancels all currently running activities
 pub fn cancel(file_name: &str) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
-    let mut new_file_content : Vec<bartib_file::Line> = Vec::new();
+    let mut new_file_content: Vec<bartib_file::Line> = Vec::new();
 
     for line in file_content {
         match &line.activity {
@@ -71,14 +115,15 @@ pub fn cancel(file_name: &str) -> Result<()> {
                 if activity.is_stopped() {
                     new_file_content.push(line);
                 } else {
-                    println!("Canceled activity: \"{}\" ({}) started at {}",
-                             activity.description,
-                             activity.project,
-                             activity.start.format(conf::FORMAT_DATETIME)
+                    println!(
+                        "Canceled activity: \"{}\" ({}) started at {}",
+                        activity.description,
+                        activity.project,
+                        activity.start.format(conf::FORMAT_DATETIME)
                     );
                 }
-            },
-            Err(_) => new_file_content.push(line)
+            }
+            Err(_) => new_file_content.push(line),
         }
     }
 
@@ -86,28 +131,34 @@ pub fn cancel(file_name: &str) -> Result<()> {
         .context(format!("Could not write to file: {}", file_name))
 }
 
-
 // continue last activity
 pub fn continue_last_activity(
     file_name: &str,
     project_name: Option<&str>,
     activity_description: Option<&str>,
     time: Option<NaiveDateTime>,
-    number: usize
+    number: usize,
 ) -> Result<()> {
     let mut file_content = bartib_file::get_file_content(file_name)?;
 
-    let descriptions_and_projects : Vec<(&String, &String)> = getter::get_descriptions_and_projects(&file_content);
+    let descriptions_and_projects: Vec<(&String, &String)> =
+        getter::get_descriptions_and_projects(&file_content);
 
     if descriptions_and_projects.is_empty() {
         bail!("No activity has been started before.")
     }
 
     if number > descriptions_and_projects.len() {
-        bail!(format!("Less than {} distinct activities have been logged yet", number));
+        bail!(format!(
+            "Less than {} distinct activities have been logged yet",
+            number
+        ));
     }
 
-    let i = descriptions_and_projects.len().saturating_sub(number).saturating_sub(1);
+    let i = descriptions_and_projects
+        .len()
+        .saturating_sub(number)
+        .saturating_sub(1);
     let optional_description_and_project = descriptions_and_projects.get(i);
 
     if let Some((description, project)) = optional_description_and_project {
@@ -119,7 +170,10 @@ pub fn continue_last_activity(
         stop_all_running_activities(&mut file_content, time);
         save_new_activity(file_name, &mut file_content, new_activity)
     } else {
-        bail!(format!("Less than {} distinct activities have been logged yet", number));
+        bail!(format!(
+            "Less than {} distinct activities have been logged yet",
+            number
+        ));
     }
 }
 

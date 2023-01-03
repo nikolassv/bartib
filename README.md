@@ -263,15 +263,23 @@ bartib list --from 2021-09-01 --to 2021-09-05    # list activities in a given ti
 bartib list --project "The most exciting project"    # list activities for a given project
 ```
 
+### Edit activities
+
+```bash
+bartib change -d "A new description"   # change the description of the current activity
+bartib change -p "Another project"   # change the project for the current activity
+bartib change -t 8:15   # change the start time of the current activity
+
+bartib edit   # open the activity log in the editor you have defined in your `EDITOR` environment variable
+bartib edit -e vim    # open the activity log in a given editor
+```
+
 ### Doing other stuff
 
 ```bash
 bartib current    # show currently running activity
 bartib projects    # list all projects ever used
 bartib projects -c # show current project only
-
-bartib edit   # open the activity log in the editor you have defined in your `EDITOR` environment variable
-bartib edit -e vim    # open the activity log in a given editor
 
 bartib check    # check your activity log for invalid lines
 bartib sanity    # check for activities with logical errors (e.g activities with negative duration)
