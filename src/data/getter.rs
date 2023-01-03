@@ -1,4 +1,4 @@
-use chrono::{naive, NaiveDate};
+use chrono::NaiveDate;
 use std::collections::HashSet;
 
 use crate::data::activity;
@@ -83,8 +83,8 @@ pub fn filter_activities<'a>(
         from_date = date;
         to_date = date;
     } else {
-        from_date = filter.from_date.unwrap_or(naive::MIN_DATE);
-        to_date = filter.to_date.unwrap_or(naive::MAX_DATE);
+        from_date = filter.from_date.unwrap_or(NaiveDate::MIN);
+        to_date = filter.to_date.unwrap_or(NaiveDate::MAX);
     }
 
     activities
@@ -105,7 +105,7 @@ pub fn get_last_activity_by_end(file_content: &[bartib_file::Line]) -> Option<&a
         .max_by_key(|activity| {
             activity
                 .end
-                .unwrap_or_else(|| naive::MIN_DATE.and_hms(0, 0, 0))
+                .unwrap_or_else(|| NaiveDate::MIN.and_hms_opt(0, 0, 0).unwrap())
         })
 }
 

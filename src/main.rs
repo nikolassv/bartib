@@ -254,7 +254,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let project_name = sub_m.value_of("project").unwrap();
             let activity_description = sub_m.value_of("description").unwrap();
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
-                .map(|t| Local::today().naive_local().and_time(t));
+                .map(|t| Local::now().date_naive().and_time(t));
 
             bartib::controller::manipulation::start(file_name, project_name, activity_description, time)
         }
@@ -262,7 +262,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let project_name = sub_m.value_of("project");
             let activity_description = sub_m.value_of("description");
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
-                .map(|t| Local::today().naive_local().and_time(t));
+                .map(|t| Local::now().date_naive().and_time(t));
 
             bartib::controller::manipulation::change(file_name, project_name, activity_description, time)
         }
@@ -270,7 +270,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let project_name = sub_m.value_of("project");
             let activity_description = sub_m.value_of("description");
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
-                .map(|t| Local::today().naive_local().and_time(t));
+                .map(|t| Local::now().date_naive().and_time(t));
             let number = get_number_argument_or_ignore(
                 sub_m.value_of("number"),
                 "-n/--number",
@@ -280,7 +280,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         }
         ("stop", Some(sub_m)) => {
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
-                .map(|t| Local::today().naive_local().and_time(t));
+                .map(|t| Local::now().date_naive().and_time(t));
 
             bartib::controller::manipulation::stop(file_name, time)
         }
