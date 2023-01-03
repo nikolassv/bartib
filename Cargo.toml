@@ -12,10 +12,10 @@ keywords = ["cli"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-chrono = "0.4"
-clap = "~2.33"
-thiserror = "1.0"
-anyhow = "1.0.42"
-nu-ansi-term = "0.34.0"
-term_size = "1.0.0-beta1"
-textwrap = "0.14.2"
+chrono = "0.4.0"
+clap = "2.0.0"
+thiserror = "1.0.0"
+anyhow = "1.0.0"
+nu-ansi-term = "0.46.0"
+term_size = "0.3.0"
+textwrap = "0.16.0"
