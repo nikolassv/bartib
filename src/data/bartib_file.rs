@@ -16,7 +16,7 @@ pub enum LineStatus {
 #[derive(Debug)]
 pub struct Line {
     // the plaintext of the line as it has been read from the file
-    // we save this to be able write untouched lines back to file without chaning them
+    // we save this to be able write untouched lines back to file without changing them
     pub plaintext: Option<String>,
     // the line number
     pub line_number: Option<usize>,

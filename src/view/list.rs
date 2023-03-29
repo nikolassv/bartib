@@ -2,8 +2,8 @@ use chrono::NaiveDate;
 use nu_ansi_term::Color;
 use std::collections::BTreeMap;
 
-use crate::data::activity;
 use crate::conf;
+use crate::data::activity;
 use crate::view::format_util;
 use crate::view::table;
 
@@ -36,7 +36,7 @@ pub fn list_activities_grouped_by_date(activities: &[&activity::Activity]) {
     group_activities_by_date(activities)
         .iter()
         .map(|(date, activity_list)| {
-            create_activites_group(&format!("{}", date), activity_list.as_slice())
+            create_activities_group(&format!("{}", date), activity_list.as_slice())
         })
         .for_each(|g| activity_table.add_group(g));
 
@@ -45,15 +45,30 @@ pub fn list_activities_grouped_by_date(activities: &[&activity::Activity]) {
 
 fn create_activity_table() -> table::Table {
     table::Table::new(vec![
-        table::Column{ label: "Started".to_string(), wrap: table::Wrap::NoWrap },
-        table::Column{ label: "Stopped".to_string(), wrap: table::Wrap::NoWrap },
-        table::Column{ label: "Description".to_string(), wrap: table::Wrap::Wrap },
-        table::Column{ label: "Project".to_string(), wrap: table::Wrap::Wrap },
-        table::Column{ label: "Duration".to_string(), wrap: table::Wrap::NoWrap },
+        table::Column {
+            label: "Started".to_string(),
+            wrap: table::Wrap::NoWrap,
+        },
+        table::Column {
+            label: "Stopped".to_string(),
+            wrap: table::Wrap::NoWrap,
+        },
+        table::Column {
+            label: "Description".to_string(),
+            wrap: table::Wrap::Wrap,
+        },
+        table::Column {
+            label: "Project".to_string(),
+            wrap: table::Wrap::Wrap,
+        },
+        table::Column {
+            label: "Duration".to_string(),
+            wrap: table::Wrap::NoWrap,
+        },
     ])
 }
 
-fn create_activites_group(title: &str, activities: &[&activity::Activity]) -> table::Group {
+fn create_activities_group(title: &str, activities: &[&activity::Activity]) -> table::Group {
     let rows = activities
         .iter()
         .map(|a| get_activity_table_row(a, false))
@@ -67,10 +82,22 @@ pub fn list_running_activities(activities: &[&activity::Activity]) {
         println!("No Activity is currently running");
     } else {
         let mut activity_table = table::Table::new(vec![
-            table::Column{ label: "Started At".to_string(), wrap: table::Wrap::NoWrap },
-            table::Column{ label: "Description".to_string(), wrap: table::Wrap::Wrap },
-            table::Column{ label: "Project".to_string(), wrap: table::Wrap::Wrap },
-            table::Column{ label: "Duration".to_string(), wrap: table::Wrap::NoWrap },
+            table::Column {
+                label: "Started At".to_string(),
+                wrap: table::Wrap::NoWrap,
+            },
+            table::Column {
+                label: "Description".to_string(),
+                wrap: table::Wrap::Wrap,
+            },
+            table::Column {
+                label: "Project".to_string(),
+                wrap: table::Wrap::Wrap,
+            },
+            table::Column {
+                label: "Duration".to_string(),
+                wrap: table::Wrap::NoWrap,
+            },
         ]);
 
         activities
@@ -90,24 +117,35 @@ pub fn list_running_activities(activities: &[&activity::Activity]) {
 }
 
 // display a list of projects and descriptions with index number
-pub fn list_descriptions_and_projects(descriptions_and_projects : &[(&String, &String)]) {
+pub fn list_descriptions_and_projects(descriptions_and_projects: &[(&String, &String)]) {
     if descriptions_and_projects.is_empty() {
         println!("No activities have been tracked yet");
     } else {
         let mut descriptions_and_projects_table = table::Table::new(vec![
-            table::Column{ label: " # ".to_string(), wrap: table::Wrap::NoWrap },
-            table::Column{ label: "Description".to_string(), wrap: table::Wrap::Wrap },
-            table::Column{ label: "Project".to_string(), wrap: table::Wrap::Wrap },
+            table::Column {
+                label: " # ".to_string(),
+                wrap: table::Wrap::NoWrap,
+            },
+            table::Column {
+                label: "Description".to_string(),
+                wrap: table::Wrap::Wrap,
+            },
+            table::Column {
+                label: "Project".to_string(),
+                wrap: table::Wrap::Wrap,
+            },
         ]);
 
-        let mut i  = descriptions_and_projects.len();
+        let mut i = descriptions_and_projects.len();
 
         for (description, project) in descriptions_and_projects {
             i = i.saturating_sub(1);
 
-            descriptions_and_projects_table.add_row(
-                table::Row::new(vec![format!("[{}]", i), description.to_string(), project.to_string()])
-            );
+            descriptions_and_projects_table.add_row(table::Row::new(vec![
+                format!("[{}]", i),
+                description.to_string(),
+                project.to_string(),
+            ]));
         }
 
         println!("\n{}", descriptions_and_projects_table);
@@ -118,7 +156,9 @@ pub fn list_descriptions_and_projects(descriptions_and_projects : &[(&String, &S
 //
 // the date of the end is shown when it is not the same date as the start
 fn get_activity_table_row(activity: &activity::Activity, with_start_dates: bool) -> table::Row {
-    let more_then_one_day = activity.end.map_or(false, |end| activity.start.date() != end.date());
+    let more_then_one_day = activity
+        .end
+        .map_or(false, |end| activity.start.date() != end.date());
 
     let display_end = activity.end.map_or_else(
         || "-".to_string(),

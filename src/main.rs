@@ -2,9 +2,9 @@ use anyhow::{bail, Context, Result};
 use chrono::{Datelike, Duration, Local, NaiveDate, NaiveTime};
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
+use bartib::data::getter::ActivityFilter;
 #[cfg(windows)]
 use nu_ansi_term::enable_ansi_support;
-use bartib::data::getter::ActivityFilter;
 
 fn main() -> Result<()> {
     #[cfg(windows)]
@@ -65,7 +65,14 @@ fn main() -> Result<()> {
         .long("last_week")
         .help("show activities of the last week")
         .required(false)
-        .conflicts_with_all(&["from_date", "to_date", "date", "today", "yesterday", "current_week"])
+        .conflicts_with_all(&[
+            "from_date",
+            "to_date",
+            "date",
+            "today",
+            "yesterday",
+            "current_week",
+        ])
         .takes_value(false);
 
     let arg_description = Arg::with_name("description")
@@ -99,16 +106,8 @@ fn main() -> Result<()> {
         .subcommand(
             SubCommand::with_name("start")
                 .about("starts a new activity")
-                .arg(
-                    arg_project
-                        .clone()
-                        .required(true)
-                )
-                .arg(
-                    arg_description
-                        .clone()
-                        .required(true)
-                )
+                .arg(arg_project.clone().required(true))
+                .arg(arg_description.clone().required(true))
                 .arg(&arg_time),
         )
         .subcommand(
@@ -122,7 +121,7 @@ fn main() -> Result<()> {
                         .help("the number of the activity to continue (see subcommand `last`)")
                         .required(false)
                         .takes_value(true)
-                        .default_value("0")
+                        .default_value("0"),
                 )
                 .arg(&arg_time),
         )
@@ -131,7 +130,7 @@ fn main() -> Result<()> {
                 .about("changes the current activity")
                 .arg(&arg_description)
                 .arg(&arg_project)
-                .arg(&arg_time)
+                .arg(&arg_time),
         )
         .subcommand(
             SubCommand::with_name("stop")
@@ -139,12 +138,10 @@ fn main() -> Result<()> {
                 .arg(&arg_time),
         )
         .subcommand(
-            SubCommand::with_name("cancel")
-                .about("cancels all currently running activities")
+            SubCommand::with_name("cancel").about("cancels all currently running activities"),
         )
         .subcommand(
-            SubCommand::with_name("current")
-                .about("lists all currently running activities")
+            SubCommand::with_name("current").about("lists all currently running activities"),
         )
         .subcommand(
             SubCommand::with_name("list")
@@ -163,7 +160,7 @@ fn main() -> Result<()> {
                         .value_name("PROJECT")
                         .help("do list activities for this project only")
                         .takes_value(true)
-                        .required(false)
+                        .required(false),
                 )
                 .arg(
                     Arg::with_name("no_grouping")
@@ -197,9 +194,9 @@ fn main() -> Result<()> {
                         .value_name("PROJECT")
                         .help("do report activities for this project only")
                         .takes_value(true)
-                        .required(false)
-                )
-       )
+                        .required(false),
+                ),
+        )
         .subcommand(
             SubCommand::with_name("last")
                 .about("displays the descriptions and projects of recent activities")
@@ -211,8 +208,8 @@ fn main() -> Result<()> {
                         .help("maximum number of lines to display")
                         .required(false)
                         .takes_value(true)
-                        .default_value("10")
-                )
+                        .default_value("10"),
+                ),
         )
         .subcommand(
             SubCommand::with_name("projects")
@@ -223,8 +220,8 @@ fn main() -> Result<()> {
                         .long("current")
                         .help("prints currently running projects only")
                         .takes_value(false)
-                        .required(false)
-                )
+                        .required(false),
+                ),
         )
         .subcommand(
             SubCommand::with_name("edit")
@@ -233,7 +230,7 @@ fn main() -> Result<()> {
                     Arg::with_name("editor")
                         .short("e")
                         .value_name("editor")
-                        .help("the command to start your prefered text editor")
+                        .help("the command to start your preferred text editor")
                         .env("EDITOR")
                         .takes_value(true),
                 ),
@@ -256,7 +253,12 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
                 .map(|t| Local::now().date_naive().and_time(t));
 
-            bartib::controller::manipulation::start(file_name, project_name, activity_description, time)
+            bartib::controller::manipulation::start(
+                file_name,
+                project_name,
+                activity_description,
+                time,
+            )
         }
         ("change", Some(sub_m)) => {
             let project_name = sub_m.value_of("project");
@@ -264,19 +266,28 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
                 .map(|t| Local::now().date_naive().and_time(t));
 
-            bartib::controller::manipulation::change(file_name, project_name, activity_description, time)
+            bartib::controller::manipulation::change(
+                file_name,
+                project_name,
+                activity_description,
+                time,
+            )
         }
         ("continue", Some(sub_m)) => {
             let project_name = sub_m.value_of("project");
             let activity_description = sub_m.value_of("description");
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
                 .map(|t| Local::now().date_naive().and_time(t));
-            let number = get_number_argument_or_ignore(
-                sub_m.value_of("number"),
-                "-n/--number",
-            ).unwrap_or(0);
+            let number =
+                get_number_argument_or_ignore(sub_m.value_of("number"), "-n/--number").unwrap_or(0);
 
-            bartib::controller::manipulation::continue_last_activity(file_name, project_name, activity_description, time, number)
+            bartib::controller::manipulation::continue_last_activity(
+                file_name,
+                project_name,
+                activity_description,
+                time,
+                number,
+            )
         }
         ("stop", Some(sub_m)) => {
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
@@ -295,12 +306,12 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let filter = create_filter_for_arguments(sub_m);
             bartib::controller::report::show_report(file_name, filter)
         }
-        ("projects", Some(sub_m)) => bartib::controller::list::list_projects(file_name, sub_m.is_present("current")),
+        ("projects", Some(sub_m)) => {
+            bartib::controller::list::list_projects(file_name, sub_m.is_present("current"))
+        }
         ("last", Some(sub_m)) => {
-            let number = get_number_argument_or_ignore(
-                sub_m.value_of("number"),
-                "-n/--number",
-            ).unwrap_or(10);
+            let number = get_number_argument_or_ignore(sub_m.value_of("number"), "-n/--number")
+                .unwrap_or(10);
             bartib::controller::list::list_last_activities(file_name, number)
         }
         ("edit", Some(sub_m)) => {
@@ -322,7 +333,7 @@ fn create_filter_for_arguments<'a>(sub_m: &'a ArgMatches) -> ActivityFilter<'a> 
         from_date: get_date_argument_or_ignore(sub_m.value_of("from_date"), "--from"),
         to_date: get_date_argument_or_ignore(sub_m.value_of("to_date"), "--to"),
         date: get_date_argument_or_ignore(sub_m.value_of("date"), "-d/--date"),
-        project: sub_m.value_of("project")
+        project: sub_m.value_of("project"),
     };
 
     let today = Local::now().naive_local().date();
@@ -335,13 +346,26 @@ fn create_filter_for_arguments<'a>(sub_m: &'a ArgMatches) -> ActivityFilter<'a> 
     }
 
     if sub_m.is_present("current_week") {
-        filter.from_date = Some(today - Duration::days(today.weekday().num_days_from_monday() as i64));
-        filter.to_date = Some(today - Duration::days(today.weekday().num_days_from_monday() as i64) + Duration::days(6));
+        filter.from_date =
+            Some(today - Duration::days(today.weekday().num_days_from_monday() as i64));
+        filter.to_date = Some(
+            today - Duration::days(today.weekday().num_days_from_monday() as i64)
+                + Duration::days(6),
+        );
     }
 
     if sub_m.is_present("last_week") {
-        filter.from_date = Some(today - Duration::days(today.weekday().num_days_from_monday() as i64) - Duration::weeks(1));
-        filter.to_date = Some(today - Duration::days(today.weekday().num_days_from_monday() as i64) - Duration::weeks(1) + Duration::days(6) )
+        filter.from_date = Some(
+            today
+                - Duration::days(today.weekday().num_days_from_monday() as i64)
+                - Duration::weeks(1),
+        );
+        filter.to_date = Some(
+            today
+                - Duration::days(today.weekday().num_days_from_monday() as i64)
+                - Duration::weeks(1)
+                + Duration::days(6),
+        )
     }
 
     filter
