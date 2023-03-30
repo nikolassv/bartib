@@ -19,7 +19,7 @@ pub enum ActivityError {
     #[error("could not parse date or time of activity")]
     DateTimeParseError,
     #[error("could not parse activity")]
-    GeneralParseError
+    GeneralParseError,
 }
 
 impl Activity {
@@ -83,7 +83,7 @@ impl FromStr for Activity {
     type Err = ActivityError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<String> = split_with_escaped_delimeter(s).collect();
+        let parts: Vec<String> = split_with_escaped_delimiter(s).collect();
 
         if parts.len() < 2 {
             return Err(ActivityError::GeneralParseError);
@@ -160,7 +160,7 @@ impl Iterator for StringSplitter<'_> {
     }
 }
 
-fn split_with_escaped_delimeter(s: &str) -> StringSplitter {
+fn split_with_escaped_delimiter(s: &str) -> StringSplitter {
     StringSplitter { chars: s.chars() }
 }
 

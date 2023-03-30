@@ -1,6 +1,6 @@
 # Bartib
 
-![Illustration of the White Rabbit from Alice in Wonderland](misc/white-rabbit.png "Oh dear! Oh dear! I shall be too late") 
+![Illustration of the White Rabbit from Alice in Wonderland](misc/white-rabbit.png "Oh dear! Oh dear! I shall be too late")
 
 Bartib is an easy to use time tracking tool for the command line. It saves a log of all tracked activities as a plaintext file and allows you to create flexible reports.
 
@@ -12,19 +12,27 @@ Bartib is an easy to use time tracking tool for the command line. It saves a log
 
 ## Contents
 
-1. [Tutorial](#tutorial)
-1. [How To ...](#how-to-)
-    1. [How to install Bartib](#how-to-install-bartib)
-    1. [How to build Bartib](#how-to-build-bartib)
-    1. [How to define in which file to save the log of your activities](#how-to-define-in-which-file-to-save-the-log-of-your-activities)
-    1. [How to edit or delete tracked activities](#how-to-edit-or-delete-tracked-activities)
-    1. [How to activate auto completion](#how-to-activate-auto-completion)
-1. [Command overview](#command-overview)
-    1. [The essentials](#the-essentials)
-    1. [Getting Help](#getting-help)
-    1. [Tracking activities](#tracking-activities)
-    1. [Reporting and listing activities](#reporting-and-listing-activities)
-    1. [Doing other stuff](#doing-other-stuff)
+- [Bartib](#bartib)
+  - [Contents](#contents)
+  - [Tutorial](#tutorial)
+  - [How To ...](#how-to-)
+    - [How to install Bartib](#how-to-install-bartib)
+      - [Download an executable](#download-an-executable)
+      - [With Cargo](#with-cargo)
+      - [From the AUR (Arch Linux)](#from-the-aur-arch-linux)
+      - [Via homebrew](#via-homebrew)
+      - [Via apk (Alpine Linux)](#via-apk-alpine-linux)
+    - [How to build Bartib](#how-to-build-bartib)
+    - [How to define in which file to save the log of your activities](#how-to-define-in-which-file-to-save-the-log-of-your-activities)
+    - [How to edit or delete tracked activities](#how-to-edit-or-delete-tracked-activities)
+    - [How to activate auto completion](#how-to-activate-auto-completion)
+  - [Command overview](#command-overview)
+    - [The essentials](#the-essentials)
+    - [Getting Help](#getting-help)
+    - [Tracking activities](#tracking-activities)
+    - [Reporting and listing activities](#reporting-and-listing-activities)
+    - [Edit activities](#edit-activities)
+    - [Doing other stuff](#doing-other-stuff)
 
 ## Tutorial
 
@@ -68,7 +76,7 @@ Started activity: "More Urgent Task Y" (Just Another Project B) at 2021-10-29 10
 
 See how Bartib just stops the running activity when another one starts? No need to stop it manually.
 
-It is a productive morning. After _More Urgent Task Y_ Alice workes on other projects and other tasks, but now it is time for lunch and Alice lets Bartib list all the activities she has tracked today until now:
+It is a productive morning. After _More Urgent Task Y_ Alice works on other projects and other tasks, but now it is time for lunch and Alice lets Bartib list all the activities she has tracked today until now:
 
 ```console
 alice@work: ~ $ bartib list --today
@@ -136,7 +144,7 @@ Do you want to be as happy as Alice? Use Bartib!
 
 #### Download an executable
 
-Simply download a suitable executable from https://github.com/nikolassv/bartib/releases and copy it in some directory that is listed in your `PATH` (e.g. ~/bin).
+Simply download a suitable executable from <https://github.com/nikolassv/bartib/releases> and copy it in some directory that is listed in your `PATH` (e.g. ~/bin).
 
 #### With Cargo
 
@@ -192,7 +200,7 @@ If the specified log file does not exist yet Bartib creates it.
 
 ### How to edit or delete tracked activities
 
-Just open your activitiy log in your favorite text editor to edit or delete former activities. You may even add new activities manually in this file. The format is self explanatory.
+Just open your activity log in your favorite text editor to edit or delete former activities. You may even add new activities manually in this file. The format is self explanatory.
 
 Bartib even offers the `bartib edit` command which opens the log in the editor defined by your `EDITOR` environment variable. If you are unsure whether your edits are readable by bartib, use the `bartib check` command. It will inform you about any parsing errors.
 
@@ -205,6 +213,7 @@ Bartib offers a simple auto completion for project names. This saves you from ty
 All these commands require that you have set the `BARTIB_FILE` environment variable to the file path of your activity log. Otherwise they require an additional `-f/--file` parameter between `bartib` and the subcommand (see above: [How to define in which file to save the log of your activities](#how-to-define-in-which-file-to-save-the-log-of-your-activities)).
 
 ### The essentials
+
 ```bash
 bartib -h    # get help
 bartib start -p "name of the project" -d "description of the activity"    # start a new activity
@@ -214,12 +223,14 @@ bartib report --today    # create a report for today
 ```
 
 ### Getting Help
+
 ```bash
 bartib -h    # Print a concise help
 bartib start -h    # Print a help for any subcommand
 ```
 
-### Tracking activities 
+### Tracking activities
+
 ```bash
 bartib start -p "The name of the associated project" -d "A description of the activity"    # Start a new activity with a short description and an associated project
 bartib start -p "The name of the associated project" -d "A description of the activity" -t 13:45    # Start a new activity at a given time
@@ -230,7 +241,7 @@ bartib stop -t 14:00    # Stop the currently running activity at a given time
 bartib last    # Print a list of the ten most recently used projects and descriptions
 bartib last -n 25   # Prints a list of recently used projects and descriptions with more entries
 
-# All numbers used with the following commands refer to the indizees in the list created with `bartib last`
+# All numbers used with the following commands refer to the indexes in the list created with `bartib last`
 bartib continue 5    # Start an activity with a recently used project and description
 bartib continue    # Continue the latest activity
 bartib continue 3 -d "Another description"    # Continue activity number 3 but overwrite the description
@@ -254,7 +265,7 @@ bartib report --project "The most exciting project"    # create a report for a g
 bartib list    # list all activities grouped by day
 bartib list --no_grouping    # list all activities but do not group them by day
 
-bartib list --today    # list todays' activites
+bartib list --today    # list todays' activities
 bartib list --yesterday    # list yesterdays' activities
 bartib list --current_week    # list activities of the current week (since monday)
 bartib list --last_week    # list activities of the last week

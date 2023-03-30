@@ -13,8 +13,11 @@ pub fn show_report(file_name: &str, filter: getter::ActivityFilter) -> Result<()
 
     filtered_activities.sort_by_key(|activity| activity.start);
 
-
-    let first_element = filtered_activities.len().saturating_sub(filter.number_of_activities.unwrap_or(filtered_activities.len()));
+    let first_element = filtered_activities.len().saturating_sub(
+        filter
+            .number_of_activities
+            .unwrap_or(filtered_activities.len()),
+    );
 
     report::show_activities(&filtered_activities[first_element..filtered_activities.len()]);
 

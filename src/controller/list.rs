@@ -8,7 +8,7 @@ use crate::data::bartib_file;
 use crate::data::getter;
 use crate::view::list;
 
-// lists all currently runninng activities.
+// lists all currently running activities.
 pub fn list_running(file_name: &str) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
     let running_activities = getter::get_running_activities(&file_content);
@@ -52,19 +52,17 @@ pub fn list(
 // checks the file content for sanity
 pub fn sanity_check(file_name: &str) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
-    let mut lines_with_activities : Vec<(Option<usize>, Activity)> = file_content
+    let mut lines_with_activities: Vec<(Option<usize>, Activity)> = file_content
         .into_iter()
-        .filter_map(|line| {
-            match line.activity {
-                Ok(a) => Some((line.line_number, a)),
-                Err(_) => None
-            }
+        .filter_map(|line| match line.activity {
+            Ok(a) => Some((line.line_number, a)),
+            Err(_) => None,
         })
         .collect();
     lines_with_activities.sort_unstable_by_key(|(_, activity)| activity.start);
 
-    let mut has_finding : bool = false;
-    let mut last_end : Option<NaiveDateTime> = None;
+    let mut has_finding: bool = false;
+    let mut last_end: Option<NaiveDateTime> = None;
 
     for (line_number, activity) in lines_with_activities {
         has_finding = !check_sanity(last_end, &activity, line_number) || has_finding;
@@ -87,7 +85,11 @@ pub fn sanity_check(file_name: &str) -> Result<()> {
     Ok(())
 }
 
-fn check_sanity(last_end: Option<NaiveDateTime>, activity: &Activity, line_number: Option<usize>) -> bool {
+fn check_sanity(
+    last_end: Option<NaiveDateTime>,
+    activity: &Activity,
+    line_number: Option<usize>,
+) -> bool {
     let mut sane = true;
     if activity.get_duration().num_milliseconds() < 0 {
         println!("Activity has negative duration");
@@ -96,7 +98,7 @@ fn check_sanity(last_end: Option<NaiveDateTime>, activity: &Activity, line_numbe
 
     if let Some(e) = last_end {
         if e > activity.start {
-            println!("Activity startet before another activity ended");
+            println!("Activity started before another activity ended");
             sane = false;
         }
     }
@@ -109,17 +111,19 @@ fn check_sanity(last_end: Option<NaiveDateTime>, activity: &Activity, line_numbe
 }
 
 fn print_activity_with_line(activity: &Activity, line_number: usize) {
-    println!("{} (Started: {}, Ended: {}, Line: {})\n",
-             activity.description,
-             activity.start.format(conf::FORMAT_DATETIME),
-             activity.end
-                 .map(|end| end.format(conf::FORMAT_DATETIME).to_string())
-                 .unwrap_or_else(|| String::from("--")),
-             line_number
+    println!(
+        "{} (Started: {}, Ended: {}, Line: {})\n",
+        activity.description,
+        activity.start.format(conf::FORMAT_DATETIME),
+        activity
+            .end
+            .map(|end| end.format(conf::FORMAT_DATETIME).to_string())
+            .unwrap_or_else(|| String::from("--")),
+        line_number
     )
 }
 
-// prints all errors that occured when reading the bartib file
+// prints all errors that occurred when reading the bartib file
 pub fn check(file_name: &str) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
 

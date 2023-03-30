@@ -141,7 +141,7 @@ mod tests {
     }
 
     #[test]
-    fn get_descriptions_and_projects_test_restarted_activitiy() {
+    fn get_descriptions_and_projects_test_restarted_activity() {
         let a1 = activity::Activity::start("p1".to_string(), "d1".to_string(), None);
         let a2 = activity::Activity::start("p2".to_string(), "d1".to_string(), None);
         let a3 = activity::Activity::start("p1".to_string(), "d1".to_string(), None);
