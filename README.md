@@ -208,6 +208,8 @@ Bartib even offers the `bartib edit` command which opens the log in the editor d
 
 Bartib offers a simple auto completion for project names. This saves you from typing out long project names each time you start a new task. Just source the script [misc/bartibCompletion.sh](misc/bartibCompletion.sh) in your `.bashrc` to enable it.
 
+For fish users, add the [misc/bartib.fish](misc/bartib.fish) to either the `~/.config/fish/completions/` or `~/.local/share/fish/vendor_completions.d/` directory.
+
 ## Command overview
 
 All these commands require that you have set the `BARTIB_FILE` environment variable to the file path of your activity log. Otherwise they require an additional `-f/--file` parameter between `bartib` and the subcommand (see above: [How to define in which file to save the log of your activities](#how-to-define-in-which-file-to-save-the-log-of-your-activities)).
