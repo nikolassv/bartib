@@ -209,6 +209,7 @@ Bartib even offers the `bartib edit` command which opens the log in the editor d
 Bartib offers a simple auto completion for project names. This saves you from typing out long project names each time you start a new task. Just source the script [misc/bartibCompletion.sh](misc/bartibCompletion.sh) in your `.bashrc` to enable it.
 
 For fish users, add the [misc/bartib.fish](misc/bartib.fish) to either the `~/.config/fish/completions/` or `~/.local/share/fish/vendor_completions.d/` directory.
+Currently, you must set the `BARTIB_FILE` in your fish shell for the project and description names completions.
 
 ## Command overview
 
