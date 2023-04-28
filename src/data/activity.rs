@@ -1,11 +1,12 @@
 use chrono::{Duration, Local, NaiveDateTime};
+use serde::Serialize;
 use std::fmt;
 use std::str::{Chars, FromStr};
 use thiserror::Error;
 
 use crate::conf;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Activity {
     pub start: NaiveDateTime,
     pub end: Option<NaiveDateTime>,

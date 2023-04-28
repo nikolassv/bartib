@@ -5,11 +5,16 @@ use std::ops::Add;
 
 use chrono::Duration;
 use nu_ansi_term::Style;
+use serde::Serializer;
 use textwrap;
+
+extern crate serde;
+extern crate serde_json;
 
 use crate::conf;
 use crate::data::activity;
 use crate::view::format_util;
+use crate::view::format_util::Format;
 
 type ProjectMap<'a> = BTreeMap<&'a str, (Vec<&'a activity::Activity>, Duration)>;
 
@@ -26,6 +31,128 @@ impl<'a> Report<'a> {
         }
     }
 }
+
+impl<'a> serde::Serialize for Report<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut report_map = serde_json::Map::new();
+        report_map.insert(
+            "totalDuration".to_string(),
+            format_util::duration_to_json(&self.total_duration),
+        );
+        
+        let projects: Vec<serde_json::Value> = self.project_map.iter().map(|(project, (activities, duration))| {
+            let mut project_map = serde_json::Map::new();
+            project_map.insert(
+                "project".to_string(),
+                serde_json::Value::String(project.to_string()),
+            );
+            project_map.insert(
+                "duration".to_string(),
+                format_util::duration_to_json(duration),
+            );
+
+            let mut activities_vec = Vec::new();
+            for activity in activities {
+                let mut activity_map = serde_json::Map::new();
+                activity_map.insert(
+                    "description".to_string(),
+                    serde_json::Value::String(activity.description.to_string()),
+                );
+                activity_map.insert(
+                    "duration".to_string(),
+                    format_util::duration_to_json(&activity.get_duration())
+                );
+                activity_map.insert(
+                    "start".to_string(),
+                    serde_json::Value::String(activity.start.to_string()),
+                );
+                if let Some(end) = activity.end {
+                    activity_map.insert(
+                        "end".to_string(),
+                        serde_json::Value::String(end.to_string())
+                    );
+                };
+                activities_vec.push(serde_json::Value::Object(activity_map));
+            }
+            project_map.insert(
+                "activities".to_string(),
+                serde_json::Value::Array(activities_vec),
+            );
+            serde_json::Value::Object(project_map)
+        }).collect();
+        
+        report_map.insert(
+            "projects".to_string(),
+            serde_json::Value::Array(projects),
+        );
+        report_map.serialize(serializer)
+    }
+}
+
+
+// impl<'a> serde::Serialize for Report<'a> {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: Serializer,
+//     {
+//         let mut report_map = serde_json::Map::new();
+//         report_map.insert(
+//             "totalDuration".to_string(),
+//             format_util::duration_to_json(&self.total_duration),
+//         );
+//         let mut seq = serializer.serialize_seq(Some(self.project_map.len()))?;
+//         for (project, (activities, duration)) in self.project_map.iter() {
+//             let mut project_map = serde_json::Map::new();
+//             project_map.insert(
+//                 "project".to_string(),
+//                 serde_json::Value::String(project.to_string()),
+//             );
+//             project_map.insert(
+//                 "duration".to_string(),
+//                 format_util::duration_to_json(duration),
+//             );
+
+//             let mut activities_vec = Vec::new();
+//             for activity in activities {
+//                 let mut activity_map = serde_json::Map::new();
+//                 activity_map.insert(
+//                     "description".to_string(),
+//                     serde_json::Value::String(activity.description.to_string()),
+//                 );
+//                 activity_map.insert(
+//                     "duration".to_string(),
+//                     format_util::duration_to_json(&activity.get_duration())
+//                 );
+//                 activity_map.insert(
+//                     "start".to_string(),
+//                     serde_json::Value::String(activity.start.to_string()),
+//                 );
+//                 if let Some(end) = activity.end {
+//                     activity_map.insert(
+//                         "end".to_string(),
+//                         serde_json::Value::String(end.to_string())
+//                     );
+//                 };
+//                 activities_vec.push(serde_json::Value::Object(activity_map));
+//             }
+//             project_map.insert(
+//                 "activities".to_string(),
+//                 serde_json::Value::Array(activities_vec),
+//             );
+
+//             seq.serialize_element(&serde_json::Value::Object(project_map))?;
+//         }
+//         let projects: Vec<serde_json::Value> = seq.collect();
+//         report_map.insert(
+//             "projects".to_string(),
+//             serde_json::Value::Array(projects),
+//         );
+//         report_map.serialize(serializer)
+//     }
+// }
 
 impl<'a> fmt::Display for Report<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -58,9 +185,12 @@ impl<'a> fmt::Display for Report<'a> {
     }
 }
 
-pub fn show_activities<'a>(activities: &'a [&'a activity::Activity]) {
+pub fn show_activities<'a>(activities: &'a [&'a activity::Activity], format: Format) {
     let report = Report::new(activities);
-    println!("\n{}", report);
+    match format {
+        Format::SHELL => println!("{}", report),
+        Format::JSON => println!("{}", serde_json::to_string(&report).unwrap()),
+    }
 }
 
 fn create_project_map<'a>(activities: &'a [&'a activity::Activity]) -> ProjectMap {

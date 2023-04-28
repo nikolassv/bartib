@@ -6,6 +6,8 @@ use bartib::data::getter::ActivityFilter;
 #[cfg(windows)]
 use nu_ansi_term::enable_ansi_support;
 
+use bartib::view::format_util::Format;
+
 fn main() -> Result<()> {
     #[cfg(windows)]
     if let Err(e) = enable_ansi_support() {
@@ -87,6 +89,15 @@ fn main() -> Result<()> {
         .long("project")
         .value_name("PROJECT")
         .help("the project to which the new activity belongs")
+        .takes_value(true);
+
+    let arg_format = Arg::with_name("format")
+        .short("o")
+        .long("output")
+        .value_name("FORMAT")
+        .help("the output format")
+        .possible_values(&["shell", "json"])
+        .default_value("shell")
         .takes_value(true);
 
     let matches = App::new("bartib")
@@ -187,6 +198,7 @@ fn main() -> Result<()> {
                 .arg(&arg_yesterday)
                 .arg(&arg_current_week)
                 .arg(&arg_last_week)
+                .arg(&arg_format)
                 .arg(
                     Arg::with_name("project")
                         .short("p")
@@ -304,7 +316,8 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         }
         ("report", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
-            bartib::controller::report::show_report(file_name, filter)
+            let format = sub_m.value_of("format").unwrap_or("shell").parse::<Format>().unwrap();
+            bartib::controller::report::show_report(file_name, filter, format)
         }
         ("projects", Some(sub_m)) => {
             bartib::controller::list::list_projects(file_name, sub_m.is_present("current"))

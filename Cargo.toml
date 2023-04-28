@@ -12,10 +12,12 @@ keywords = ["cli"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-chrono = "0.4.0"
+chrono = { version = "0.4.0", features = ["serde"] }
 clap = "2.0.0"
 thiserror = "1.0.0"
 anyhow = "1.0.0"
 nu-ansi-term = "0.46.0"
 term_size = "0.3.0"
 textwrap = "0.16.0"
+serde = { version = "*", features = ["derive"] }
+serde_json = "1.0.64"
