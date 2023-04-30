@@ -1,12 +1,14 @@
 use chrono::{Duration, Local, NaiveDateTime};
 use serde::Serialize;
+use serde::ser::SerializeMap;
 use std::fmt;
 use std::str::{Chars, FromStr};
 use thiserror::Error;
 
 use crate::conf;
+use crate::view::list::SerializableDuration;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct Activity {
     pub start: NaiveDateTime,
     pub end: Option<NaiveDateTime>,
@@ -14,6 +16,21 @@ pub struct Activity {
     pub project: String,
     pub description: String,
 }
+
+impl Serialize for Activity {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer {
+        let mut ser = serializer.serialize_map(Some(5))?;
+        ser.serialize_entry("start", &self.start)?;
+        ser.serialize_entry("end", &self.end)?;
+        ser.serialize_entry("project", &self.project)?;
+        ser.serialize_entry("description", &self.description)?;
+        ser.serialize_entry("duration", &SerializableDuration::from(&self.get_duration()))?;
+        ser.end()
+    }
+}
+
 
 #[derive(Error, Debug)]
 pub enum ActivityError {

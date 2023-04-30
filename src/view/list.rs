@@ -1,46 +1,100 @@
 use chrono::NaiveDate;
 use nu_ansi_term::Color;
 use std::collections::BTreeMap;
+use serde::Serialize;
 
 use crate::conf;
 use crate::data::activity;
 use crate::view::format_util;
 use crate::view::table;
 
-// displays a table with activities
-pub fn list_activities(activities: &[&activity::Activity], with_start_dates: bool) {
-    if activities.is_empty() {
-        println!("No activity to display");
-        return;
+use super::format_util::Format;
+
+const HOURS_IN_DAY: i64 = 24;
+const MINUTES_IN_HOUR: i64 = 60;
+const SECONDS_IN_MINUTE: i64 = 60;
+
+#[derive(Serialize)]
+pub struct MultiDayListEntry<'a> {
+    pub date: NaiveDate,
+    pub entries: Vec<&'a activity::Activity>
+}
+
+#[derive(Serialize)]
+pub struct SerializableDuration {
+    days: i64,
+    hours: i64,
+    minutes: i64,
+    seconds: i64,
+}
+
+impl From<&chrono::Duration> for SerializableDuration {
+    fn from(value: &chrono::Duration) -> Self {
+        Self {
+            days: value.num_days(),
+            hours: value.num_hours() % HOURS_IN_DAY,
+            minutes: value.num_minutes() % MINUTES_IN_HOUR,
+            seconds: value.num_seconds() % SECONDS_IN_MINUTE
+        }
     }
+}
 
-    let mut activity_table = create_activity_table();
 
-    activities
-        .iter()
-        .map(|t| get_activity_table_row(t, with_start_dates))
-        .for_each(|row| activity_table.add_row(row));
-
-    println!("\n{}", activity_table);
+// displays a table with activities
+pub fn list_activities(activities: &[&activity::Activity], with_start_dates: bool, format: Format) -> Result<(), serde_json::Error> {
+    match format {
+        Format::JSON => {
+            println!("{}", serde_json::to_string(&activities)?);
+            Ok(())
+        },
+        Format::SHELL => {
+            if activities.is_empty() {
+                println!("No activity to display");
+                return Ok(());
+            }
+        
+            let mut activity_table = create_activity_table();
+        
+            activities
+                .iter()
+                .map(|t| get_activity_table_row(t, with_start_dates))
+                .for_each(|row| activity_table.add_row(row));
+        
+            println!("\n{}", activity_table);
+            Ok(())
+        }
+    }
 }
 
 // list activities grouped by the dates of their start time
-pub fn list_activities_grouped_by_date(activities: &[&activity::Activity]) {
-    if activities.is_empty() {
-        println!("No activity to display");
-        return;
+pub fn list_activities_grouped_by_date(activities: &[&activity::Activity], format: Format) -> Result<(), serde_json::Error> {
+    match format {
+        Format::JSON => {
+            println!("{}", serde_json::to_string(&group_activities_by_date(activities)
+                .into_iter()
+                .map(|(date, entries)| MultiDayListEntry{ date: date, entries: entries })
+                .collect::<Vec<_>>())?);
+            Ok(())
+        },
+        Format::SHELL => {
+            if activities.is_empty() {
+                println!("No activity to display");
+                return Ok(());
+            }
+        
+            let mut activity_table = create_activity_table();
+        
+            group_activities_by_date(activities)
+                .iter()
+                .map(|(date, activity_list)| {
+                    create_activities_group(&format!("{}", date), activity_list.as_slice())
+                })
+                .for_each(|g| activity_table.add_group(g));
+        
+            println!("\n{}", activity_table);
+            Ok(())
+        }
     }
-
-    let mut activity_table = create_activity_table();
-
-    group_activities_by_date(activities)
-        .iter()
-        .map(|(date, activity_list)| {
-            create_activities_group(&format!("{}", date), activity_list.as_slice())
-        })
-        .for_each(|g| activity_table.add_group(g));
-
-    println!("\n{}", activity_table);
 }
 
 fn create_activity_table() -> table::Table {

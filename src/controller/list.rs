@@ -6,6 +6,7 @@ use crate::data::activity;
 use crate::data::activity::Activity;
 use crate::data::bartib_file;
 use crate::data::getter;
+use crate::view::format_util::Format;
 use crate::view::list;
 
 // lists all currently running activities.
@@ -25,6 +26,7 @@ pub fn list(
     file_name: &str,
     filter: getter::ActivityFilter,
     do_group_activities: bool,
+    format: Format
 ) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
     let activities = getter::get_activities(&file_content);
@@ -40,10 +42,10 @@ pub fn list(
     );
 
     if do_group_activities {
-        list::list_activities_grouped_by_date(&filtered_activities[first_element..]);
+        list::list_activities_grouped_by_date(&filtered_activities[first_element..], format)?;
     } else {
         let with_start_dates = filter.date.is_none();
-        list::list_activities(&filtered_activities[first_element..], with_start_dates);
+        list::list_activities(&filtered_activities[first_element..], with_start_dates, format)?;
     }
 
     Ok(())

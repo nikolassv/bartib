@@ -164,6 +164,7 @@ fn main() -> Result<()> {
                 .arg(&arg_yesterday)
                 .arg(&arg_current_week)
                 .arg(&arg_last_week)
+                .arg(&arg_format)
                 .arg(
                     Arg::with_name("project")
                         .short("p")
@@ -312,7 +313,8 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("list", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
             let do_group_activities = !sub_m.is_present("no_grouping") && filter.date.is_none();
-            bartib::controller::list::list(file_name, filter, do_group_activities)
+            let format = sub_m.value_of("format").unwrap_or("shell").parse::<Format>().unwrap();
+            bartib::controller::list::list(file_name, filter, do_group_activities, format)
         }
         ("report", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
