@@ -119,6 +119,7 @@ fn main() -> Result<()> {
                 .about("starts a new activity")
                 .arg(arg_project.clone().required(true))
                 .arg(arg_description.clone().required(true))
+                .arg(&arg_format)
                 .arg(&arg_time),
         )
         .subcommand(
@@ -146,7 +147,8 @@ fn main() -> Result<()> {
         .subcommand(
             SubCommand::with_name("stop")
                 .about("stops all currently running activities")
-                .arg(&arg_time),
+                .arg(&arg_time)
+                .arg(&arg_format)
         )
         .subcommand(
             SubCommand::with_name("cancel").about("cancels all currently running activities"),
@@ -265,12 +267,14 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let activity_description = sub_m.value_of("description").unwrap();
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
                 .map(|t| Local::now().date_naive().and_time(t));
+            let format = sub_m.value_of("format").unwrap().parse::<Format>().unwrap();
 
             bartib::controller::manipulation::start(
                 file_name,
                 project_name,
                 activity_description,
                 time,
+                format
             )
         }
         ("change", Some(sub_m)) => {
@@ -305,20 +309,21 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("stop", Some(sub_m)) => {
             let time = get_time_argument_or_ignore(sub_m.value_of("time"), "-t/--time")
                 .map(|t| Local::now().date_naive().and_time(t));
+            let format = sub_m.value_of("format").unwrap().parse::<Format>().unwrap();
 
-            bartib::controller::manipulation::stop(file_name, time)
+            bartib::controller::manipulation::stop(file_name, time, format)
         }
         ("cancel", Some(_)) => bartib::controller::manipulation::cancel(file_name),
         ("current", Some(_)) => bartib::controller::list::list_running(file_name),
         ("list", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
             let do_group_activities = !sub_m.is_present("no_grouping") && filter.date.is_none();
-            let format = sub_m.value_of("format").unwrap_or("shell").parse::<Format>().unwrap();
+            let format = sub_m.value_of("format").unwrap().parse::<Format>().unwrap();
             bartib::controller::list::list(file_name, filter, do_group_activities, format)
         }
         ("report", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
-            let format = sub_m.value_of("format").unwrap_or("shell").parse::<Format>().unwrap();
+            let format = sub_m.value_of("format").unwrap().parse::<Format>().unwrap();
             bartib::controller::report::show_report(file_name, filter, format)
         }
         ("projects", Some(sub_m)) => {

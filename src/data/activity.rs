@@ -8,7 +8,7 @@ use thiserror::Error;
 use crate::conf;
 use crate::view::list::SerializableDuration;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Activity {
     pub start: NaiveDateTime,
     pub end: Option<NaiveDateTime>,
