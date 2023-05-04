@@ -32,12 +32,19 @@ end
 
 function __fish_complete_bartib_numbers
     set -l output (bartib last -n 100 2>/dev/null)
-    string match -r "\[(\d)\]" -g $output
+
+    set -l description_and_project (string match -r '(\\e\[4mDescription.*)(\\e\[4mProject.*)' -g $output)
+    set -l description_length (math (string length $description_and_project[1]) - 9)
+    set -l project_length (math (string length $description_and_project[2]) - 8)
+    string trim --right (string match -r '(\d\t.*)' -g (string replace -r (echo "\[(\d)\] ([[:ascii:]]{0,$description_length})[^[:ascii:]]*([[:ascii:]]{0,$project_length}).*") '$1\t$3->$2' $output))
 end
 
 function __fish_complete_bartib_descriptions
-    set -l output (tail -n 100 $BARTIB_FILE)
-    string match -r ".*\|\s.*\|\s(.*)" -g $output
+    set -l output (bartib last -n 100 2>/dev/null)
+
+    set -l description_match (string match -r '(\\e\[4mDescription.*)' -g $output)
+    set -l description_length (math (string length $description_match) - 9)
+    string replace -r (echo "\[(\d)\] ([[:ascii:]]{0,$description_length}).*") '$2' (string match -r '\[\d\].*' $output)
 end
 
 function __is_last_argument
