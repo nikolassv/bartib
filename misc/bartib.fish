@@ -42,8 +42,8 @@ end
 function __fish_complete_bartib_descriptions
     set -l output (bartib last -n 100 2>/dev/null)
 
-    set -l description_match (string match -r '(\\e\[4mDescription.*)' -g $output)
-    set -l description_length (math (string length $description_match) - 9)
+    set -l description_match (string match -r '(\\e\[4mDescription.*)\\e\[4mProject.*' -g $output)
+    set -l description_length (math (string length $description_match) - 8)
     string replace -r (echo "\[(\d)\] ([[:ascii:]]{0,$description_length}).*") '$2' (string match -r '\[\d\].*' $output)
 end
 
