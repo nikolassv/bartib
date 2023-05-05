@@ -256,7 +256,7 @@ fn write_cells<T: AsRef<str> + std::fmt::Display>(
         for (width, wrapped_cell) in column_width.iter().zip(wrapped_cells.iter()) {
             match wrapped_cell.get(line) {
                 Some(c) => write_with_width_and_style(f, c, width, style)?,
-                None => write!(f, "{} ", "\u{a0}".repeat(*width))?,
+                None => write!(f, "{} ", "\u{a0}".repeat(*width))?, // pad with non breaking space
             }
         }
 
@@ -282,7 +282,7 @@ fn write_with_width_and_style(
     // space will be styled (e.g. underlined)
     write!(
         f,
-        "{prefix}{content:\u{a0}<width$}{suffix} ",
+        "{prefix}{content:\u{a0}<width$}{suffix} ", // pad with non breaking space
         prefix = style_prefix,
         content = content,
         width = width,
