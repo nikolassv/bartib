@@ -1,6 +1,6 @@
 use anyhow::{bail, Context, Result};
 use chrono::{Datelike, Duration, Local, NaiveDate, NaiveTime};
-use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+use clap::{App, AppSettings, Arg, ArgMatches, SubCommand, crate_version};
 
 use bartib::data::getter::ActivityFilter;
 #[cfg(windows)]
@@ -90,7 +90,7 @@ fn main() -> Result<()> {
         .takes_value(true);
 
     let matches = App::new("bartib")
-        .version("1.0.0")
+        .version(crate_version!())
         .author("Nikolas Schmidt-Voigt <nikolas.schmidt-voigt@posteo.de>")
         .about("A simple timetracker")
         .setting(AppSettings::SubcommandRequiredElseHelp)
