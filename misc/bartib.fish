@@ -36,8 +36,8 @@ function __fish_complete_bartib_numbers
     set -l description_and_project (string match -r '(\\e\[4mDescription.*)(\\e\[4mProject.*)' -g $output)
     set -l description_length (math (string length $description_and_project[1]) - 9)
     set -l project_length (math (string length $description_and_project[2]) - 8)
-    set -l description_project_re "\[(\d+)\][^[:ascii:]]* ([[:ascii:]]{0,$description_length})[^[:ascii:]]*([[:ascii:]]{0,$project_length}).*"
-    string trim --right (string match -r '(\d+\t.*)' -g (string replace -r $description_project_re '$1\t$3->$2' $output))
+    set -l description_project_re "\[(\d+)\][\p{Space}]*(.{$description_length})[\p{Space}]*(.{$project_length}).*"
+    string trim --right (string match -r '(\d+\t.*)' -g (string replace -r $description_project_re '$1\t$3-> $2' $output))
 end
 
 function __fish_complete_bartib_descriptions
