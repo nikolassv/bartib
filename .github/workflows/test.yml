@@ -17,7 +17,9 @@ jobs:
     - name: Cache Rust dependencies
       uses: actions/cache@v3
       with:
-        path: ~/.cargo
+        path: |
+          ~/.cargo
+          target
         key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-rust-
