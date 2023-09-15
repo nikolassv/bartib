@@ -23,8 +23,9 @@ pub enum ActivityError {
 }
 
 impl Activity {
-    pub fn start(project: String, description: String, time: Option<NaiveDateTime>) -> Activity {
-        Activity {
+    #[must_use]
+    pub fn start(project: String, description: String, time: Option<NaiveDateTime>) -> Self {
+        Self {
             start: time.unwrap_or_else(|| Local::now().naive_local()),
             end: None,
             project,
@@ -36,10 +37,12 @@ impl Activity {
         self.end = time.or_else(|| Some(Local::now().naive_local()));
     }
 
+    #[must_use]
     pub fn is_stopped(&self) -> bool {
         self.end.is_some()
     }
 
+    #[must_use]
     pub fn get_duration(&self) -> Duration {
         if let Some(end) = self.end {
             end.signed_duration_since(self.start)
@@ -101,7 +104,7 @@ impl FromStr for Activity {
         let project = parts[1].trim();
         let description = if parts.len() > 2 { parts[2].trim() } else { "" };
 
-        let activity = Activity {
+        let activity = Self {
             start: starttime,
             end: endtime,
             project: project.to_string(),
@@ -133,9 +136,7 @@ impl Iterator for StringSplitter<'_> {
     fn next(&mut self) -> Option<String> {
         let mut next_char = self.chars.next();
 
-        if next_char.is_none() {
-            return None;
-        }
+        next_char?;
 
         let mut escaped = false;
         let mut collector = String::new();
@@ -202,13 +203,13 @@ mod tests {
         );
         t.start = NaiveDateTime::parse_from_str("2021-02-16 16:14", conf::FORMAT_DATETIME).unwrap();
         assert_eq!(
-            format!("{}", t),
+            format!("{t}"),
             "2021-02-16 16:14 | test project\\| 1 | test\\\\description\n"
         );
         t.end =
             Some(NaiveDateTime::parse_from_str("2021-02-16 18:23", conf::FORMAT_DATETIME).unwrap());
         assert_eq!(
-            format!("{}", t),
+            format!("{t}"),
             "2021-02-16 16:14 - 2021-02-16 18:23 | test project\\| 1 | test\\\\description\n"
         );
     }
@@ -240,7 +241,7 @@ mod tests {
         assert_eq!(t.start.time().hour(), 16);
         assert_eq!(t.start.time().minute(), 14);
 
-        assert_eq!(t.description, "".to_string());
+        assert_eq!(t.description, String::new());
         assert_eq!(t.project, "test project".to_string());
         assert_eq!(t.end, None);
     }
@@ -283,7 +284,7 @@ mod tests {
             None,
         );
         t.stop(None);
-        let t2 = Activity::from_str(format!("{}", t).as_str()).unwrap();
+        let t2 = Activity::from_str(format!("{t}").as_str()).unwrap();
 
         assert_eq!(
             t.start.with_second(0).unwrap().with_nanosecond(0).unwrap(),

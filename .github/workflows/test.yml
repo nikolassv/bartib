@@ -10,12 +10,42 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  format:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - name: Cache Rust dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo
+        key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-rust-
+    - name: Format
+      run: cargo fmt --all --check
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: format
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Clippy
+        run: rustup component add clippy
+      - name: Run Clippy
+        run: cargo clippy -- -D warnings
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable

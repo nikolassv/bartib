@@ -35,8 +35,8 @@ pub struct Table {
 }
 
 impl Row {
-    pub fn new(content: Vec<String>) -> Row {
-        Row {
+    pub fn new(content: Vec<String>) -> Self {
+        Self {
             content,
             style: None,
         }
@@ -48,14 +48,14 @@ impl Row {
 }
 
 impl Group {
-    pub fn new(title: Option<String>, rows: Vec<Row>) -> Group {
-        Group { title, rows }
+    pub fn new(title: Option<String>, rows: Vec<Row>) -> Self {
+        Self { title, rows }
     }
 }
 
 impl Table {
-    pub fn new(columns: Vec<Column>) -> Table {
-        Table {
+    pub fn new(columns: Vec<Column>) -> Self {
+        Self {
             columns,
             groups: Vec::new(),
             rows: Vec::new(),
@@ -190,9 +190,7 @@ impl Table {
 
 impl fmt::Display for Table {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let terminal_width = term_size::dimensions_stdout()
-            .map(|d| d.0)
-            .unwrap_or(conf::DEFAULT_WIDTH);
+        let terminal_width = term_size::dimensions_stdout().map_or(conf::DEFAULT_WIDTH, |d| d.0);
 
         let column_width = self.get_column_width(terminal_width - self.columns.len());
 
@@ -214,7 +212,7 @@ impl fmt::Display for Table {
 }
 
 fn write_group(f: &mut fmt::Formatter<'_>, group: &Group, column_width: &[usize]) -> fmt::Result {
-    let empty_string = "".to_string();
+    let empty_string = String::new();
     let title = group.title.as_ref().unwrap_or(&empty_string);
 
     writeln!(f)?;
@@ -250,7 +248,11 @@ fn write_cells<T: AsRef<str> + std::fmt::Display>(
         })
         .collect();
 
-    let most_lines: usize = wrapped_cells.iter().map(|c| c.len()).max().unwrap_or(1);
+    let most_lines: usize = wrapped_cells
+        .iter()
+        .map(std::vec::Vec::len)
+        .max()
+        .unwrap_or(1);
 
     for line in 0..most_lines {
         for (width, wrapped_cell) in column_width.iter().zip(wrapped_cells.iter()) {
@@ -275,19 +277,12 @@ fn write_with_width_and_style(
     width: &usize,
     opt_style: Option<Style>,
 ) -> fmt::Result {
-    let style_prefix = opt_style.map_or("".to_string(), |style| style.prefix().to_string());
-    let style_suffix = opt_style.map_or("".to_string(), |style| style.suffix().to_string());
+    let style_prefix = opt_style.map_or(String::new(), |style| style.prefix().to_string());
+    let style_suffix = opt_style.map_or(String::new(), |style| style.suffix().to_string());
 
     // cells are filled with non-breaking white space. Contrary to normal spaces non-breaking white
     // space will be styled (e.g. underlined)
-    write!(
-        f,
-        "{prefix}{content:\u{a0}<width$}{suffix} ", // pad with non breaking space
-        prefix = style_prefix,
-        content = content,
-        width = width,
-        suffix = style_suffix
-    )
+    write!(f, "{style_prefix}{content:\u{a0}<width$}{style_suffix} ")
 }
 
 #[cfg(test)]
@@ -467,7 +462,7 @@ mod tests {
         t.add_row(row2);
 
         assert_eq!(
-            format!("{}", t),
+            format!("{t}"),
             "\u{1b}[4ma\u{a0}\u{a0}\u{1b}[0m \u{1b}[4mb\u{a0}\u{a0}\u{a0}\u{1b}[0m \u{1b}[4mc\u{a0}\u{a0}\u{a0}\u{1b}[0m \nabc defg \na\u{a0}\u{a0} b\u{a0}\u{a0}\u{a0} cdef \n"
         );
     }

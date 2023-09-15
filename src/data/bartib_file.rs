@@ -28,8 +28,9 @@ pub struct Line {
 
 impl Line {
     // creates a new line struct from plaintext
-    pub fn new(plaintext: &str, line_number: usize) -> Line {
-        Line {
+    #[must_use]
+    pub fn new(plaintext: &str, line_number: usize) -> Self {
+        Self {
             plaintext: Some(plaintext.trim().to_string()),
             line_number: Some(line_number),
             activity: activity::Activity::from_str(plaintext),
@@ -38,8 +39,9 @@ impl Line {
     }
 
     // creates a new line from an existing activity
-    pub fn for_activity(activity: activity::Activity) -> Line {
-        Line {
+    #[must_use]
+    pub fn for_activity(activity: activity::Activity) -> Self {
+        Self {
             plaintext: None,
             line_number: None,
             activity: Ok(activity),
@@ -56,12 +58,12 @@ impl Line {
 // reads the content of a file to a vector of lines
 pub fn get_file_content(file_name: &str) -> Result<Vec<Line>> {
     let file_handler =
-        File::open(file_name).context(format!("Could not read from file: {}", file_name))?;
+        File::open(file_name).context(format!("Could not read from file: {file_name}"))?;
     let reader = BufReader::new(file_handler);
 
     let lines = reader
         .lines()
-        .filter_map(|line_result| line_result.ok())
+        .map_while(Result::ok)
         .enumerate()
         .map(|(line_number, line)| Line::new(&line, line_number.saturating_add(1)))
         .collect();
@@ -77,7 +79,7 @@ pub fn write_to_file(file_name: &str, file_content: &[Line]) -> Result<(), io::E
         match &line.status {
             LineStatus::Unchanged => {
                 if let Some(plaintext) = &line.plaintext {
-                    writeln!(&file_handler, "{}", plaintext)?
+                    writeln!(&file_handler, "{plaintext}")?
                 } else {
                     write!(&file_handler, "{}", line.activity.as_ref().unwrap())?
                 }

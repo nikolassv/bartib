@@ -49,7 +49,7 @@ fn save_new_activity(
 
     file_content.push(bartib_file::Line::for_activity(activity));
     bartib_file::write_to_file(file_name, file_content)
-        .context(format!("Could not write to file: {}", file_name))
+        .context(format!("Could not write to file: {file_name}"))
 }
 
 pub fn change(
@@ -60,7 +60,7 @@ pub fn change(
 ) -> Result<()> {
     let mut file_content = bartib_file::get_file_content(file_name)?;
 
-    for line in file_content.iter_mut() {
+    for line in &mut file_content {
         if let Ok(activity) = &mut line.activity {
             if !activity.is_stopped() {
                 let mut changed = false;
@@ -93,7 +93,7 @@ pub fn change(
         }
     }
     bartib_file::write_to_file(file_name, &file_content)
-        .context(format!("Could not write to file: {}", file_name))
+        .context(format!("Could not write to file: {file_name}"))
 }
 
 // stops all currently running activities
@@ -101,7 +101,7 @@ pub fn stop(file_name: &str, time: Option<NaiveDateTime>) -> Result<()> {
     let mut file_content = bartib_file::get_file_content(file_name)?;
     stop_all_running_activities(&mut file_content, time);
     bartib_file::write_to_file(file_name, &file_content)
-        .context(format!("Could not write to file: {}", file_name))
+        .context(format!("Could not write to file: {file_name}"))
 }
 
 // cancels all currently running activities
@@ -128,7 +128,7 @@ pub fn cancel(file_name: &str) -> Result<()> {
     }
 
     bartib_file::write_to_file(file_name, &new_file_content)
-        .context(format!("Could not write to file: {}", file_name))
+        .context(format!("Could not write to file: {file_name}"))
 }
 
 // continue last activity
