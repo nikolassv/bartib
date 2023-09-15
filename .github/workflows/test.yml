@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  COMMON_CACHE_KEY: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.lock') }}
 
 jobs:
   format:
@@ -20,16 +21,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     needs: format
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Clippy
-        run: rustup component add clippy
-      - name: Run Clippy
-        run: cargo clippy -- -D warnings
-
-  build:
-    runs-on: ubuntu-latest
-    needs: lint
+    env:
+      CACHE_KEY: ${{ env.COMMON_CACHE_KEY }}
     steps:
       - uses: actions/checkout@v3
       - name: Cache Rust dependencies
@@ -38,9 +31,28 @@ jobs:
           path: |
             ~/.cargo
             target
-          key: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-build-
+          key: ${{ env.CACHE_KEY }}
+          restore-keys: ${{ runner.os }}-build-
+      - name: Install Clippy
+        run: rustup component add clippy
+      - name: Run Clippy
+        run: cargo clippy -- -D warnings
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
+    env:
+      CACHE_KEY: ${{ env.COMMON_CACHE_KEY }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo
+            target
+          key: ${{ env.CACHE_KEY }}
+          restore-keys: ${{ runner.os }}-build-
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -50,8 +62,18 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
+    env:
+      CACHE_KEY: ${{ env.COMMON_CACHE_KEY }}
     steps:
       - uses: actions/checkout@v3
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo
+            target
+          key: ${{ env.CACHE_KEY }}
+          restore-keys: ${{ runner.os }}-build-
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
