@@ -28,7 +28,8 @@ pub struct Line {
 
 impl Line {
     // creates a new line struct from plaintext
-    #[must_use] pub fn new(plaintext: &str, line_number: usize) -> Self {
+    #[must_use]
+    pub fn new(plaintext: &str, line_number: usize) -> Self {
         Self {
             plaintext: Some(plaintext.trim().to_string()),
             line_number: Some(line_number),
@@ -38,7 +39,8 @@ impl Line {
     }
 
     // creates a new line from an existing activity
-    #[must_use] pub fn for_activity(activity: activity::Activity) -> Self {
+    #[must_use]
+    pub fn for_activity(activity: activity::Activity) -> Self {
         Self {
             plaintext: None,
             line_number: None,
@@ -61,7 +63,7 @@ pub fn get_file_content(file_name: &str) -> Result<Vec<Line>> {
 
     let lines = reader
         .lines()
-        .filter_map(std::result::Result::ok)
+        .map_while(Result::ok)
         .enumerate()
         .map(|(line_number, line)| Line::new(&line, line_number.saturating_add(1)))
         .collect();

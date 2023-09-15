@@ -32,8 +32,7 @@ impl<'a> fmt::Display for Report<'a> {
         let mut longest_line = get_longest_line(&self.project_map).unwrap_or(0);
         let longest_duration_string = get_longest_duration_string(self).unwrap_or(0);
 
-        let terminal_width = term_size::dimensions_stdout()
-            .map_or(conf::DEFAULT_WIDTH, |d| d.0);
+        let terminal_width = term_size::dimensions_stdout().map_or(conf::DEFAULT_WIDTH, |d| d.0);
 
         if terminal_width < longest_line + longest_duration_string + 1 {
             longest_line = terminal_width - longest_duration_string - 1;
@@ -73,7 +72,7 @@ fn create_project_map<'a>(activities: &'a [&'a activity::Activity]) -> ProjectMa
             .push(a);
     }
 
-    for (_project, (activities, duration)) in &mut project_map {
+    for (activities, duration) in project_map.values_mut() {
         *duration = sum_duration(activities);
     }
 
