@@ -133,9 +133,7 @@ impl Iterator for StringSplitter<'_> {
     fn next(&mut self) -> Option<String> {
         let mut next_char = self.chars.next();
 
-        if next_char.is_none() {
-            return None;
-        }
+        next_char?;
 
         let mut escaped = false;
         let mut collector = String::new();
