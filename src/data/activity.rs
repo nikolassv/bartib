@@ -23,7 +23,8 @@ pub enum ActivityError {
 }
 
 impl Activity {
-    #[must_use] pub fn start(project: String, description: String, time: Option<NaiveDateTime>) -> Self {
+    #[must_use]
+    pub fn start(project: String, description: String, time: Option<NaiveDateTime>) -> Self {
         Self {
             start: time.unwrap_or_else(|| Local::now().naive_local()),
             end: None,
@@ -36,11 +37,13 @@ impl Activity {
         self.end = time.or_else(|| Some(Local::now().naive_local()));
     }
 
-    #[must_use] pub fn is_stopped(&self) -> bool {
+    #[must_use]
+    pub fn is_stopped(&self) -> bool {
         self.end.is_some()
     }
 
-    #[must_use] pub fn get_duration(&self) -> Duration {
+    #[must_use]
+    pub fn get_duration(&self) -> Duration {
         if let Some(end) = self.end {
             end.signed_duration_since(self.start)
         } else {

@@ -13,7 +13,8 @@ pub struct ActivityFilter<'a> {
     pub project: Option<&'a str>,
 }
 
-#[must_use] pub fn get_descriptions_and_projects(
+#[must_use]
+pub fn get_descriptions_and_projects(
     file_content: &[bartib_file::Line],
 ) -> Vec<(&String, &String)> {
     let mut activities: Vec<&activity::Activity> = get_activities(file_content).collect();
@@ -49,7 +50,8 @@ fn get_descriptions_and_projects_from_activities<'a>(
     descriptions_and_projects
 }
 
-#[must_use] pub fn get_running_activities(file_content: &[bartib_file::Line]) -> Vec<&activity::Activity> {
+#[must_use]
+pub fn get_running_activities(file_content: &[bartib_file::Line]) -> Vec<&activity::Activity> {
     get_activities(file_content)
         .filter(|activity| !activity.is_stopped())
         .collect()
@@ -91,14 +93,11 @@ pub fn filter_activities<'a>(
         .filter(move |activity| {
             activity.start.date() >= from_date && activity.start.date() <= to_date
         })
-        .filter(move |activity| {
-            filter
-                .project
-                .map_or(true, |p| activity.project == *p)
-        })
+        .filter(move |activity| filter.project.map_or(true, |p| activity.project == *p))
 }
 
-#[must_use] pub fn get_last_activity_by_end(file_content: &[bartib_file::Line]) -> Option<&activity::Activity> {
+#[must_use]
+pub fn get_last_activity_by_end(file_content: &[bartib_file::Line]) -> Option<&activity::Activity> {
     get_activities(file_content)
         .filter(|activity| activity.is_stopped())
         .max_by_key(|activity| {
@@ -108,7 +107,8 @@ pub fn filter_activities<'a>(
         })
 }
 
-#[must_use] pub fn get_last_activity_by_start(
+#[must_use]
+pub fn get_last_activity_by_start(
     file_content: &[bartib_file::Line],
 ) -> Option<&activity::Activity> {
     get_activities(file_content).max_by_key(|activity| activity.start)

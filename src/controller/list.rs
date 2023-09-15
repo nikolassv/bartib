@@ -115,8 +115,10 @@ fn print_activity_with_line(activity: &Activity, line_number: usize) {
         "{} (Started: {}, Ended: {}, Line: {})\n",
         activity.description,
         activity.start.format(conf::FORMAT_DATETIME),
-        activity
-            .end.map_or_else(|| String::from("--"), |end| end.format(conf::FORMAT_DATETIME).to_string()),
+        activity.end.map_or_else(
+            || String::from("--"),
+            |end| end.format(conf::FORMAT_DATETIME).to_string()
+        ),
         line_number
     )
 }

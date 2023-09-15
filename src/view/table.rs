@@ -190,8 +190,7 @@ impl Table {
 
 impl fmt::Display for Table {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let terminal_width = term_size::dimensions_stdout()
-            .map_or(conf::DEFAULT_WIDTH, |d| d.0);
+        let terminal_width = term_size::dimensions_stdout().map_or(conf::DEFAULT_WIDTH, |d| d.0);
 
         let column_width = self.get_column_width(terminal_width - self.columns.len());
 
@@ -249,7 +248,11 @@ fn write_cells<T: AsRef<str> + std::fmt::Display>(
         })
         .collect();
 
-    let most_lines: usize = wrapped_cells.iter().map(std::vec::Vec::len).max().unwrap_or(1);
+    let most_lines: usize = wrapped_cells
+        .iter()
+        .map(std::vec::Vec::len)
+        .max()
+        .unwrap_or(1);
 
     for line in 0..most_lines {
         for (width, wrapped_cell) in column_width.iter().zip(wrapped_cells.iter()) {
@@ -279,10 +282,7 @@ fn write_with_width_and_style(
 
     // cells are filled with non-breaking white space. Contrary to normal spaces non-breaking white
     // space will be styled (e.g. underlined)
-    write!(
-        f,
-        "{style_prefix}{content:\u{a0}<width$}{style_suffix} "
-    )
+    write!(f, "{style_prefix}{content:\u{a0}<width$}{style_suffix} ")
 }
 
 #[cfg(test)]
