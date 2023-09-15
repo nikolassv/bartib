@@ -347,9 +347,9 @@ fn create_filter_for_arguments<'a>(sub_m: &'a ArgMatches) -> ActivityFilter<'a> 
 
     if sub_m.is_present("current_week") {
         filter.from_date =
-            Some(today - Duration::days(today.weekday().num_days_from_monday() as i64));
+            Some(today - Duration::days(i64::from(today.weekday().num_days_from_monday())));
         filter.to_date = Some(
-            today - Duration::days(today.weekday().num_days_from_monday() as i64)
+            today - Duration::days(i64::from(today.weekday().num_days_from_monday()))
                 + Duration::days(6),
         );
     }
@@ -357,12 +357,12 @@ fn create_filter_for_arguments<'a>(sub_m: &'a ArgMatches) -> ActivityFilter<'a> 
     if sub_m.is_present("last_week") {
         filter.from_date = Some(
             today
-                - Duration::days(today.weekday().num_days_from_monday() as i64)
+                - Duration::days(i64::from(today.weekday().num_days_from_monday()))
                 - Duration::weeks(1),
         );
         filter.to_date = Some(
             today
-                - Duration::days(today.weekday().num_days_from_monday() as i64)
+                - Duration::days(i64::from(today.weekday().num_days_from_monday()))
                 - Duration::weeks(1)
                 + Duration::days(6),
         )
@@ -382,8 +382,7 @@ fn get_number_argument_or_ignore(
             Some(number)
         } else {
             println!(
-                "Can not parse \"{}\" as number. Argument for {} is ignored",
-                number_string, argument_name
+                "Can not parse \"{number_string}\" as number. Argument for {argument_name} is ignored"
             );
             None
         }
@@ -403,8 +402,7 @@ fn get_date_argument_or_ignore(
             Ok(date) => Some(date),
             Err(parsing_error) => {
                 println!(
-                    "Can not parse \"{}\" as date. Argument for {} is ignored ({})",
-                    date_string, argument_name, parsing_error
+                    "Can not parse \"{date_string}\" as date. Argument for {argument_name} is ignored ({parsing_error})"
                 );
                 None
             }
@@ -425,8 +423,7 @@ fn get_time_argument_or_ignore(
             Ok(date) => Some(date),
             Err(parsing_error) => {
                 println!(
-                    "Can not parse \"{}\" as time. Argument for {} is ignored ({})",
-                    time_string, argument_name, parsing_error
+                    "Can not parse \"{time_string}\" as time. Argument for {argument_name} is ignored ({parsing_error})"
                 );
                 None
             }

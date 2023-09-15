@@ -116,9 +116,7 @@ fn print_activity_with_line(activity: &Activity, line_number: usize) {
         activity.description,
         activity.start.format(conf::FORMAT_DATETIME),
         activity
-            .end
-            .map(|end| end.format(conf::FORMAT_DATETIME).to_string())
-            .unwrap_or_else(|| String::from("--")),
+            .end.map_or_else(|| String::from("--"), |end| end.format(conf::FORMAT_DATETIME).to_string()),
         line_number
     )
 }
@@ -137,7 +135,7 @@ pub fn check(file_name: &str) -> Result<()> {
         return Ok(());
     }
 
-    println!("Found {} line(s) with parsing errors", number_of_errors);
+    println!("Found {number_of_errors} line(s) with parsing errors");
 
     file_content
         .iter()
@@ -169,7 +167,7 @@ pub fn list_projects(file_name: &str, current: bool) -> Result<()> {
     all_projects.dedup();
 
     for project in all_projects {
-        println!("\"{}\"", project);
+        println!("\"{project}\"");
     }
 
     Ok(())

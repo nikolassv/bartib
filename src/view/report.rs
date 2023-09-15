@@ -33,14 +33,13 @@ impl<'a> fmt::Display for Report<'a> {
         let longest_duration_string = get_longest_duration_string(self).unwrap_or(0);
 
         let terminal_width = term_size::dimensions_stdout()
-            .map(|d| d.0)
-            .unwrap_or(conf::DEFAULT_WIDTH);
+            .map_or(conf::DEFAULT_WIDTH, |d| d.0);
 
         if terminal_width < longest_line + longest_duration_string + 1 {
             longest_line = terminal_width - longest_duration_string - 1;
         }
 
-        for (project, (activities, duration)) in self.project_map.iter() {
+        for (project, (activities, duration)) in &self.project_map {
             print_project_heading(f, project, duration, longest_line, longest_duration_string)?;
 
             print_descriptions_with_durations(
@@ -60,21 +59,21 @@ impl<'a> fmt::Display for Report<'a> {
 
 pub fn show_activities<'a>(activities: &'a [&'a activity::Activity]) {
     let report = Report::new(activities);
-    println!("\n{}", report);
+    println!("\n{report}");
 }
 
 fn create_project_map<'a>(activities: &'a [&'a activity::Activity]) -> ProjectMap {
     let mut project_map: ProjectMap = BTreeMap::new();
 
-    activities.iter().for_each(|a| {
+    for a in activities {
         project_map
             .entry(&a.project)
             .or_insert_with(|| (Vec::<&'a activity::Activity>::new(), Duration::seconds(0)))
             .0
             .push(a);
-    });
+    }
 
-    for (_project, (activities, duration)) in project_map.iter_mut() {
+    for (_project, (activities, duration)) in &mut project_map {
         *duration = sum_duration(activities);
     }
 
@@ -103,7 +102,7 @@ fn print_project_heading(
 
     for (i, line) in project_lines.iter().enumerate() {
         if i + 1 < project_lines.len() {
-            writeln!(f, "{}", line)?;
+            writeln!(f, "{line}")?;
         } else {
             write!(
                 f,
@@ -131,13 +130,13 @@ fn print_descriptions_with_durations<'a>(
         .initial_indent(&indent_string)
         .subsequent_indent(&indent_string);
 
-    for (description, activities) in description_map.iter() {
+    for (description, activities) in &description_map {
         let description_duration = sum_duration(activities);
         let description_lines = textwrap::wrap(description, &wrapping_options);
 
         for (i, line) in description_lines.iter().enumerate() {
             if i + 1 < description_lines.len() {
-                writeln!(f, "{}", line)?;
+                writeln!(f, "{line}")?;
             } else {
                 writeln!(
                     f,
@@ -177,12 +176,12 @@ fn group_activities_by_description<'a>(
 ) -> BTreeMap<&str, Vec<&'a activity::Activity>> {
     let mut activity_map: BTreeMap<&str, Vec<&'a activity::Activity>> = BTreeMap::new();
 
-    activities.iter().for_each(|a| {
+    for a in activities {
         activity_map
             .entry(&a.description)
             .or_insert_with(Vec::<&'a activity::Activity>::new)
             .push(a);
-    });
+    }
 
     activity_map
 }
