@@ -1,6 +1,6 @@
 use anyhow::{bail, Context, Result};
 use chrono::{Datelike, Duration, Local, NaiveDate, NaiveTime};
-use clap::{App, AppSettings, Arg, ArgMatches, SubCommand, crate_version};
+use clap::{crate_version, App, AppSettings, Arg, ArgMatches, SubCommand};
 
 use bartib::data::getter::ActivityFilter;
 #[cfg(windows)]
