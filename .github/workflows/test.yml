@@ -49,8 +49,10 @@ jobs:
           path: |
             ~/.cargo
             target
-          key: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-build-
+          key: ${{ runner.os }}-${{ matrix.toolchain }}-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.toolchain }}-build-
+            ${{ runner.os }}-build-
       - name: Set up Rust toolchain
         run: rustup toolchain install ${{ matrix.toolchain }}
       - uses: actions-rs/toolchain@v1
@@ -73,8 +75,10 @@ jobs:
           path: |
             ~/.cargo
             target
-          key: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-build-
+          key: ${{ runner.os }}-${{ matrix.toolchain }}-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.toolchain }}-build-
+            ${{ runner.os }}-build-
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
