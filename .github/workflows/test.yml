@@ -10,14 +10,79 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  format:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - name: Format
+      run: cargo fmt --all --check
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: format
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo
+            target
+          key: ${{ runner.os }}-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-build-
+      - name: Install Clippy
+        run: rustup component add clippy
+      - name: Run Clippy
+        run: cargo clippy -- -D warnings
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        toolchain: [stable, beta, nightly]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo
+            target
+          key: ${{ runner.os }}-${{ matrix.toolchain }}-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.toolchain }}-build-
+            ${{ runner.os }}-build-
+      - name: Set up Rust toolchain
+        run: rustup toolchain install ${{ matrix.toolchain }}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - name: Build
+        run: cargo +${{ matrix.toolchain }} build --verbose
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        toolchain: [stable, beta, nightly]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo
+            target
+          key: ${{ runner.os }}-${{ matrix.toolchain }}-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.toolchain }}-build-
+            ${{ runner.os }}-build-
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Set up Rust toolchain
+        run: rustup toolchain install ${{ matrix.toolchain }}
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo +${{ matrix.toolchain }} test --verbose
