@@ -174,6 +174,10 @@ apk add bartib
 
 (Currently bartib is only available in the [testing repository](https://pkgs.alpinelinux.org/packages?name=bartib))
 
+#### General Packaging Status
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/bartib.svg)](https://repology.org/project/bartib/versions)
+
 ### How to build Bartib
 
 Bartib is written in rust. You may build it yourself with the help of cargo. Just clone this repository and execute the `cargo build` command in its main directory:
