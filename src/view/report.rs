@@ -178,7 +178,7 @@ fn group_activities_by_description<'a>(
     for a in activities {
         activity_map
             .entry(&a.description)
-            .or_insert_with(Vec::<&'a activity::Activity>::new)
+            .or_default()
             .push(a);
     }
 
