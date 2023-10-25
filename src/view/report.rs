@@ -176,10 +176,7 @@ fn group_activities_by_description<'a>(
     let mut activity_map: BTreeMap<&str, Vec<&'a activity::Activity>> = BTreeMap::new();
 
     for a in activities {
-        activity_map
-            .entry(&a.description)
-            .or_default()
-            .push(a);
+        activity_map.entry(&a.description).or_default().push(a);
     }
 
     activity_map
