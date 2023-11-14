@@ -75,9 +75,9 @@ pub fn get_activities(
 }
 
 pub fn filter_activities<'a>(
-    activities: impl Iterator<Item = &'a activity::Activity>,
+    activities: Vec<&'a activity::Activity>,
     filter: &'a ActivityFilter,
-) -> impl Iterator<Item = &'a activity::Activity> {
+) -> Vec<&'a activity::Activity> {
     let from_date: NaiveDate;
     let to_date: NaiveDate;
 
@@ -90,10 +90,12 @@ pub fn filter_activities<'a>(
     }
 
     activities
+        .into_iter()
         .filter(move |activity| {
             activity.start.date() >= from_date && activity.start.date() <= to_date
         })
         .filter(move |activity| filter.project.map_or(true, |p| activity.project == *p))
+        .collect()
 }
 
 #[must_use]
