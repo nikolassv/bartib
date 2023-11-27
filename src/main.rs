@@ -79,7 +79,7 @@ fn main() -> Result<()> {
 
     let arg_group = Arg::with_name("round")
         .long("round")
-        .help("rounds the time to the nearest duration. Durations can be in minutes or hours. E.g. 15m or 4h")
+        .help("rounds the start and end time to the nearest duration. Durations can be in minutes or hours. E.g. 15m or 4h")
         .required(false)
         .takes_value(true);
 
