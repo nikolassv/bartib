@@ -5,7 +5,7 @@ use thiserror::Error;
 
 use crate::conf;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Activity {
     pub start: NaiveDateTime,
     pub end: Option<NaiveDateTime>,

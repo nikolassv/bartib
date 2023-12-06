@@ -3,6 +3,8 @@ use chrono::{Datelike, Duration, Local, NaiveDate, NaiveTime};
 use clap::{crate_version, App, AppSettings, Arg, ArgMatches, SubCommand};
 
 use bartib::data::getter::ActivityFilter;
+use bartib::data::processor;
+
 #[cfg(windows)]
 use nu_ansi_term::enable_ansi_support;
 
@@ -74,6 +76,12 @@ fn main() -> Result<()> {
             "current_week",
         ])
         .takes_value(false);
+
+    let arg_group = Arg::with_name("round")
+        .long("round")
+        .help("rounds the start and end time to the nearest duration. Durations can be in minutes or hours. E.g. 15m or 4h")
+        .required(false)
+        .takes_value(true);
 
     let arg_description = Arg::with_name("description")
         .short("d")
@@ -153,6 +161,7 @@ fn main() -> Result<()> {
                 .arg(&arg_yesterday)
                 .arg(&arg_current_week)
                 .arg(&arg_last_week)
+                .arg(&arg_group)
                 .arg(
                     Arg::with_name("project")
                         .short("p")
@@ -187,6 +196,7 @@ fn main() -> Result<()> {
                 .arg(&arg_yesterday)
                 .arg(&arg_current_week)
                 .arg(&arg_last_week)
+                .arg(&arg_group)
                 .arg(
                     Arg::with_name("project")
                         .short("p")
@@ -299,12 +309,14 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("current", Some(_)) => bartib::controller::list::list_running(file_name),
         ("list", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
+            let processors = create_processors_for_arguments(sub_m);
             let do_group_activities = !sub_m.is_present("no_grouping") && filter.date.is_none();
-            bartib::controller::list::list(file_name, filter, do_group_activities)
+            bartib::controller::list::list(file_name, filter, do_group_activities, processors)
         }
         ("report", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
-            bartib::controller::report::show_report(file_name, filter)
+            let processors = create_processors_for_arguments(sub_m);
+            bartib::controller::report::show_report(file_name, filter, processors)
         }
         ("projects", Some(sub_m)) => {
             bartib::controller::list::list_projects(file_name, sub_m.is_present("current"))
@@ -322,6 +334,16 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("sanity", Some(_)) => bartib::controller::list::sanity_check(file_name),
         _ => bail!("Unknown command"),
     }
+}
+
+fn create_processors_for_arguments(sub_m: &ArgMatches) -> processor::ProcessorList {
+    let mut processors: Vec<Box<dyn processor::ActivityProcessor>> = Vec::new();
+
+    if let Some(round) = get_duration_argument_or_ignore(sub_m.value_of("round"), "--round") {
+        processors.push(Box::new(processor::RoundProcessor { round }));
+    }
+
+    processors
 }
 
 fn create_filter_for_arguments<'a>(sub_m: &'a ArgMatches) -> ActivityFilter<'a> {
@@ -427,6 +449,34 @@ fn get_time_argument_or_ignore(
                 );
                 None
             }
+        }
+    } else {
+        None
+    }
+}
+
+fn get_duration_argument_or_ignore(
+    duration_argument: Option<&str>,
+    argument_name: &str,
+) -> Option<chrono::Duration> {
+    if let Some(duration_string) = duration_argument {
+        // extract last character, leave the rest as number
+        let (number_string, duration_unit) = duration_string.split_at(duration_string.len() - 1);
+
+        let number: Option<i64> = number_string.parse().ok();
+
+        match number {
+            Some(number) => match duration_unit {
+                "m" => Some(chrono::Duration::minutes(number)),
+                "h" => Some(chrono::Duration::hours(number)),
+                _ => {
+                    println!(
+                            "Can not parse \"{duration_string}\" as duration. Argument for {argument_name} is ignored"
+                        );
+                    None
+                }
+            },
+            None => None,
         }
     } else {
         None
