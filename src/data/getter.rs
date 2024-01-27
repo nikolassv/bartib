@@ -1,5 +1,6 @@
 use chrono::NaiveDate;
 use std::collections::HashSet;
+use wildmatch::WildMatch;
 
 use crate::data::activity;
 use crate::data::activity::Activity;
@@ -94,7 +95,11 @@ pub fn filter_activities<'a>(
         .filter(move |activity| {
             activity.start.date() >= from_date && activity.start.date() <= to_date
         })
-        .filter(move |activity| filter.project.map_or(true, |p| activity.project == *p))
+        .filter(move |activity| {
+            filter
+                .project
+                .map_or(true, |p| WildMatch::new(p).matches(&activity.project))
+        })
         .collect()
 }
 
@@ -132,7 +137,7 @@ mod tests {
 
         assert_eq!(descriptions_and_projects.len(), 2);
         assert_eq!(
-            *descriptions_and_projects.get(0).unwrap(),
+            *descriptions_and_projects.first().unwrap(),
             (&"d1".to_string(), &"p1".to_string())
         );
         assert_eq!(
@@ -153,7 +158,7 @@ mod tests {
 
         assert_eq!(descriptions_and_projects.len(), 2);
         assert_eq!(
-            *descriptions_and_projects.get(0).unwrap(),
+            *descriptions_and_projects.first().unwrap(),
             (&"d1".to_string(), &"p2".to_string())
         );
         assert_eq!(
