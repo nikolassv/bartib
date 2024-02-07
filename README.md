@@ -268,7 +268,7 @@ bartib report --last_week    # create a report for the last week
 bartib report --date 2021-09-03    # create a report for a given day
 bartib report --from 2021-09-01 --to 2021-09-05    # create a report for a given time range
 bartib report --project "The most exciting project"    # create a report for a given project
-bartib report --project "maintenance::*"    # you can use wildcards as well to filter for projects, like this you can implement scopes
+bartib report --project "Maint?nance *"    # use '?' and '*' as wildcards in project names
 bartib report --round 15m # rounds the start and end time to the nearest duration. Durations can be in minutes or hours. E.g. 15m or 4h
 
 bartib list    # list all activities grouped by day
