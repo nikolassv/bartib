@@ -5,6 +5,7 @@ use wildmatch::WildMatch;
 use crate::data::activity;
 use crate::data::activity::Activity;
 use crate::data::bartib_file;
+use crate::data::filter::Filters;
 
 pub struct ActivityFilter<'a> {
     pub number_of_activities: Option<usize>,
@@ -54,7 +55,7 @@ fn get_descriptions_and_projects_from_activities<'a>(
 #[must_use]
 pub fn get_running_activities(file_content: &[bartib_file::Line]) -> Vec<&activity::Activity> {
     get_activities(file_content)
-        .filter(|activity| !activity.is_stopped())
+        .filter(Filters::active)
         .collect()
 }
 
