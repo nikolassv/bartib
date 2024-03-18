@@ -10,7 +10,7 @@ use crate::view::format_util;
 pub struct StatusReport {}
 
 impl StatusReportWriter for StatusReport {
-    fn process<'a>(&self, data: &'a StatusReportData) -> anyhow::Result<()> {
+    fn process(&self, data: &StatusReportData) -> anyhow::Result<()> {
         println!("{data}");
         Ok(())
     }
@@ -116,4 +116,127 @@ fn write_period(
         suffix = style.infix(Style::new())
     )?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::Local;
+
+    use super::*;
+
+    #[test]
+    fn report_test() {
+        let data = StatusReportData {
+            activity: None,
+            project: None,
+            current_month: Duration::hours(10),
+            current_week: Duration::hours(5),
+            today: Duration::minutes(30),
+        };
+        let expected = "\u{1b}[2m
+ =======<>[3m Status for <>[1mALL<>[3m projects <>[2m ======= 
+<>[2;3m
+  NOW: <>[1m NO Activity
+
+<>[3m <>[2;3m Today......................... <>[1m30m<>[3m
+<>[3m <>[2;3m Current week.................. <>[1m5h 00m<>[3m
+<>[3m <>[2;3m Current month................. <>[1m10h 00m<>[3m
+\u{1b}[0m";
+
+        let res = data.to_string();
+
+        assert_eq!(clean(res.as_str()), clean(expected));
+    }
+
+    #[test]
+    fn report_project_test() {
+        let data = StatusReportData {
+            activity: None,
+            project: Some("project"),
+            current_month: Duration::hours(10),
+            current_week: Duration::hours(5),
+            today: Duration::minutes(30),
+        };
+        let expected = "\u{1b}[2m
+ =======<>[3m Status for project: <>[1mproject<>[2m ======= 
+<>[2;3m
+  NOW: <>[1m NO Activity
+
+<>[3m <>[2;3m Today......................... <>[1m30m<>[3m
+<>[3m <>[2;3m Current week.................. <>[1m5h 00m<>[3m
+<>[3m <>[2;3m Current month................. <>[1m10h 00m<>[3m
+\u{1b}[0m";
+
+        let res = data.to_string();
+
+        assert_eq!(clean(res.as_str()), clean(expected));
+    }
+
+    #[test]
+    fn report_active_test() {
+        let now = Local::now().naive_local();
+        let act = activity::Activity {
+            start: now - Duration::minutes(10),
+            end: None,
+            project: "project".to_string(),
+            description: "olia".to_string(),
+        };
+        let data = StatusReportData {
+            activity: Some(&act),
+            project: Some("project"),
+            current_month: Duration::hours(10),
+            current_week: Duration::hours(5),
+            today: Duration::minutes(30),
+        };
+        let expected = "\u{1b}[2m
+ =======<>[3m Status for project: <>[1mproject<>[2m ======= 
+<>[2;3m
+  NOW: <>[1;32molia<>[2m ...... <>[1m10m<>[2m
+
+<>[3m <>[2;3m Today......................... <>[1m30m<>[3m
+<>[3m <>[2;3m Current week.................. <>[1m5h 00m<>[3m
+<>[3m <>[2;3m Current month................. <>[1m10h 00m<>[3m
+\u{1b}[0m";
+       
+        let res = data.to_string();
+
+        assert_eq!(clean(res.as_str()), clean(expected));
+    }
+
+    #[test]
+    fn report_active_and_project_test() {
+        let now = Local::now().naive_local();
+        let act = activity::Activity {
+            start: now - Duration::minutes(10),
+            end: None,
+            project: "project".to_string(),
+            description: "olia".to_string(),
+        };
+        let data = StatusReportData {
+            activity: Some(&act),
+            project: None,
+            current_month: Duration::hours(10),
+            current_week: Duration::hours(5),
+            today: Duration::minutes(30),
+        };
+        let expected = "\u{1b}[2m
+ =======<>[3m Status for <>[1mALL<>[3m projects <>[2m ======= 
+<>[2;3m
+  NOW: <>[1;32molia<>[2;3m on <>[3mproject<>[2m ...... <>[1m10m<>[2m
+
+<>[3m <>[2;3m Today......................... <>[1m30m<>[3m
+<>[3m <>[2;3m Current week.................. <>[1m5h 00m<>[3m
+<>[3m <>[2;3m Current month................. <>[1m10h 00m<>[3m
+\u{1b}[0m";
+       
+        let res = data.to_string();
+
+        assert_eq!(clean(res.as_str()), clean(expected));
+    }
+
+    fn clean(a: &str) -> String {
+        let st_f = "\u{1b}[0m\u{1b}";
+        let clean_res = a.replace(st_f, "<>");
+        clean_res
+    }
 }

@@ -18,7 +18,7 @@ pub struct StatusReportData<'a> {
     pub current_month: Duration,
 }
 pub trait StatusReportWriter {
-    fn process<'a>(&self, data: &'a StatusReportData) -> Result<()>;
+    fn process(&self, data: &StatusReportData) -> Result<()>;
 }
 
 pub struct RoundProcessor {
