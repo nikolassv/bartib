@@ -1,4 +1,7 @@
+use std::borrow::Borrow;
+
 use anyhow::{bail, Context, Result};
+use bartib::view::status::StatusReport;
 use chrono::{Datelike, Duration, Local, NaiveDate, NaiveTime};
 use clap::{crate_version, App, AppSettings, Arg, ArgMatches, SubCommand};
 
@@ -348,7 +351,8 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("status", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
             let processors = create_processors_for_arguments(sub_m);
-            bartib::controller::status::show_status(file_name, filter, processors)
+            let writer = create_status_writer(sub_m);
+            bartib::controller::status::show_status(file_name, filter, processors, writer.borrow())
         }
         _ => bail!("Unknown command"),
     }
@@ -362,6 +366,11 @@ fn create_processors_for_arguments(sub_m: &ArgMatches) -> processor::ProcessorLi
     }
 
     processors
+}
+
+fn create_status_writer(_sub_m: &ArgMatches) -> Box<dyn processor::StatusReportWriter> {
+    let result = StatusReport {};
+    Box::new(result)
 }
 
 fn create_filter_for_arguments<'a>(sub_m: &'a ArgMatches) -> ActivityFilter<'a> {
