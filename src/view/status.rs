@@ -71,13 +71,15 @@ fn print_activity(
     activity: Option<&activity::Activity>,
     project: Option<&str>,
 ) -> fmt::Result {
+    let activity_style = Color::Green.bold();
+    let project_style = Style::new().italic();
     match activity {
         Some(activity) => {
             write(f, "\n  NOW: ", Style::new().italic().dimmed())?;
-            write(f, activity.description.as_str(), Color::Green.bold())?;
-            if project.is_none() {
+            write(f, activity.description.as_str(), activity_style)?;
+            if let Some(pr_str) = project {
                 write(f, " on ", Style::new().italic().dimmed())?;
-                write(f, &activity.project, Style::new().italic())?;
+                write(f, pr_str, project_style)?;
             };
             write(f, " ...... ", Style::new().dimmed())?;
             write(
