@@ -197,7 +197,7 @@ mod tests {
 <>[3m <>[2;3m Current week.................. <>[1m5h 00m<>[3m
 <>[3m <>[2;3m Current month................. <>[1m10h 00m<>[3m
 \u{1b}[0m";
-       
+
         let res = data.to_string();
 
         assert_eq!(clean(res.as_str()), clean(expected));
@@ -228,7 +228,7 @@ mod tests {
 <>[3m <>[2;3m Current week.................. <>[1m5h 00m<>[3m
 <>[3m <>[2;3m Current month................. <>[1m10h 00m<>[3m
 \u{1b}[0m";
-       
+
         let res = data.to_string();
 
         assert_eq!(clean(res.as_str()), clean(expected));
