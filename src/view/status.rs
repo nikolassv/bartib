@@ -3,30 +3,50 @@ use std::fmt;
 use chrono::Duration;
 use nu_ansi_term::{Color, Style};
 
+use crate::conf;
 use crate::data::activity;
-use crate::data::processor::{StatusReportData, StatusReportWriter};
 use crate::view::format_util;
 
-pub struct StatusReport {}
+pub struct StatusReportData<'a> {
+    pub activity: Option<&'a activity::Activity>,
+    pub project: Option<&'a str>,
+    pub today: Duration,
+    pub current_week: Duration,
+    pub current_month: Duration,
+}
 
-impl StatusReportWriter for StatusReport {
-    fn process<'a>(&self, data: &'a StatusReportData) -> anyhow::Result<()> {
-        println!("{data}");
+struct Report<'a> {
+    data: StatusReportData<'a>,
+}
+
+impl<'a> Report<'a> {
+    fn new(data: StatusReportData<'a>) -> Report<'a> {
+        Report { data }
+    }
+}
+
+impl<'a> fmt::Display for Report<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut longest_line = 30;
+        let terminal_width = term_size::dimensions_stdout().map_or(conf::DEFAULT_WIDTH, |d| d.0);
+
+        if terminal_width <= longest_line {
+            longest_line = terminal_width;
+        }
+
+        print_title(f, self.data.project)?;
+        print_activity(f, self.data.activity, self.data.project)?;
+        print_duration(f, "Today", self.data.today, longest_line)?;
+        print_duration(f, "Current week", self.data.current_week, longest_line)?;
+        print_duration(f, "Current month", self.data.current_month, longest_line)?;
+
         Ok(())
     }
 }
 
-impl<'a> fmt::Display for StatusReportData<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let longest_line = 30;
-        print_title(f, self.project)?;
-        print_activity(f, self.activity, self.project)?;
-        print_duration(f, "Today", self.today, longest_line)?;
-        print_duration(f, "Current week", self.current_week, longest_line)?;
-        print_duration(f, "Current month", self.current_month, longest_line)?;
-
-        Ok(())
-    }
+pub fn show(data: StatusReportData) {
+    let report = Report::new(data);
+    println!("{report}");
 }
 
 fn print_duration(

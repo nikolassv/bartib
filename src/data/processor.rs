@@ -1,4 +1,3 @@
-use anyhow::Result;
 use chrono::Duration;
 
 use crate::data::activity;
@@ -8,17 +7,6 @@ pub type ProcessorList = Vec<Box<dyn ActivityProcessor>>;
 
 pub trait ActivityProcessor {
     fn process(&self, activity: &activity::Activity) -> activity::Activity;
-}
-
-pub struct StatusReportData<'a> {
-    pub activity: Option<&'a activity::Activity>,
-    pub project: Option<&'a str>,
-    pub today: Duration,
-    pub current_week: Duration,
-    pub current_month: Duration,
-}
-pub trait StatusReportWriter {
-    fn process<'a>(&self, data: &'a StatusReportData) -> Result<()>;
 }
 
 pub struct RoundProcessor {

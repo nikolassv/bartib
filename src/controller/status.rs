@@ -6,13 +6,13 @@ use crate::data::bartib_file;
 use crate::data::filter::Filters;
 use crate::data::getter;
 use crate::data::processor;
-use crate::data::processor::StatusReportData;
+use crate::view::status;
+use crate::view::status::StatusReportData;
 
 pub fn show_status(
     file_name: &str,
     filter: getter::ActivityFilter,
     processors: processor::ProcessorList,
-    writer: &dyn processor::StatusReportWriter,
 ) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
     let activities: Vec<&Activity> = getter::get_activities(&file_content).collect();
@@ -53,12 +53,13 @@ pub fn show_status(
         .map(|f| f.get_duration())
         .sum();
 
-    let status_report_data = StatusReportData {
+    status::show(StatusReportData {
         activity: current,
         today,
         current_week,
         current_month,
         project: filter.project,
-    };
-    writer.process(&status_report_data)
+    });
+
+    Ok(())
 }
