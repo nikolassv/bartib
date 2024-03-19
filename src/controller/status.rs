@@ -1,5 +1,4 @@
 use anyhow::Result;
-use chrono::Local;
 
 use crate::data::activity;
 use crate::data::activity::Activity;
@@ -27,8 +26,6 @@ pub fn show_status(
 
     filtered_activities.sort_by_key(|activity| activity.start);
 
-    let now = Local::now().naive_local();
-
     let current: Option<&Activity> = filtered_activities
         .clone()
         .into_iter()
@@ -39,20 +36,20 @@ pub fn show_status(
     let today = filtered_activities
         .clone()
         .into_iter()
-        .filter(Filters::today(now.date()))
+        .filter(Filters::today())
         .map(|f| f.get_duration())
         .sum();
 
     let current_week = filtered_activities
         .clone()
         .into_iter()
-        .filter(Filters::current_week(now.date()))
+        .filter(Filters::current_week())
         .map(|f| f.get_duration())
         .sum();
 
     let current_month = filtered_activities
         .into_iter()
-        .filter(Filters::current_month(now.date()))
+        .filter(Filters::current_month())
         .map(|f| f.get_duration())
         .sum();
 
