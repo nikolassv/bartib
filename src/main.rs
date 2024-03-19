@@ -247,19 +247,6 @@ fn main() -> Result<()> {
         )
         .subcommand(SubCommand::with_name("check").about("checks file and reports parsing errors"))
         .subcommand(SubCommand::with_name("sanity").about("checks sanity of bartib log"))
-        .subcommand(
-            SubCommand::with_name("status")
-                .about("shows current status and time reports for today, current week, and current month")
-                .arg(
-                    Arg::with_name("project")
-                        .short("p")
-                        .long("project")
-                        .value_name("PROJECT")
-                        .help("show status for this project only")
-                        .takes_value(true)
-                        .required(false),
-                ),
-        )
         .get_matches();
 
     let file_name = matches.value_of("file")
@@ -345,11 +332,6 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         }
         ("check", Some(_)) => bartib::controller::list::check(file_name),
         ("sanity", Some(_)) => bartib::controller::list::sanity_check(file_name),
-        ("status", Some(sub_m)) => {
-            let filter = create_filter_for_arguments(sub_m);
-            let processors = create_processors_for_arguments(sub_m);
-            bartib::controller::status::show_status(file_name, filter, processors)
-        }
         _ => bail!("Unknown command"),
     }
 }
