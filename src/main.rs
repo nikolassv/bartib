@@ -258,6 +258,16 @@ fn main() -> Result<()> {
         )
         .subcommand(SubCommand::with_name("check").about("checks file and reports parsing errors"))
         .subcommand(SubCommand::with_name("sanity").about("checks sanity of bartib log"))
+        .subcommand(SubCommand::with_name("search").about("search for existing descriptions and projects")
+                .arg(
+                    Arg::with_name("search_term")
+                        .value_name("SEARCH_TERM")
+                        .help("the search term")
+                        .required(false)
+                        .takes_value(true)
+                        .default_value("''"),
+                ),
+        )
         .subcommand(
             SubCommand::with_name("status")
                 .about("shows current status and time reports for today, current week, and current month")
@@ -358,6 +368,10 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         }
         ("check", Some(_)) => bartib::controller::list::check(file_name),
         ("sanity", Some(_)) => bartib::controller::list::sanity_check(file_name),
+        ("search", Some(sub_m)) => {
+            let search_term = sub_m.value_of("search_term");
+            bartib::controller::list::search(file_name, search_term)
+        }
         ("status", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
             let processors = create_processors_for_arguments(sub_m);
