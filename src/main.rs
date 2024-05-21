@@ -342,9 +342,11 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             let processors = create_processors_for_arguments(sub_m);
             bartib::controller::report::show_report(file_name, filter, processors)
         }
-        ("projects", Some(sub_m)) => {
-            bartib::controller::list::list_projects(file_name, sub_m.is_present("current"), sub_m.is_present("no-quotes"))
-        }
+        ("projects", Some(sub_m)) => bartib::controller::list::list_projects(
+            file_name,
+            sub_m.is_present("current"),
+            sub_m.is_present("no-quotes"),
+        ),
         ("last", Some(sub_m)) => {
             let number = get_number_argument_or_ignore(sub_m.value_of("number"), "-n/--number")
                 .unwrap_or(10);
