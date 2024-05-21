@@ -163,7 +163,7 @@ pub fn check(file_name: &str) -> Result<()> {
 }
 
 // lists all projects
-pub fn list_projects(file_name: &str, current: bool) -> Result<()> {
+pub fn list_projects(file_name: &str, current: bool, no_quotes: bool) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
 
     let mut all_projects: Vec<&String> = getter::get_activities(&file_content)
@@ -175,7 +175,11 @@ pub fn list_projects(file_name: &str, current: bool) -> Result<()> {
     all_projects.dedup();
 
     for project in all_projects {
-        println!("\"{project}\"");
+        if no_quotes {
+            println!("{project}");
+        } else {
+            println!("\"{project}\"");
+        }
     }
 
     Ok(())

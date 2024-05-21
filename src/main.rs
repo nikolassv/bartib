@@ -234,6 +234,14 @@ fn main() -> Result<()> {
                         .help("prints currently running projects only")
                         .takes_value(false)
                         .required(false),
+                )
+                .arg(
+                    Arg::with_name("no-quotes")
+                        .short("n")
+                        .long("no-quotes")
+                        .help("prints projects without quotes")
+                        .takes_value(false)
+                        .required(false),
                 ),
         )
         .subcommand(
@@ -335,7 +343,7 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             bartib::controller::report::show_report(file_name, filter, processors)
         }
         ("projects", Some(sub_m)) => {
-            bartib::controller::list::list_projects(file_name, sub_m.is_present("current"))
+            bartib::controller::list::list_projects(file_name, sub_m.is_present("current"), sub_m.is_present("no-quotes"))
         }
         ("last", Some(sub_m)) => {
             let number = get_number_argument_or_ignore(sub_m.value_of("number"), "-n/--number")
