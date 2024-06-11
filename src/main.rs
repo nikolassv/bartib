@@ -104,6 +104,8 @@ fn main() -> Result<()> {
         .version(crate_version!())
         .author("Nikolas Schmidt-Voigt <nikolas.schmidt-voigt@posteo.de>")
         .about("A simple timetracker")
+        .after_help("To get help for a specific subcommand, run `bartib [SUBCOMMAND] --help`.
+To get started, view the `start` help with `bartib start --help`")
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .setting(AppSettings::VersionlessSubcommands)
         .arg(
