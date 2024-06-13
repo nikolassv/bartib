@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Subcommand `status` to display the total duration of activities today, in the current week and in the current month (thanks to [@airenas](https://github.com/airenas))
 
+### Changed
+
+- Improved general `--help` output (thanks to [@RossBarnie](https://github.com/RossBarnie)
+
 ## [1.1.0] - 2024-02-29
 
 ### Added
