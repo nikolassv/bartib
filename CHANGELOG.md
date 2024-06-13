@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Subcommand `status` to display the total duration of activities today, in the current week and in the current month (thanks to [@airenas](https://github.com/airenas))
+- Option `--no-quotes` to `project` to suppres quotes in the projects list (thanks to [@defigli](https://github.com/defigli))
 
 ### Changed
 
-- Improved general `--help` output (thanks to [@RossBarnie](https://github.com/RossBarnie)
+- Update of libc:musl to support longarch64 (thanks to [@zhaixiaojuan](https://github.com/zhaixiaojuan))
+- Improved general `--help` output (thanks to [@RossBarnie](https://github.com/RossBarnie))
 
 ## [1.1.0] - 2024-02-29
 
