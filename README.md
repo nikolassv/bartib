@@ -283,7 +283,8 @@ bartib list --from 2021-09-01 --to 2021-09-05    # list activities in a given ti
 bartib list --project "The most exciting project"    # list activities for a given project
 bartib list --round 15m # rounds the start and end time to the nearest duration. Durations can be in minutes or hours. E.g. 15m or 4h
 
-bartib search    # search all descriptions and projects for a specific term
+bartib search "exiting"   # search all descriptions and projects for a specific term
+bartib search "e*t?ng"   # use '?' and '*' as wildcards
 ```
 
 ### Edit activities
