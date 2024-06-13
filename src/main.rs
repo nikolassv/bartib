@@ -263,7 +263,7 @@ fn main() -> Result<()> {
                     Arg::with_name("search_term")
                         .value_name("SEARCH_TERM")
                         .help("the search term")
-                        .required(false)
+                        .required(true)
                         .takes_value(true)
                         .default_value("''"),
                 ),

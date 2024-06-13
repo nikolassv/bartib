@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Subcommand `search` to search the list of last activities for terms (thanks to [@Pyxels](https://github.com/Pyxels))
 - Subcommand `status` to display the total duration of activities today, in the current week and in the current month (thanks to [@airenas](https://github.com/airenas))
 
 ## [1.1.0] - 2024-02-29

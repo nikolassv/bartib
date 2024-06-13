@@ -1,5 +1,6 @@
 use anyhow::Result;
 use chrono::NaiveDateTime;
+use wildmatch::WildMatch;
 
 use crate::conf;
 use crate::data::activity;
@@ -200,19 +201,22 @@ pub fn list_last_activities(file_name: &str, number: usize) -> Result<()> {
 
 // searches for the term in descriptions and projects
 pub fn search(file_name: &str, search_term: Option<&str>) -> Result<()> {
-    let search_term = search_term.unwrap_or("");
+    let search_term = search_term
+        .map(|term| format!("*{}*", term.to_lowercase()))
+        .unwrap_or("".to_string());
     let file_content = bartib_file::get_file_content(file_name)?;
 
     let descriptions_and_projects: Vec<(&String, &String)> =
         getter::get_descriptions_and_projects(&file_content);
+    let search_term_wildmatch = WildMatch::new(&search_term);
     let matches: Vec<(usize, &(&String, &String))> = descriptions_and_projects
         .iter()
         .rev()
         .enumerate()
         .rev()
         .filter(|(_index, (desc, proj))| {
-            desc.to_lowercase().contains(&search_term.to_lowercase())
-                || proj.to_lowercase().contains(&search_term.to_lowercase())
+            search_term_wildmatch.matches(&desc.to_lowercase())
+                || search_term_wildmatch.matches(&proj.to_lowercase())
         })
         .collect();
 
