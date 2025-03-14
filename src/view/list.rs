@@ -1,3 +1,4 @@
+use chrono::Duration;
 use chrono::NaiveDate;
 use nu_ansi_term::Color;
 use std::collections::BTreeMap;
@@ -73,7 +74,13 @@ fn create_activities_group(title: &str, activities: &[&activity::Activity]) -> t
         .iter()
         .map(|a| get_activity_table_row(a, false))
         .collect();
-    table::Group::new(Some(title.to_string()), rows)
+
+    let total_duration = activities
+        .iter()
+        .map(|a| a.get_duration())
+        .fold(Duration::zero(), |acc, e| acc + e);
+    
+    table::Group::new(Some(format!("{}\t{}",title.to_string(), format_util::format_duration(&total_duration))), rows)
 }
 
 // displays a table with running activities (no end time)
