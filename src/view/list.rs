@@ -3,10 +3,12 @@ use chrono::NaiveDate;
 use nu_ansi_term::Color;
 use std::collections::BTreeMap;
 
+
 use crate::conf;
 use crate::data::activity;
 use crate::view::format_util;
 use crate::view::table;
+use crate::view::report;
 
 // displays a table with activities
 pub fn list_activities(activities: &[&activity::Activity], with_start_dates: bool) {
@@ -75,10 +77,7 @@ fn create_activities_group(title: &str, activities: &[&activity::Activity]) -> t
         .map(|a| get_activity_table_row(a, false))
         .collect();
 
-    let total_duration = activities
-        .iter()
-        .map(|a| a.get_duration())
-        .fold(Duration::zero(), |acc, e| acc + e);
+    let total_duration = report::sum_duration(activities);
     
     table::Group::new(Some(format!("{}\t{}",title.to_string(), format_util::format_duration(&total_duration))), rows)
 }
