@@ -79,7 +79,7 @@ fn create_project_map<'a>(activities: &'a [&'a activity::Activity]) -> ProjectMa
     project_map
 }
 
-fn sum_duration(activities: &[&activity::Activity]) -> Duration {
+pub fn sum_duration(activities: &[&activity::Activity]) -> Duration {
     let mut duration = Duration::seconds(0);
 
     for activity in activities {
