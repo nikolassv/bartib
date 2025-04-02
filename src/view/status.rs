@@ -236,7 +236,7 @@ mod tests {
 
     fn clean(a: &str) -> String {
         let st_f = "\u{1b}[0m\u{1b}";
-        
+
         a.replace(st_f, "<>")
     }
 }

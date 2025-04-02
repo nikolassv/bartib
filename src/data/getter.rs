@@ -98,7 +98,8 @@ pub fn filter_activities<'a>(
         })
         .filter(move |activity| {
             filter
-                .project.is_none_or(|p| WildMatch::new(p).matches(&activity.project))
+                .project
+                .is_none_or(|p| WildMatch::new(p).matches(&activity.project))
         })
         .collect()
 }

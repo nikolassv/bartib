@@ -180,7 +180,8 @@ pub fn list_descriptions_and_projects_with_index(
 // the date of the end is shown when it is not the same date as the start
 fn get_activity_table_row(activity: &activity::Activity, with_start_dates: bool) -> table::Row {
     let more_then_one_day = activity
-        .end.is_some_and(|end| activity.start.date() != end.date());
+        .end
+        .is_some_and(|end| activity.start.date() != end.date());
 
     let display_end = activity.end.map_or_else(
         || "-".to_string(),
