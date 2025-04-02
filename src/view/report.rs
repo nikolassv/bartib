@@ -27,7 +27,7 @@ impl<'a> Report<'a> {
     }
 }
 
-impl<'a> fmt::Display for Report<'a> {
+impl fmt::Display for Report<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut longest_line = get_longest_line(&self.project_map).unwrap_or(0);
         let longest_duration_string = get_longest_duration_string(self).unwrap_or(0);
@@ -61,7 +61,7 @@ pub fn show_activities<'a>(activities: &'a [&'a activity::Activity]) {
     println!("\n{report}");
 }
 
-fn create_project_map<'a>(activities: &'a [&'a activity::Activity]) -> ProjectMap {
+fn create_project_map<'a>(activities: &'a [&'a activity::Activity]) -> ProjectMap<'a> {
     let mut project_map: ProjectMap = BTreeMap::new();
 
     for a in activities {
@@ -172,8 +172,8 @@ fn print_total_duration(
 
 fn group_activities_by_description<'a>(
     activities: &'a [&'a activity::Activity],
-) -> BTreeMap<&str, Vec<&'a activity::Activity>> {
-    let mut activity_map: BTreeMap<&str, Vec<&'a activity::Activity>> = BTreeMap::new();
+) -> BTreeMap<&'a str, Vec<&'a activity::Activity>> {
+    let mut activity_map: BTreeMap<&'a str, Vec<&'a activity::Activity>> = BTreeMap::new();
 
     for a in activities {
         activity_map.entry(&a.description).or_default().push(a);

@@ -16,7 +16,7 @@ impl StatusReportWriter for StatusReport {
     }
 }
 
-impl<'a> fmt::Display for StatusReportData<'a> {
+impl fmt::Display for StatusReportData<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let longest_line = 30;
         print_title(f, self.project)?;
@@ -236,7 +236,7 @@ mod tests {
 
     fn clean(a: &str) -> String {
         let st_f = "\u{1b}[0m\u{1b}";
-        let clean_res = a.replace(st_f, "<>");
-        clean_res
+        
+        a.replace(st_f, "<>")
     }
 }

@@ -110,11 +110,11 @@ mod tests {
             start: date(2024, 3, 19),
             end: None,
         };
-        return vec![a0, a1, a2, a3, a4];
+        vec![a0, a1, a2, a3, a4]
     }
 
     fn date(year: i32, month: u32, day: u32) -> NaiveDateTime {
         let date = NaiveDate::from_ymd_opt(year, month, day).unwrap();
-        return NaiveDateTime::new(date, chrono::NaiveTime::from_hms_opt(10, 0, 0).unwrap());
+        NaiveDateTime::new(date, chrono::NaiveTime::from_hms_opt(10, 0, 0).unwrap())
     }
 }
