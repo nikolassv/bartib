@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Added total hours to the grouped list (thanks to [@Niatross](https://github.com/Niatross))
 - Update of libc:musl to support longarch64 (thanks to [@zhaixiaojuan](https://github.com/zhaixiaojuan))
 - Improved general `--help` output (thanks to [@RossBarnie](https://github.com/RossBarnie))
 

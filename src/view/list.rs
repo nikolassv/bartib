@@ -1,4 +1,3 @@
-use chrono::Duration;
 use chrono::NaiveDate;
 use nu_ansi_term::Color;
 use std::collections::BTreeMap;
