@@ -215,6 +215,8 @@ Bartib offers a simple auto completion for project names. This saves you from ty
 For fish users, add the [misc/bartib.fish](misc/bartib.fish) to either the `~/.config/fish/completions/` or `~/.local/share/fish/vendor_completions.d/` directory.
 Currently, you must set the `BARTIB_FILE` in your fish shell for the project and description names completions.
 
+For zsh users, the `misc/_bartib` file can be used for completions.
+
 ## Command overview
 
 All these commands require that you have set the `BARTIB_FILE` environment variable to the file path of your activity log. Otherwise they require an additional `-f/--file` parameter between `bartib` and the subcommand (see above: [How to define in which file to save the log of your activities](#how-to-define-in-which-file-to-save-the-log-of-your-activities)).
