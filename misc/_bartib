@@ -1,9 +1,9 @@
 #compdef bartib
 
 _bartib_tasks() {
-    local -a _tasks=($(bartib last | awk 'NR > 2 {print $1}' | tr -d '[]' | sort | tr '\n' ' '))
+    local -a _tasks=($(bartib last | head -n -1 | awk 'BEGIN { a="" } NR > 2 {for (i=2; i <= NF - 1; i++) { if (i != 2) { a=a" "$i; } else { a=$i } } gsub("[\[\]]", "", $1); printf("%s[%s]\n", $1, a)}' | tr '\n' ' '))
 
-    _values "NUMBER" ${_tasks[@]}
+    _values "TASK" ${_tasks[@]}
 }
 
 _bartib_projects() {
