@@ -10,7 +10,10 @@ pub fn format_duration(duration: &Duration) -> String {
     if duration.num_minutes() > 0 {
         duration_string.push_str(&format!("{:0>2}m", duration.num_minutes() % 60));
     } else {
+        #[cfg(not(feature = "second-precision"))]
         duration_string.push_str("<1m");
+        #[cfg(feature = "second-precision")]
+        duration_string.push_str(&format!("{:0>2}s", duration.num_seconds() % 60));
     }
 
     duration_string
