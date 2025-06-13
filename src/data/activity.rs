@@ -130,7 +130,11 @@ fn parse_timepart(time_part: &str) -> Result<NaiveDateTime, ActivityError> {
                 conf::FORMAT_SECOND_PRECISION_DATETIME,
             ) {
                 Ok(datetime) => {
-                    // Successfully parsed timestamp. Round to the nearest minute
+                    // Successfully parsed timestamp. Notify the user about the mismatch
+                    // and round to the nearest minute
+                    eprintln!("WARNING: Bartib log encountered timestamps with minute precision.");
+                    eprintln!("This version of Bartib has been compiled with second precision");
+
                     let datetime = datetime
                         .duration_round(Duration::minutes(1))
                         .map_err(|_| ActivityError::DateTimeParseError)?;
@@ -151,10 +155,14 @@ fn parse_timepart(time_part: &str) -> Result<NaiveDateTime, ActivityError> {
             // Presume that the timestamp has minute-precision and that is the cause of the error
             match NaiveDateTime::parse_from_str(
                 time_part.trim(),
-                conf::FORMAT_SECOND_PRECISION_DATETIME,
+                conf::FORMAT_MINUTE_PRECISION_DATETIME,
             ) {
                 Ok(datetime) => {
-                    // Successfully parsed timestamp. Set seconds to zero
+                    // Successfully parsed timestamp. Notify the user about the mismatch
+                    // and set seconds to zero
+                    eprintln!("WARNING: Bartib log encountered timestamps with minute precision.");
+                    eprintln!("This version of Bartib has been compiled with second precision");
+
                     let datetime = datetime
                         .with_second(0)
                         .ok_or(ActivityError::DateTimeParseError)?;
