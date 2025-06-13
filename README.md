@@ -189,7 +189,7 @@ cargo build --release
 
 #### Precision
 
-By default, Bartib measures timestamps in minutes. If you would like to measure timestamps with second precision, you can enable the `second-precision` feature:
+By default, Bartib records timestamps in minutes. If you would like to record timestamps with second precision, you can enable the `second-precision` feature:
 
 ```bash
 cargo build --features=second-precision --release
