@@ -45,6 +45,10 @@ textwrap = "0.16.0"
 thiserror = "1.0.0"
 wildmatch = "2.3.0"
 
+[features]
+# Timestamps are recorded with second precision instead of the default minute precision
+second-precision = []
+
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
