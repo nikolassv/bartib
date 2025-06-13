@@ -219,7 +219,11 @@ fn get_longest_duration_string(report: &Report) -> Option<usize> {
 fn get_max_option(o1: Option<usize>, o2: Option<usize>) -> Option<usize> {
     if let Some(s1) = o1 {
         if let Some(s2) = o2 {
-            if s1 > s2 { o1 } else { o2 }
+            if s1 > s2 {
+                o1
+            } else {
+                o2
+            }
         } else {
             o1
         }
