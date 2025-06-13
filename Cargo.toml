@@ -2,12 +2,12 @@
 name = "bartib"
 version = "1.1.0"
 authors = ["Nikolas Schmidt-Voigt <nikolas.schmidt-voigt@posteo.de>"]
+edition = "2018"
 description = "A simple timetracker for the command line"
+readme = "README.md"
 homepage = "https://github.com/nikolassv/bartib"
 repository = "https://github.com/nikolassv/bartib"
-edition = "2018"
 license = "GPL-3.0-or-later"
-readme = "README.md"
 keywords = ["cli"]
 categories = ["command-line-utilities"]
 
@@ -16,21 +16,6 @@ upgrade-guid = "1D8348BE-1D47-4755-8D09-624AF8B092C3"
 path-guid = "BE8CBFAC-1DE6-4B0D-BB4B-C31A85A34AC5"
 license = false
 eula = false
-
-[dependencies]
-chrono = "0.4.0"
-clap = "2.0.0"
-thiserror = "1.0.0"
-anyhow = "1.0.0"
-nu-ansi-term = "0.46.0"
-term_size = "0.3.0"
-textwrap = "0.16.0"
-wildmatch = "2.3.0"
-
-# The profile that 'cargo dist' will build with
-[profile.dist]
-inherits = "release"
-lto = "thin"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
@@ -41,6 +26,30 @@ ci = ["github"]
 # The installers to generate for each app
 installers = ["shell", "powershell", "msi"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+targets = [
+  "aarch64-apple-darwin",
+  "x86_64-apple-darwin",
+  "x86_64-unknown-linux-gnu",
+  "x86_64-pc-windows-msvc",
+]
 # Publish jobs to run in CI
 pr-run-mode = "upload"
+
+[dependencies]
+anyhow = "1.0.0"
+chrono = "0.4.0"
+clap = "2.0.0"
+nu-ansi-term = "0.46.0"
+term_size = "0.3.0"
+textwrap = "0.16.0"
+thiserror = "1.0.0"
+wildmatch = "2.3.0"
+
+[features]
+# Timestamps are recorded with second precision instead of the default minute precision
+second-precision = []
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"

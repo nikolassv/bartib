@@ -1,3 +1,7 @@
+#[cfg(not(feature = "second-precision"))]
+use chrono::DurationRound;
+#[cfg(feature = "second-precision")]
+use chrono::Timelike;
 use chrono::{Duration, Local, NaiveDateTime};
 use std::fmt;
 use std::str::{Chars, FromStr};
@@ -115,9 +119,60 @@ impl FromStr for Activity {
     }
 }
 
+#[cfg(not(feature = "second-precision"))]
 fn parse_timepart(time_part: &str) -> Result<NaiveDateTime, ActivityError> {
-    NaiveDateTime::parse_from_str(time_part.trim(), conf::FORMAT_DATETIME)
-        .map_err(|_| ActivityError::DateTimeParseError)
+    match NaiveDateTime::parse_from_str(time_part.trim(), conf::FORMAT_DATETIME) {
+        Ok(datetime) => Ok(datetime),
+        Err(_) => {
+            // Presume that the timestamp has second-precision and that is the cause of the error
+            match NaiveDateTime::parse_from_str(
+                time_part.trim(),
+                conf::FORMAT_SECOND_PRECISION_DATETIME,
+            ) {
+                Ok(datetime) => {
+                    // Successfully parsed timestamp. Notify the user about the mismatch
+                    // and round to the nearest minute
+                    eprintln!("WARNING: Bartib log encountered timestamps with minute precision.");
+                    eprintln!("This version of Bartib has been compiled with second precision");
+
+                    let datetime = datetime
+                        .duration_round(Duration::minutes(1))
+                        .map_err(|_| ActivityError::DateTimeParseError)?;
+
+                    Ok(datetime)
+                }
+                Err(_) => Err(ActivityError::DateTimeParseError),
+            }
+        }
+    }
+}
+
+#[cfg(feature = "second-precision")]
+fn parse_timepart(time_part: &str) -> Result<NaiveDateTime, ActivityError> {
+    match NaiveDateTime::parse_from_str(time_part.trim(), conf::FORMAT_DATETIME) {
+        Ok(datetime) => Ok(datetime),
+        Err(_) => {
+            // Presume that the timestamp has minute-precision and that is the cause of the error
+            match NaiveDateTime::parse_from_str(
+                time_part.trim(),
+                conf::FORMAT_MINUTE_PRECISION_DATETIME,
+            ) {
+                Ok(datetime) => {
+                    // Successfully parsed timestamp. Notify the user about the mismatch
+                    // and set seconds to zero
+                    eprintln!("WARNING: Bartib log encountered timestamps with minute precision.");
+                    eprintln!("This version of Bartib has been compiled with second precision");
+
+                    let datetime = datetime
+                        .with_second(0)
+                        .ok_or(ActivityError::DateTimeParseError)?;
+
+                    Ok(datetime)
+                }
+                Err(_) => Err(ActivityError::DateTimeParseError),
+            }
+        }
+    }
 }
 
 /**
@@ -195,6 +250,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn display() {
         let mut t = Activity::start(
             "test project| 1".to_string(),
@@ -215,6 +271,30 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "second-precision")]
+    fn display() {
+        let mut t = Activity::start(
+            "test project| 1".to_string(),
+            "test\\description".to_string(),
+            None,
+        );
+        t.start =
+            NaiveDateTime::parse_from_str("2021-02-16 16:14:53", conf::FORMAT_DATETIME).unwrap();
+        assert_eq!(
+            format!("{t}"),
+            "2021-02-16 16:14:53 | test project\\| 1 | test\\\\description\n"
+        );
+        t.end = Some(
+            NaiveDateTime::parse_from_str("2021-02-16 18:23:17", conf::FORMAT_DATETIME).unwrap(),
+        );
+        assert_eq!(
+            format!("{t}"),
+            "2021-02-16 16:14:53 - 2021-02-16 18:23:17 | test project\\| 1 | test\\\\description\n"
+        );
+    }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn from_str_running_activity() {
         let t = Activity::from_str("2021-02-16 16:14 | test project | test description").unwrap();
 
@@ -231,6 +311,26 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "second-precision")]
+    fn from_str_running_activity() {
+        let t =
+            Activity::from_str("2021-02-16 16:14:53 | test project | test description").unwrap();
+
+        assert_eq!(t.start.date().year(), 2021);
+        assert_eq!(t.start.date().month(), 2);
+        assert_eq!(t.start.date().day(), 16);
+
+        assert_eq!(t.start.time().hour(), 16);
+        assert_eq!(t.start.time().minute(), 14);
+        assert_eq!(t.start.time().second(), 53);
+
+        assert_eq!(t.description, "test description".to_string());
+        assert_eq!(t.project, "test project".to_string());
+        assert_eq!(t.end, None);
+    }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn from_str_running_activity_no_description() {
         let t = Activity::from_str("2021-02-16 16:14 | test project").unwrap();
 
@@ -247,6 +347,25 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "second-precision")]
+    fn from_str_running_activity_no_description() {
+        let t = Activity::from_str("2021-02-16 16:14:53 | test project").unwrap();
+
+        assert_eq!(t.start.date().year(), 2021);
+        assert_eq!(t.start.date().month(), 2);
+        assert_eq!(t.start.date().day(), 16);
+
+        assert_eq!(t.start.time().hour(), 16);
+        assert_eq!(t.start.time().minute(), 14);
+        assert_eq!(t.start.time().second(), 53);
+
+        assert_eq!(t.description, String::new());
+        assert_eq!(t.project, "test project".to_string());
+        assert_eq!(t.end, None);
+    }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn from_str_stopped_activity() {
         let t = Activity::from_str(
             "2021-02-16 16:14 - 2021-02-16 18:23 | test project | test description",
@@ -266,6 +385,28 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "second-precision")]
+    fn from_str_stopped_activity() {
+        let t = Activity::from_str(
+            "2021-02-16 16:14:53 - 2021-02-16 18:23:17 | test project | test description",
+        )
+        .unwrap();
+
+        assert_ne!(t.end, None);
+
+        let end = t.end.unwrap();
+
+        assert_eq!(end.date().year(), 2021);
+        assert_eq!(end.date().month(), 2);
+        assert_eq!(end.date().day(), 16);
+
+        assert_eq!(end.time().hour(), 18);
+        assert_eq!(end.time().minute(), 23);
+        assert_eq!(end.time().second(), 17);
+    }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn from_str_escaped_chars() {
         let t = Activity::from_str(
             "2021-02-16 16:14 - 2021-02-16 18:23 | test project\\| 1 | test\\\\description",
@@ -277,6 +418,19 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "second-precision")]
+    fn from_str_escaped_chars() {
+        let t = Activity::from_str(
+            "2021-02-16 16:14:53 - 2021-02-16 18:23:17 | test project\\| 1 | test\\\\description",
+        )
+        .unwrap();
+
+        assert_eq!(t.project, "test project| 1");
+        assert_eq!(t.description, "test\\description");
+    }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn string_roundtrip() {
         let mut t = Activity::start(
             "ex\\ample\\\\pro|ject".to_string(),
@@ -305,11 +459,87 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "second-precision")]
+    fn string_roundtrip() {
+        let mut t = Activity::start(
+            "ex\\ample\\\\pro|ject".to_string(),
+            "e\\\\xam|||ple tas\t\t\nk".to_string(),
+            None,
+        );
+        t.stop(None);
+        let t2 = Activity::from_str(format!("{t}").as_str()).unwrap();
+
+        assert_eq!(t.start.with_nanosecond(0).unwrap(), t2.start);
+        assert_eq!(t.end.unwrap().with_nanosecond(0).unwrap(), t2.end.unwrap());
+
+        assert_eq!(t.project, t2.project);
+        assert_eq!(t.description, t2.description);
+    }
+
+    #[test]
     fn from_str_errors() {
         let t = Activity::from_str("2021 test project");
         assert!(matches!(t, Err(ActivityError::GeneralParseError)));
 
         let t = Activity::from_str("asb - 2021- | project");
         assert!(matches!(t, Err(ActivityError::DateTimeParseError)));
+    }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
+    fn from_str_second_precision_encountered_when_minute_precision_expected() {
+        let t = Activity::from_str(
+            "2021-02-16 16:14:53 - 2021-02-16 18:23:17 | test project | test description",
+        )
+        .unwrap();
+
+        assert_eq!(t.start.date().year(), 2021);
+        assert_eq!(t.start.date().month(), 2);
+        assert_eq!(t.start.date().day(), 16);
+
+        assert_eq!(t.start.time().hour(), 16);
+        assert_eq!(t.start.time().minute(), 15);
+        assert_eq!(t.start.time().second(), 0);
+
+        assert_ne!(t.end, None);
+
+        let end = t.end.unwrap();
+
+        assert_eq!(end.date().year(), 2021);
+        assert_eq!(end.date().month(), 2);
+        assert_eq!(end.date().day(), 16);
+
+        assert_eq!(end.time().hour(), 18);
+        assert_eq!(end.time().minute(), 23);
+        assert_eq!(end.time().second(), 0);
+    }
+
+    #[test]
+    #[cfg(feature = "second-precision")]
+    fn from_str_minute_precision_encountered_when_second_precision_expected() {
+        let t = Activity::from_str(
+            "2021-02-16 16:14 - 2021-02-16 18:23 | test project | test description",
+        )
+        .unwrap();
+
+        assert_eq!(t.start.date().year(), 2021);
+        assert_eq!(t.start.date().month(), 2);
+        assert_eq!(t.start.date().day(), 16);
+
+        assert_eq!(t.start.time().hour(), 16);
+        assert_eq!(t.start.time().minute(), 14);
+        assert_eq!(t.start.time().second(), 0);
+
+        assert_ne!(t.end, None);
+
+        let end = t.end.unwrap();
+
+        assert_eq!(end.date().year(), 2021);
+        assert_eq!(end.date().month(), 2);
+        assert_eq!(end.date().day(), 16);
+
+        assert_eq!(end.time().hour(), 18);
+        assert_eq!(end.time().minute(), 23);
+        assert_eq!(end.time().second(), 0);
     }
 }
