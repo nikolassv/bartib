@@ -1,3 +1,7 @@
+#[cfg(not(feature = "second-precision"))]
+use chrono::DurationRound;
+#[cfg(feature = "second-precision")]
+use chrono::Timelike;
 use chrono::{Duration, Local, NaiveDateTime};
 use std::fmt;
 use std::str::{Chars, FromStr};
@@ -115,9 +119,52 @@ impl FromStr for Activity {
     }
 }
 
+#[cfg(not(feature = "second-precision"))]
 fn parse_timepart(time_part: &str) -> Result<NaiveDateTime, ActivityError> {
-    NaiveDateTime::parse_from_str(time_part.trim(), conf::FORMAT_DATETIME)
-        .map_err(|_| ActivityError::DateTimeParseError)
+    match NaiveDateTime::parse_from_str(time_part.trim(), conf::FORMAT_DATETIME) {
+        Ok(datetime) => Ok(datetime),
+        Err(_) => {
+            // Presume that the timestamp has second-precision and that is the cause of the error
+            match NaiveDateTime::parse_from_str(
+                time_part.trim(),
+                conf::FORMAT_SECOND_PRECISION_DATETIME,
+            ) {
+                Ok(datetime) => {
+                    // Successfully parsed timestamp. Round to the nearest minute
+                    let datetime = datetime
+                        .duration_round(Duration::minutes(1))
+                        .map_err(|_| ActivityError::DateTimeParseError)?;
+
+                    Ok(datetime)
+                }
+                Err(_) => Err(ActivityError::DateTimeParseError),
+            }
+        }
+    }
+}
+
+#[cfg(feature = "second-precision")]
+fn parse_timepart(time_part: &str) -> Result<NaiveDateTime, ActivityError> {
+    match NaiveDateTime::parse_from_str(time_part.trim(), conf::FORMAT_DATETIME) {
+        Ok(datetime) => Ok(datetime),
+        Err(_) => {
+            // Presume that the timestamp has minute-precision and that is the cause of the error
+            match NaiveDateTime::parse_from_str(
+                time_part.trim(),
+                conf::FORMAT_SECOND_PRECISION_DATETIME,
+            ) {
+                Ok(datetime) => {
+                    // Successfully parsed timestamp. Set seconds to zero
+                    let datetime = datetime
+                        .with_second(0)
+                        .ok_or(ActivityError::DateTimeParseError)?;
+
+                    Ok(datetime)
+                }
+                Err(_) => Err(ActivityError::DateTimeParseError),
+            }
+        }
+    }
 }
 
 /**
