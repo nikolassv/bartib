@@ -484,4 +484,62 @@ mod tests {
         let t = Activity::from_str("asb - 2021- | project");
         assert!(matches!(t, Err(ActivityError::DateTimeParseError)));
     }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
+    fn from_str_second_precision_encountered_when_minute_precision_expected() {
+        let t = Activity::from_str(
+            "2021-02-16 16:14:53 - 2021-02-16 18:23:17 | test project | test description",
+        )
+        .unwrap();
+
+        assert_eq!(t.start.date().year(), 2021);
+        assert_eq!(t.start.date().month(), 2);
+        assert_eq!(t.start.date().day(), 16);
+
+        assert_eq!(t.start.time().hour(), 16);
+        assert_eq!(t.start.time().minute(), 15);
+        assert_eq!(t.start.time().second(), 0);
+
+        assert_ne!(t.end, None);
+
+        let end = t.end.unwrap();
+
+        assert_eq!(end.date().year(), 2021);
+        assert_eq!(end.date().month(), 2);
+        assert_eq!(end.date().day(), 16);
+
+        assert_eq!(end.time().hour(), 18);
+        assert_eq!(end.time().minute(), 23);
+        assert_eq!(end.time().second(), 0);
+    }
+
+    #[test]
+    #[cfg(feature = "second-precision")]
+    fn from_str_minute_precision_encountered_when_second_precision_expected() {
+        let t = Activity::from_str(
+            "2021-02-16 16:14 - 2021-02-16 18:23 | test project | test description",
+        )
+        .unwrap();
+
+        assert_eq!(t.start.date().year(), 2021);
+        assert_eq!(t.start.date().month(), 2);
+        assert_eq!(t.start.date().day(), 16);
+
+        assert_eq!(t.start.time().hour(), 16);
+        assert_eq!(t.start.time().minute(), 14);
+        assert_eq!(t.start.time().second(), 0);
+
+        assert_ne!(t.end, None);
+
+        let end = t.end.unwrap();
+
+        assert_eq!(end.date().year(), 2021);
+        assert_eq!(end.date().month(), 2);
+        assert_eq!(end.date().day(), 16);
+
+        assert_eq!(end.time().hour(), 18);
+        assert_eq!(end.time().minute(), 23);
+        assert_eq!(end.time().second(), 0);
+    }
 }
