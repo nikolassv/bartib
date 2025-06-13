@@ -23,6 +23,7 @@ Bartib is an easy to use time tracking tool for the command line. It saves a log
       - [Via homebrew](#via-homebrew)
       - [Via apk (Alpine Linux)](#via-apk-alpine-linux)
     - [How to build Bartib](#how-to-build-bartib)
+      - [Precision](#precision)
     - [How to define in which file to save the log of your activities](#how-to-define-in-which-file-to-save-the-log-of-your-activities)
     - [How to edit or delete tracked activities](#how-to-edit-or-delete-tracked-activities)
     - [How to activate auto completion](#how-to-activate-auto-completion)
@@ -184,6 +185,14 @@ Bartib is written in rust. You may build it yourself with the help of cargo. Jus
 
 ```bash
 cargo build --release
+```
+
+#### Precision
+
+By default, Bartib measures timestamps in minutes. If you would like to measure timestamps with second precision, you can enable the `second-precision` feature:
+
+```bash
+cargo build --features=second-precision --release
 ```
 
 ### How to define in which file to save the log of your activities
