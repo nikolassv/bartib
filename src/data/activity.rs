@@ -195,6 +195,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn display() {
         let mut t = Activity::start(
             "test project| 1".to_string(),
@@ -215,6 +216,30 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "second-precision")]
+    fn display() {
+        let mut t = Activity::start(
+            "test project| 1".to_string(),
+            "test\\description".to_string(),
+            None,
+        );
+        t.start =
+            NaiveDateTime::parse_from_str("2021-02-16 16:14:53", conf::FORMAT_DATETIME).unwrap();
+        assert_eq!(
+            format!("{t}"),
+            "2021-02-16 16:14:53 | test project\\| 1 | test\\\\description\n"
+        );
+        t.end = Some(
+            NaiveDateTime::parse_from_str("2021-02-16 18:23:17", conf::FORMAT_DATETIME).unwrap(),
+        );
+        assert_eq!(
+            format!("{t}"),
+            "2021-02-16 16:14:53 - 2021-02-16 18:23:17 | test project\\| 1 | test\\\\description\n"
+        );
+    }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn from_str_running_activity() {
         let t = Activity::from_str("2021-02-16 16:14 | test project | test description").unwrap();
 
@@ -231,6 +256,26 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "second-precision")]
+    fn from_str_running_activity() {
+        let t =
+            Activity::from_str("2021-02-16 16:14:53 | test project | test description").unwrap();
+
+        assert_eq!(t.start.date().year(), 2021);
+        assert_eq!(t.start.date().month(), 2);
+        assert_eq!(t.start.date().day(), 16);
+
+        assert_eq!(t.start.time().hour(), 16);
+        assert_eq!(t.start.time().minute(), 14);
+        assert_eq!(t.start.time().second(), 53);
+
+        assert_eq!(t.description, "test description".to_string());
+        assert_eq!(t.project, "test project".to_string());
+        assert_eq!(t.end, None);
+    }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn from_str_running_activity_no_description() {
         let t = Activity::from_str("2021-02-16 16:14 | test project").unwrap();
 
@@ -247,6 +292,25 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "second-precision")]
+    fn from_str_running_activity_no_description() {
+        let t = Activity::from_str("2021-02-16 16:14:53 | test project").unwrap();
+
+        assert_eq!(t.start.date().year(), 2021);
+        assert_eq!(t.start.date().month(), 2);
+        assert_eq!(t.start.date().day(), 16);
+
+        assert_eq!(t.start.time().hour(), 16);
+        assert_eq!(t.start.time().minute(), 14);
+        assert_eq!(t.start.time().second(), 53);
+
+        assert_eq!(t.description, String::new());
+        assert_eq!(t.project, "test project".to_string());
+        assert_eq!(t.end, None);
+    }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn from_str_stopped_activity() {
         let t = Activity::from_str(
             "2021-02-16 16:14 - 2021-02-16 18:23 | test project | test description",
@@ -266,6 +330,28 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "second-precision")]
+    fn from_str_stopped_activity() {
+        let t = Activity::from_str(
+            "2021-02-16 16:14:53 - 2021-02-16 18:23:17 | test project | test description",
+        )
+        .unwrap();
+
+        assert_ne!(t.end, None);
+
+        let end = t.end.unwrap();
+
+        assert_eq!(end.date().year(), 2021);
+        assert_eq!(end.date().month(), 2);
+        assert_eq!(end.date().day(), 16);
+
+        assert_eq!(end.time().hour(), 18);
+        assert_eq!(end.time().minute(), 23);
+        assert_eq!(end.time().second(), 17);
+    }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn from_str_escaped_chars() {
         let t = Activity::from_str(
             "2021-02-16 16:14 - 2021-02-16 18:23 | test project\\| 1 | test\\\\description",
@@ -277,6 +363,19 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "second-precision")]
+    fn from_str_escaped_chars() {
+        let t = Activity::from_str(
+            "2021-02-16 16:14:53 - 2021-02-16 18:23:17 | test project\\| 1 | test\\\\description",
+        )
+        .unwrap();
+
+        assert_eq!(t.project, "test project| 1");
+        assert_eq!(t.description, "test\\description");
+    }
+
+    #[test]
+    #[cfg(not(feature = "second-precision"))]
     fn string_roundtrip() {
         let mut t = Activity::start(
             "ex\\ample\\\\pro|ject".to_string(),
@@ -299,6 +398,24 @@ mod tests {
                 .unwrap(),
             t2.end.unwrap()
         );
+
+        assert_eq!(t.project, t2.project);
+        assert_eq!(t.description, t2.description);
+    }
+
+    #[test]
+    #[cfg(feature = "second-precision")]
+    fn string_roundtrip() {
+        let mut t = Activity::start(
+            "ex\\ample\\\\pro|ject".to_string(),
+            "e\\\\xam|||ple tas\t\t\nk".to_string(),
+            None,
+        );
+        t.stop(None);
+        let t2 = Activity::from_str(format!("{t}").as_str()).unwrap();
+
+        assert_eq!(t.start.with_nanosecond(0).unwrap(), t2.start);
+        assert_eq!(t.end.unwrap().with_nanosecond(0).unwrap(), t2.end.unwrap());
 
         assert_eq!(t.project, t2.project);
         assert_eq!(t.description, t2.description);
