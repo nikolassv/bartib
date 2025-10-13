@@ -9,13 +9,17 @@ use crate::view::report;
 use crate::view::table;
 
 // displays a table with activities
-pub fn list_activities(activities: &[&activity::Activity], with_start_dates: bool) {
+pub fn list_activities(
+    activities: &[&activity::Activity],
+    with_start_dates: bool,
+    separator: &str,
+) {
     if activities.is_empty() {
         println!("No activity to display");
         return;
     }
 
-    let mut activity_table = create_activity_table();
+    let mut activity_table = create_activity_table(separator);
 
     activities
         .iter()
@@ -26,13 +30,13 @@ pub fn list_activities(activities: &[&activity::Activity], with_start_dates: boo
 }
 
 // list activities grouped by the dates of their start time
-pub fn list_activities_grouped_by_date(activities: &[&activity::Activity]) {
+pub fn list_activities_grouped_by_date(activities: &[&activity::Activity], separator: &str) {
     if activities.is_empty() {
         println!("No activity to display");
         return;
     }
 
-    let mut activity_table = create_activity_table();
+    let mut activity_table = create_activity_table(separator);
 
     group_activities_by_date(activities)
         .iter()
@@ -44,29 +48,32 @@ pub fn list_activities_grouped_by_date(activities: &[&activity::Activity]) {
     println!("\n{activity_table}");
 }
 
-fn create_activity_table() -> table::Table {
-    table::Table::new(vec![
-        table::Column {
-            label: "Started".to_string(),
-            wrap: table::Wrap::NoWrap,
-        },
-        table::Column {
-            label: "Stopped".to_string(),
-            wrap: table::Wrap::NoWrap,
-        },
-        table::Column {
-            label: "Description".to_string(),
-            wrap: table::Wrap::Wrap,
-        },
-        table::Column {
-            label: "Project".to_string(),
-            wrap: table::Wrap::Wrap,
-        },
-        table::Column {
-            label: "Duration".to_string(),
-            wrap: table::Wrap::NoWrap,
-        },
-    ])
+fn create_activity_table(separator: &str) -> table::Table {
+    table::Table::new(
+        vec![
+            table::Column {
+                label: "Started".to_string(),
+                wrap: table::Wrap::NoWrap,
+            },
+            table::Column {
+                label: "Stopped".to_string(),
+                wrap: table::Wrap::NoWrap,
+            },
+            table::Column {
+                label: "Description".to_string(),
+                wrap: table::Wrap::Wrap,
+            },
+            table::Column {
+                label: "Project".to_string(),
+                wrap: table::Wrap::Wrap,
+            },
+            table::Column {
+                label: "Duration".to_string(),
+                wrap: table::Wrap::NoWrap,
+            },
+        ],
+        separator.to_string(),
+    )
 }
 
 fn create_activities_group(title: &str, activities: &[&activity::Activity]) -> table::Group {
@@ -88,28 +95,32 @@ fn create_activities_group(title: &str, activities: &[&activity::Activity]) -> t
 }
 
 // displays a table with running activities (no end time)
-pub fn list_running_activities(activities: &[&activity::Activity]) {
+pub fn list_running_activities(activities: &[&activity::Activity], separator: &str) {
     if activities.is_empty() {
         println!("No Activity is currently running");
     } else {
-        let mut activity_table = table::Table::new(vec![
-            table::Column {
-                label: "Started At".to_string(),
-                wrap: table::Wrap::NoWrap,
-            },
-            table::Column {
-                label: "Description".to_string(),
-                wrap: table::Wrap::Wrap,
-            },
-            table::Column {
-                label: "Project".to_string(),
-                wrap: table::Wrap::Wrap,
-            },
-            table::Column {
-                label: "Duration".to_string(),
-                wrap: table::Wrap::NoWrap,
-            },
-        ]);
+        let separator = separator.to_string();
+        let mut activity_table = table::Table::new(
+            vec![
+                table::Column {
+                    label: "Started At".to_string(),
+                    wrap: table::Wrap::NoWrap,
+                },
+                table::Column {
+                    label: "Description".to_string(),
+                    wrap: table::Wrap::Wrap,
+                },
+                table::Column {
+                    label: "Project".to_string(),
+                    wrap: table::Wrap::Wrap,
+                },
+                table::Column {
+                    label: "Duration".to_string(),
+                    wrap: table::Wrap::NoWrap,
+                },
+            ],
+            separator,
+        );
 
         activities
             .iter()
@@ -128,7 +139,10 @@ pub fn list_running_activities(activities: &[&activity::Activity]) {
 }
 
 // display a list of projects and descriptions with generated index number
-pub fn list_descriptions_and_projects(descriptions_and_projects: &[(&String, &String)]) {
+pub fn list_descriptions_and_projects(
+    descriptions_and_projects: &[(&String, &String)],
+    separator: &str,
+) {
     list_descriptions_and_projects_with_index(
         &descriptions_and_projects
             .iter()
@@ -137,6 +151,7 @@ pub fn list_descriptions_and_projects(descriptions_and_projects: &[(&String, &St
             .rev()
             .collect::<Vec<_>>(),
         "No activities have been tracked yet",
+        separator,
     )
 }
 
@@ -144,25 +159,29 @@ pub fn list_descriptions_and_projects(descriptions_and_projects: &[(&String, &St
 pub fn list_descriptions_and_projects_with_index(
     descriptions_and_projects: &[(usize, &(&String, &String))],
     zero_length_error: &str,
+    separator: &str,
 ) {
     if descriptions_and_projects.is_empty() {
         println!("{zero_length_error}");
         return;
     }
-    let mut descriptions_and_projects_table = table::Table::new(vec![
-        table::Column {
-            label: " # ".to_string(),
-            wrap: table::Wrap::NoWrap,
-        },
-        table::Column {
-            label: "Description".to_string(),
-            wrap: table::Wrap::Wrap,
-        },
-        table::Column {
-            label: "Project".to_string(),
-            wrap: table::Wrap::Wrap,
-        },
-    ]);
+    let mut descriptions_and_projects_table = table::Table::new(
+        vec![
+            table::Column {
+                label: " # ".to_string(),
+                wrap: table::Wrap::NoWrap,
+            },
+            table::Column {
+                label: "Description".to_string(),
+                wrap: table::Wrap::Wrap,
+            },
+            table::Column {
+                label: "Project".to_string(),
+                wrap: table::Wrap::Wrap,
+            },
+        ],
+        separator.to_string(),
+    );
 
     for (index, (description, project)) in descriptions_and_projects {
         descriptions_and_projects_table.add_row(table::Row::new(vec![

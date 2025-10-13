@@ -154,7 +154,16 @@ To get started, view the `start` help with `bartib start --help`")
             SubCommand::with_name("cancel").about("cancels all currently running activities"),
         )
         .subcommand(
-            SubCommand::with_name("current").about("lists all currently running activities"),
+            SubCommand::with_name("current").about("lists all currently running activities")
+                            .arg(Arg::with_name("separator")
+                                        .short("s")
+                                        .long("separator")
+                                        .help("separator to seperate columns of the output table")
+                                        .required(false)
+                                        .takes_value(true)
+                                        .default_value("")
+                                    )
+            ,
         )
         .subcommand(
             SubCommand::with_name("list")
@@ -189,7 +198,15 @@ To get started, view the `start` help with `bartib start --help`")
                         .help("maximum number of activities to display")
                         .required(false)
                         .takes_value(true),
-                ),
+                )
+                .arg(Arg::with_name("separator")
+                                        .short("s")
+                                        .long("separator")
+                                        .help("separator to seperate columns of the output table")
+                                        .required(false)
+                                        .takes_value(true)
+                                        .default_value("")
+                )
         )
         .subcommand(
             SubCommand::with_name("report")
@@ -224,7 +241,16 @@ To get started, view the `start` help with `bartib start --help`")
                         .required(false)
                         .takes_value(true)
                         .default_value("10"),
-                ),
+                )
+                .arg(Arg::with_name("separator")
+                    .short("s")
+                    .long("separator")
+                    .help("separator to seperate columns of the output table")
+                    .required(false)
+                    .takes_value(true)
+                    .default_value("")
+                )
+            ,
         )
         .subcommand(
             SubCommand::with_name("projects")
@@ -268,7 +294,15 @@ To get started, view the `start` help with `bartib start --help`")
                         .required(true)
                         .takes_value(true)
                         .default_value("''"),
-                ),
+                )
+                .arg(Arg::with_name("separator")
+                    .short("s")
+                    .long("separator")
+                    .help("separator to seperate columns of the output table")
+                    .required(false)
+                    .takes_value(true)
+                    .default_value("")
+                )
         )
         .subcommand(
             SubCommand::with_name("status")
@@ -342,12 +376,22 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             bartib::controller::manipulation::stop(file_name, time)
         }
         ("cancel", Some(_)) => bartib::controller::manipulation::cancel(file_name),
-        ("current", Some(_)) => bartib::controller::list::list_running(file_name),
+        ("current", Some(sub_m)) => {
+            let separator = sub_m.value_of("separator").unwrap();
+            bartib::controller::list::list_running(file_name, separator)
+        }
         ("list", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
             let processors = create_processors_for_arguments(sub_m);
             let do_group_activities = !sub_m.is_present("no_grouping") && filter.date.is_none();
-            bartib::controller::list::list(file_name, filter, do_group_activities, processors)
+            let separator = sub_m.value_of("separator").unwrap();
+            bartib::controller::list::list(
+                file_name,
+                filter,
+                do_group_activities,
+                processors,
+                separator,
+            )
         }
         ("report", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);
@@ -362,7 +406,8 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("last", Some(sub_m)) => {
             let number = get_number_argument_or_ignore(sub_m.value_of("number"), "-n/--number")
                 .unwrap_or(10);
-            bartib::controller::list::list_last_activities(file_name, number)
+            let delim = sub_m.value_of("separator").unwrap_or("");
+            bartib::controller::list::list_last_activities(file_name, number, delim)
         }
         ("edit", Some(sub_m)) => {
             let optional_editor_command = sub_m.value_of("editor");
@@ -372,7 +417,8 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
         ("sanity", Some(_)) => bartib::controller::list::sanity_check(file_name),
         ("search", Some(sub_m)) => {
             let search_term = sub_m.value_of("search_term");
-            bartib::controller::list::search(file_name, search_term)
+            let separator = sub_m.value_of("separator").unwrap();
+            bartib::controller::list::search(file_name, search_term, separator)
         }
         ("status", Some(sub_m)) => {
             let filter = create_filter_for_arguments(sub_m);

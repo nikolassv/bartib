@@ -32,6 +32,7 @@ pub struct Table {
     columns: Vec<Column>,
     rows: Vec<Row>,
     groups: Vec<Group>,
+    separator: String,
 }
 
 impl Row {
@@ -54,11 +55,12 @@ impl Group {
 }
 
 impl Table {
-    pub fn new(columns: Vec<Column>) -> Self {
+    pub fn new(columns: Vec<Column>, separator: String) -> Self {
         Self {
             columns,
             groups: Vec::new(),
             rows: Vec::new(),
+            separator,
         }
     }
 
@@ -196,22 +198,33 @@ impl fmt::Display for Table {
 
         let labels: Vec<&String> = self.columns.iter().map(|c| &c.label).collect();
 
-        write_cells(f, &labels, &column_width, Some(Style::new().underline()))?;
+        write_cells(
+            f,
+            &labels,
+            &column_width,
+            Some(Style::new().underline()),
+            &self.separator,
+        )?;
         writeln!(f)?;
 
         for row in &self.rows {
-            write_row(f, row, &column_width)?;
+            write_row(f, row, &column_width, &self.separator)?;
         }
 
         for group in &self.groups {
-            write_group(f, group, &column_width)?;
+            write_group(f, group, &column_width, &self.separator)?;
         }
 
         Ok(())
     }
 }
 
-fn write_group(f: &mut fmt::Formatter<'_>, group: &Group, column_width: &[usize]) -> fmt::Result {
+fn write_group(
+    f: &mut fmt::Formatter<'_>,
+    group: &Group,
+    column_width: &[usize],
+    separator: &String,
+) -> fmt::Result {
     let empty_string = String::new();
     let title = group.title.as_ref().unwrap_or(&empty_string);
 
@@ -219,14 +232,19 @@ fn write_group(f: &mut fmt::Formatter<'_>, group: &Group, column_width: &[usize]
     writeln!(f, "{}", Style::new().bold().paint(title))?;
 
     for row in &group.rows {
-        write_row(f, row, column_width)?;
+        write_row(f, row, column_width, separator)?;
     }
 
     Ok(())
 }
 
-fn write_row(f: &mut fmt::Formatter<'_>, row: &Row, column_width: &[usize]) -> fmt::Result {
-    write_cells(f, &row.content, column_width, row.style)?;
+fn write_row(
+    f: &mut fmt::Formatter<'_>,
+    row: &Row,
+    column_width: &[usize],
+    separator: &String,
+) -> fmt::Result {
+    write_cells(f, &row.content, column_width, row.style, separator)?;
     writeln!(f)?;
     Ok(())
 }
@@ -236,6 +254,7 @@ fn write_cells<T: AsRef<str> + std::fmt::Display>(
     cells: &[T],
     column_width: &[usize],
     style: Option<Style>,
+    separator: &String,
 ) -> fmt::Result {
     let wrapped_cells: Vec<Vec<Cow<str>>> = cells
         .iter()
@@ -257,14 +276,14 @@ fn write_cells<T: AsRef<str> + std::fmt::Display>(
     for line in 0..most_lines {
         for (width, wrapped_cell) in column_width.iter().zip(wrapped_cells.iter()) {
             match wrapped_cell.get(line) {
-                Some(c) => write_with_width_and_style(f, c, width, style)?,
+                Some(c) => write_with_width_and_style(f, c, width, style, separator)?,
                 None => write!(f, "{} ", "\u{a0}".repeat(*width))?, // pad with non breaking space
             }
         }
 
         let is_last_line = line + 1 < most_lines;
         if is_last_line {
-            writeln!(f)?;
+            writeln!(f)?
         }
     }
 
@@ -276,13 +295,17 @@ fn write_with_width_and_style(
     content: &str,
     width: &usize,
     opt_style: Option<Style>,
+    separator: &String,
 ) -> fmt::Result {
     let style_prefix = opt_style.map_or(String::new(), |style| style.prefix().to_string());
     let style_suffix = opt_style.map_or(String::new(), |style| style.suffix().to_string());
 
     // cells are filled with non-breaking white space. Contrary to normal spaces non-breaking white
     // space will be styled (e.g. underlined)
-    write!(f, "{style_prefix}{content:\u{a0}<width$}{style_suffix} ")
+    write!(
+        f,
+        "{style_prefix}{content:\u{a0}<width$}{separator}{style_suffix} "
+    )
 }
 
 #[cfg(test)]
@@ -291,7 +314,7 @@ mod tests {
 
     #[test]
     fn get_column_width_without_wrapping() {
-        let mut t = Table::new(get_columns());
+        let mut t = Table::new(get_columns(), "".to_string());
         let row1 = Row::new(vec!["abc".to_string(), "defg".to_string()]);
         let row2 = Row::new(vec!["a".to_string(), "b".to_string(), "cdef".to_string()]);
 
@@ -307,32 +330,35 @@ mod tests {
 
     #[test]
     fn get_column_width_with_wrapping() {
-        let mut t = Table::new(vec![
-            Column {
-                label: "a".to_string(),
-                wrap: Wrap::NoWrap,
-            },
-            Column {
-                label: "b".to_string(),
-                wrap: Wrap::Wrap,
-            },
-            Column {
-                label: "c".to_string(),
-                wrap: Wrap::NoWrap,
-            },
-            Column {
-                label: "d".to_string(),
-                wrap: Wrap::Wrap,
-            },
-            Column {
-                label: "e".to_string(),
-                wrap: Wrap::Wrap,
-            },
-            Column {
-                label: "e".to_string(),
-                wrap: Wrap::Wrap,
-            },
-        ]);
+        let mut t = Table::new(
+            vec![
+                Column {
+                    label: "a".to_string(),
+                    wrap: Wrap::NoWrap,
+                },
+                Column {
+                    label: "b".to_string(),
+                    wrap: Wrap::Wrap,
+                },
+                Column {
+                    label: "c".to_string(),
+                    wrap: Wrap::NoWrap,
+                },
+                Column {
+                    label: "d".to_string(),
+                    wrap: Wrap::Wrap,
+                },
+                Column {
+                    label: "e".to_string(),
+                    wrap: Wrap::Wrap,
+                },
+                Column {
+                    label: "e".to_string(),
+                    wrap: Wrap::Wrap,
+                },
+            ],
+            "".to_string(),
+        );
         let row1 = Row::new(vec![
             "abcdefg".to_string(),         // 7
             "abcdefghijkl".to_string(),    // 12 -> muss gewrapt werden
@@ -356,32 +382,35 @@ mod tests {
 
     #[test]
     fn get_column_width_with_wrapping_not_possible() {
-        let mut t = Table::new(vec![
-            Column {
-                label: "a".to_string(),
-                wrap: Wrap::NoWrap,
-            },
-            Column {
-                label: "b".to_string(),
-                wrap: Wrap::NoWrap,
-            },
-            Column {
-                label: "c".to_string(),
-                wrap: Wrap::NoWrap,
-            },
-            Column {
-                label: "d".to_string(),
-                wrap: Wrap::NoWrap,
-            },
-            Column {
-                label: "e".to_string(),
-                wrap: Wrap::NoWrap,
-            },
-            Column {
-                label: "e".to_string(),
-                wrap: Wrap::NoWrap,
-            },
-        ]);
+        let mut t = Table::new(
+            vec![
+                Column {
+                    label: "a".to_string(),
+                    wrap: Wrap::NoWrap,
+                },
+                Column {
+                    label: "b".to_string(),
+                    wrap: Wrap::NoWrap,
+                },
+                Column {
+                    label: "c".to_string(),
+                    wrap: Wrap::NoWrap,
+                },
+                Column {
+                    label: "d".to_string(),
+                    wrap: Wrap::NoWrap,
+                },
+                Column {
+                    label: "e".to_string(),
+                    wrap: Wrap::NoWrap,
+                },
+                Column {
+                    label: "e".to_string(),
+                    wrap: Wrap::NoWrap,
+                },
+            ],
+            "".to_string(),
+        );
         let row1 = Row::new(vec![
             "abcdefg".to_string(),         // 7
             "abcdefghijkl".to_string(),    // 12
@@ -405,32 +434,35 @@ mod tests {
 
     #[test]
     fn get_column_width_with_wrapping_not_enough_wrappable_space() {
-        let mut t = Table::new(vec![
-            Column {
-                label: "a".to_string(),
-                wrap: Wrap::NoWrap,
-            },
-            Column {
-                label: "b".to_string(),
-                wrap: Wrap::Wrap,
-            },
-            Column {
-                label: "c".to_string(),
-                wrap: Wrap::NoWrap,
-            },
-            Column {
-                label: "d".to_string(),
-                wrap: Wrap::Wrap,
-            },
-            Column {
-                label: "e".to_string(),
-                wrap: Wrap::Wrap,
-            },
-            Column {
-                label: "e".to_string(),
-                wrap: Wrap::Wrap,
-            },
-        ]);
+        let mut t = Table::new(
+            vec![
+                Column {
+                    label: "a".to_string(),
+                    wrap: Wrap::NoWrap,
+                },
+                Column {
+                    label: "b".to_string(),
+                    wrap: Wrap::Wrap,
+                },
+                Column {
+                    label: "c".to_string(),
+                    wrap: Wrap::NoWrap,
+                },
+                Column {
+                    label: "d".to_string(),
+                    wrap: Wrap::Wrap,
+                },
+                Column {
+                    label: "e".to_string(),
+                    wrap: Wrap::Wrap,
+                },
+                Column {
+                    label: "e".to_string(),
+                    wrap: Wrap::Wrap,
+                },
+            ],
+            "".to_string(),
+        );
         let row1 = Row::new(vec![
             "abcdefg".to_string(),         // 7
             "abcdefghijkl".to_string(),    // 12
@@ -454,7 +486,7 @@ mod tests {
 
     #[test]
     fn display() {
-        let mut t = Table::new(get_columns());
+        let mut t = Table::new(get_columns(), "".to_string());
         let row1 = Row::new(vec!["abc".to_string(), "defg".to_string()]);
         let row2 = Row::new(vec!["a".to_string(), "b".to_string(), "cdef".to_string()]);
 

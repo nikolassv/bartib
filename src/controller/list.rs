@@ -11,11 +11,11 @@ use crate::data::processor;
 use crate::view::list;
 
 // lists all currently running activities.
-pub fn list_running(file_name: &str) -> Result<()> {
+pub fn list_running(file_name: &str, separator: &str) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
     let running_activities = getter::get_running_activities(&file_content);
 
-    list::list_running_activities(&running_activities);
+    list::list_running_activities(&running_activities, separator);
 
     Ok(())
 }
@@ -28,6 +28,7 @@ pub fn list(
     filter: getter::ActivityFilter,
     do_group_activities: bool,
     processors: processor::ProcessorList,
+    separator: &str,
 ) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
     let activities = getter::get_activities(&file_content).collect();
@@ -47,10 +48,14 @@ pub fn list(
     );
 
     if do_group_activities {
-        list::list_activities_grouped_by_date(&filtered_activities[first_element..]);
+        list::list_activities_grouped_by_date(&filtered_activities[first_element..], separator);
     } else {
         let with_start_dates = filter.date.is_none();
-        list::list_activities(&filtered_activities[first_element..], with_start_dates);
+        list::list_activities(
+            &filtered_activities[first_element..],
+            with_start_dates,
+            separator,
+        );
     }
 
     Ok(())
@@ -187,20 +192,20 @@ pub fn list_projects(file_name: &str, current: bool, no_quotes: bool) -> Result<
 }
 
 // return last finished activity
-pub fn list_last_activities(file_name: &str, number: usize) -> Result<()> {
+pub fn list_last_activities(file_name: &str, number: usize, separator: &str) -> Result<()> {
     let file_content = bartib_file::get_file_content(file_name)?;
 
     let descriptions_and_projects: Vec<(&String, &String)> =
         getter::get_descriptions_and_projects(&file_content);
     let first_element = descriptions_and_projects.len().saturating_sub(number);
 
-    list::list_descriptions_and_projects(&descriptions_and_projects[first_element..]);
+    list::list_descriptions_and_projects(&descriptions_and_projects[first_element..], separator);
 
     Ok(())
 }
 
 // searches for the term in descriptions and projects
-pub fn search(file_name: &str, search_term: Option<&str>) -> Result<()> {
+pub fn search(file_name: &str, search_term: Option<&str>, separator: &str) -> Result<()> {
     let search_term = search_term
         .map(|term| format!("*{}*", term.to_lowercase()))
         .unwrap_or("".to_string());
@@ -220,7 +225,11 @@ pub fn search(file_name: &str, search_term: Option<&str>) -> Result<()> {
         })
         .collect();
 
-    list::list_descriptions_and_projects_with_index(&matches, "No matching activities found");
+    list::list_descriptions_and_projects_with_index(
+        &matches,
+        "No matching activities found",
+        separator,
+    );
 
     Ok(())
 }
