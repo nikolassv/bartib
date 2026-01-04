@@ -10,6 +10,7 @@ use textwrap;
 use crate::conf;
 use crate::data::activity;
 use crate::view::format_util;
+use crate::data::getter;
 
 type ProjectMap<'a> = BTreeMap<&'a str, (Vec<&'a activity::Activity>, Duration)>;
 
@@ -51,6 +52,10 @@ impl fmt::Display for Report<'_> {
         }
 
         print_total_duration(f, self.total_duration, longest_line)?;
+
+        if !getter::get_hours().is_zero() {
+            print_daily_hours_overtime(f, self.total_duration)?;
+        }
 
         Ok(())
     }
@@ -167,6 +172,25 @@ fn print_total_duration(
         suffix = Style::new().bold().infix(Style::new())
     )?;
 
+    Ok(())
+}
+
+/* Prints overtime/daily hours */
+fn print_daily_hours_overtime(
+    f: &mut Formatter<'_>,
+    total_duration: Duration,
+) -> fmt::Result {
+    let d_hours = getter::get_hours();
+    let d_difference = getter::get_days_difference();
+    let overtime = (total_duration.num_minutes() -
+        d_hours.num_minutes() * d_difference.num_days()) as f64 / 60.0;
+    let daily_hours = d_hours.num_minutes() as f64 / 60.0;
+    writeln!(
+        f,
+        "{prefix}Based on {daily_hours} hours daily, current overtime is {overtime} hours.{suffix}",
+        prefix = Style::new().bold().prefix(),
+        suffix = Style::new().bold().infix(Style::new())
+    )?;
     Ok(())
 }
 
