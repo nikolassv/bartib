@@ -1,6 +1,7 @@
-use chrono::NaiveDate;
+use chrono::{Duration, NaiveDate};
 use std::collections::HashSet;
 use wildmatch::WildMatch;
+use std::cell::RefCell;
 
 use crate::data::activity;
 use crate::data::activity::Activity;
@@ -102,6 +103,37 @@ pub fn filter_activities<'a>(
                 .is_none_or(|p| WildMatch::new(p).matches(&activity.project))
         })
         .collect()
+}
+
+/*  DAILY_HOURS will be modified only if daily-hours argument is present
+    and will be used at report print if != 0 
+    DAYS_DIFFERENCE represents the difference between to_date and from_date 
+    useful for calculating daily_hours */
+thread_local! {
+    pub static DAILY_HOURS: RefCell<Duration> = RefCell::new(Duration::zero());
+    pub static DAYS_DIFFERENCE: RefCell<Duration> = RefCell::new(Duration::zero());
+}
+
+/* these functions will be used to get and set DAILY_HOURS */
+pub fn set_hours(daily_hours: i64) {
+    DAILY_HOURS.with(|hours| {
+                *hours.borrow_mut() = Duration::minutes(daily_hours);
+            });
+}
+
+pub fn get_hours() -> Duration {
+    DAILY_HOURS.with(|hours| *hours.borrow())
+}
+
+/* these functions will be used to get and set DAYS_DIFFERENCE */
+pub fn set_days_difference(days_difference: i64) {
+    DAYS_DIFFERENCE.with(|days| {
+                *days.borrow_mut() = Duration::days(days_difference);
+            });
+}
+
+pub fn get_days_difference() -> Duration {
+    DAYS_DIFFERENCE.with(|days| *days.borrow())
 }
 
 #[must_use]
