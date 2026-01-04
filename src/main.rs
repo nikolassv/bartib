@@ -7,6 +7,7 @@ use clap::{crate_version, App, AppSettings, Arg, ArgMatches, SubCommand};
 
 use bartib::data::getter::ActivityFilter;
 use bartib::data::processor;
+use bartib::data::getter;
 
 #[cfg(windows)]
 use nu_ansi_term::enable_ansi_support;
@@ -210,6 +211,14 @@ To get started, view the `start` help with `bartib start --help`")
                         .help("do report activities for this project only")
                         .takes_value(true)
                         .required(false),
+                )
+                .arg(
+                    Arg::with_name("daily_hours")
+                        .long("daily-hours")
+                        .value_name("DURATION")
+                        .help("get overtime for the number of daily hours (uses inclusive date range)")
+                        .takes_value(true)
+                        .required(false),
                 ),
         )
         .subcommand(
@@ -350,7 +359,9 @@ fn run_subcommand(matches: &ArgMatches, file_name: &str) -> Result<()> {
             bartib::controller::list::list(file_name, filter, do_group_activities, processors)
         }
         ("report", Some(sub_m)) => {
+            get_hours_daily_hours(sub_m);
             let filter = create_filter_for_arguments(sub_m);
+            get_dates_daily_hours(&filter);
             let processors = create_processors_for_arguments(sub_m);
             bartib::controller::report::show_report(file_name, filter, processors)
         }
@@ -533,5 +544,56 @@ fn get_duration_argument_or_ignore(
         }
     } else {
         None
+    }
+}
+
+fn get_hours_argument_as_minutes_or_ignore(
+    hours_argument: Option<&str>
+) -> Option<i64> {
+    if let Some(hours_string) = hours_argument {
+        let mut hours_string_minutes: f32 = hours_string.parse().ok()?;
+        hours_string_minutes *= 60.0;
+        let minutes = hours_string_minutes.trunc() as i64;
+        Some(minutes)
+    } else {
+        None
+    }
+}
+
+fn get_days_argument_or_ignore(
+    from_date: Option<NaiveDate>,
+    to_date: Option<NaiveDate>,
+) -> Option<Duration> {
+    if let Some(date_before) = from_date {
+        if let Some(date_after) = to_date {
+            if date_after >= date_before {
+                let diff = date_after - date_before + Duration::days(1);
+                Some(diff)
+            } else {
+                println!("Dates introduced in reverse order.");
+                None
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
+fn get_dates_daily_hours<'a>(filter: &'a ActivityFilter) {
+    let d_diff = get_days_argument_or_ignore(
+        filter.from_date,
+        filter.to_date,
+    );
+    if let Some(days_diff) = d_diff {
+        getter::set_days_difference(days_diff.num_days());
+    }
+}
+
+fn get_hours_daily_hours<'a>(sub_m: &'a ArgMatches) {
+    let daily_hours = get_hours_argument_as_minutes_or_ignore(sub_m.value_of("daily_hours"));
+    if let Some(minutes) = daily_hours {
+        getter::set_hours(minutes);
     }
 }
