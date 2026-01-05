@@ -110,8 +110,8 @@ pub fn filter_activities<'a>(
     DAYS_DIFFERENCE represents the difference between to_date and from_date 
     useful for calculating daily_hours */
 thread_local! {
-    pub static DAILY_HOURS: RefCell<Duration> = RefCell::new(Duration::zero());
-    pub static DAYS_DIFFERENCE: RefCell<Duration> = RefCell::new(Duration::zero());
+    static DAILY_HOURS: RefCell<Duration> = RefCell::new(Duration::zero());
+    static DAYS_DIFFERENCE: RefCell<Duration> = RefCell::new(Duration::zero());
 }
 
 /* these functions will be used to get and set DAILY_HOURS */
