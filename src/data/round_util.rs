@@ -7,13 +7,13 @@ pub fn round_datetime(
     datetime: &chrono::NaiveDateTime,
     round: &chrono::Duration,
 ) -> chrono::NaiveDateTime {
-    let timestamp = datetime.timestamp();
+    let timestamp = datetime.and_utc().timestamp();
     let round_seconds = round.num_seconds();
 
     let rounded_timestamp =
         (timestamp as f64 / round_seconds as f64).round() as i64 * round_seconds;
 
-    chrono::NaiveDateTime::from_timestamp_opt(rounded_timestamp, 0).unwrap()
+    chrono::DateTime::from_timestamp(rounded_timestamp, 0).unwrap().naive_utc()
 }
 
 #[cfg(test)]

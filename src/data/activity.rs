@@ -216,7 +216,7 @@ impl Iterator for StringSplitter<'_> {
     }
 }
 
-fn split_with_escaped_delimiter(s: &str) -> StringSplitter {
+fn split_with_escaped_delimiter(s: &str) -> StringSplitter<'_> {
     StringSplitter { chars: s.chars() }
 }
 
