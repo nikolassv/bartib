@@ -13,7 +13,9 @@ pub fn round_datetime(
     let rounded_timestamp =
         (timestamp as f64 / round_seconds as f64).round() as i64 * round_seconds;
 
-    chrono::DateTime::from_timestamp(rounded_timestamp, 0).unwrap().naive_utc()
+    chrono::DateTime::from_timestamp(rounded_timestamp, 0)
+        .unwrap()
+        .naive_utc()
 }
 
 #[cfg(test)]
