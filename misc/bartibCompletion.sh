@@ -24,20 +24,23 @@ function _bartib_completions()
             fi
         ;;
         -d)
-            # COMPLETE TASK
-            local IFS=$'\n'
-            # Get selected project and remove surrounding quotes
-            local project="${COMP_WORDS[$COMP_CWORD - 2]}"
-            project=$(echo "$project" | tr -d '"')
-            # Get tasks for that project
-            tasks=$(grep "| $project |" /opt/shared/bartib-hist | cut -d'|' -f 3 | sort | uniq | sed 's/ //' | sed -e 's/\(.*\)/"\1"/')
+            if [ -n "$BARTIB_FILE" ]
+            then
+                # COMPLETE TASK
+                local IFS=$'\n'
+                # Get selected project and remove surrounding quotes
+                local project="${COMP_WORDS[$COMP_CWORD - 2]}"
+                project=$(echo "$project" | tr -d '"')
+                # Get tasks for that project
+                tasks=$(grep "| $project |" /opt/shared/bartib-hist | cut -d'|' -f 3 | sort | uniq | sed 's/ //' | sed -e 's/\(.*\)/"\1"/')
 
-            candidate_tasks=($(compgen -W "${tasks[*]}" -- "$word"))
+                candidate_tasks=($(compgen -W "${tasks[*]}" -- "$word"))
 
-            if [ ${#candidate_tasks[*]} -eq 0 ]; then
-                COMPREPLY=()
-            else
-                COMPREPLY=($(printf "\"%s\"\n" "${candidate_tasks[@]}"))
+                if [ ${#candidate_tasks[*]} -eq 0 ]; then
+                    COMPREPLY=()
+                else
+                    COMPREPLY=($(printf "\"%s\"\n" "${candidate_tasks[@]}"))
+                fi
             fi
         ;;
         list|report)
