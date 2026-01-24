@@ -8,10 +8,10 @@ function _bartib_completions()
     case "${prev}" in
         bartib)
             # COMPLETE COMMAND
-            words="start stop current continue edit report list help cancel check last projects"
+            words="start stop current continue edit report list help cancel check last projects sanity change"
             COMPREPLY=($(compgen -W "$words" -- "$word"))    
         ;;
-        -p)
+        -p|--project)
             # COMPLETE PROJECT NAME
             local IFS=$'\n'
             ALL_PROJECTS=$(bartib projects)
@@ -43,8 +43,12 @@ function _bartib_completions()
                 fi
             fi
         ;;
-        list|report)
-            words="--today --help --last_week --current_week --yesterday --project"
+        list)
+            words="--today --help --last_week --current_week --yesterday --project --no_grouping --date --from --number --round --to"
+            COMPREPLY=($(compgen -W "$words" -- "$word"))
+        ;;
+        report)
+            words="--today --help --last_week --current_week --yesterday --project --date --from --round --to"
             COMPREPLY=($(compgen -W "$words" -- "$word"))
         ;;
         *)
