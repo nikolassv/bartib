@@ -213,7 +213,7 @@ If the specified log file does not exist yet Bartib creates it.
 
 ### How to edit or delete tracked activities
 
-Just open your activity log in your favorite text editor to edit or delete former activities. You may even add new activities manually in this file. The format is self explanatory.
+Just open your activity log in your favorite text editor to edit or delete former activities. You may even add new activities manually in this file. The format is self explanatory and described in detail in [doc/bartib-file-format.md](doc/bartib-file-format.md).
 
 Bartib even offers the `bartib edit` command which opens the log in the editor defined by your `EDITOR` environment variable. If you are unsure whether your edits are readable by bartib, use the `bartib check` command. It will inform you about any parsing errors.
 
@@ -229,6 +229,8 @@ For zsh users, the `misc/_bartib` file can be used for completions.
 ## Command overview
 
 All these commands require that you have set the `BARTIB_FILE` environment variable to the file path of your activity log. Otherwise they require an additional `-f/--file` parameter between `bartib` and the subcommand (see above: [How to define in which file to save the log of your activities](#how-to-define-in-which-file-to-save-the-log-of-your-activities)).
+
+For a full description of every subcommand and its options, see the [manual](doc/bartib.md).
 
 ### The essentials
 
