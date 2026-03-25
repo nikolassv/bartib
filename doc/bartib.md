@@ -1,4 +1,4 @@
-# bartib(1)
+# bartib
 
 ## NAME
 
